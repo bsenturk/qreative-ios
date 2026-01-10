@@ -132,38 +132,6 @@ struct MainTabView: View {
 
 // MARK: - Placeholder Views (to be replaced with actual views)
 
-struct OnboardingView: View {
-    @EnvironmentObject var appCoordinator: AppCoordinator
-
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                Spacer()
-
-                Image(systemName: "qrcode.viewfinder")
-                    .font(.system(size: 80))
-                    .foregroundStyle(LinearGradient.purpleGradient)
-
-                Text("Welcome to QReative")
-                    .typography(.largeTitle)
-
-                Text("Create and scan QR codes with style")
-                    .typography(.body, color: .textSecondary)
-
-                Spacer()
-
-                PrimaryButton("Get Started", icon: "arrow.right") {
-                    appCoordinator.completeOnboarding()
-                }
-                .padding(.horizontal, Theme.spacing.screen)
-            }
-            .padding(.bottom, 40)
-        }
-    }
-}
-
 struct PaywallView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
 
