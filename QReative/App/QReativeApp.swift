@@ -132,44 +132,6 @@ struct MainTabView: View {
 
 // MARK: - Placeholder Views (to be replaced with actual views)
 
-struct PaywallView: View {
-    @EnvironmentObject var appCoordinator: AppCoordinator
-
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                Spacer()
-
-                Image(systemName: "crown.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(LinearGradient.goldGradient)
-
-                Text("Unlock Premium")
-                    .typography(.largeTitle)
-
-                Text("Get access to all features")
-                    .typography(.body, color: .textSecondary)
-
-                Spacer()
-
-                VStack(spacing: 12) {
-                    PrimaryButton("Continue with Premium") {
-                        appCoordinator.handlePurchaseSuccess()
-                    }
-
-                    PrimaryButton.secondary("Maybe Later") {
-                        appCoordinator.dismissPaywall()
-                    }
-                }
-                .padding(.horizontal, Theme.spacing.screen)
-            }
-            .padding(.bottom, 40)
-        }
-    }
-}
-
 struct ScanViewPlaceholder: View {
     var body: some View {
         ZStack {
