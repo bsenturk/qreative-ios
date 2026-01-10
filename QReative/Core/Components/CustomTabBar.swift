@@ -1,48 +1,12 @@
 import SwiftUI
 
-// MARK: - Tab Item
-
-enum TabItem: Int, CaseIterable {
-    case scan
-    case create
-    case history
-    case settings
-
-    var title: String {
-        switch self {
-        case .scan: return "Scan"
-        case .create: return "Create"
-        case .history: return "History"
-        case .settings: return "Settings"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .scan: return "viewfinder"
-        case .create: return "qrcode.viewfinder"
-        case .history: return "clock.arrow.circlepath"
-        case .settings: return "gearshape"
-        }
-    }
-
-    var selectedIcon: String {
-        switch self {
-        case .scan: return "viewfinder"
-        case .create: return "qrcode.viewfinder"
-        case .history: return "clock.arrow.circlepath"
-        case .settings: return "gearshape.fill"
-        }
-    }
-}
-
 // MARK: - Custom Tab Bar
 
 struct CustomTabBar: View {
-    @Binding var selectedTab: TabItem
-    let onTabChange: ((TabItem) -> Void)?
+    @Binding var selectedTab: Tab
+    let onTabChange: ((Tab) -> Void)?
 
-    init(selectedTab: Binding<TabItem>, onTabChange: ((TabItem) -> Void)? = nil) {
+    init(selectedTab: Binding<Tab>, onTabChange: ((Tab) -> Void)? = nil) {
         self._selectedTab = selectedTab
         self.onTabChange = onTabChange
     }
@@ -56,7 +20,7 @@ struct CustomTabBar: View {
 
             // Tab items
             HStack(spacing: 0) {
-                ForEach(TabItem.allCases, id: \.self) { tab in
+                ForEach(Tab.allCases, id: \.self) { tab in
                     TabItemView(
                         tab: tab,
                         isSelected: selectedTab == tab
@@ -79,7 +43,7 @@ struct CustomTabBar: View {
 
     // MARK: - Tab Selection
 
-    private func selectTab(_ tab: TabItem) {
+    private func selectTab(_ tab: Tab) {
         guard selectedTab != tab else { return }
 
         // Haptic feedback
@@ -99,7 +63,7 @@ struct CustomTabBar: View {
 // MARK: - Tab Item View
 
 private struct TabItemView: View {
-    let tab: TabItem
+    let tab: Tab
     let isSelected: Bool
     let action: () -> Void
 
@@ -123,12 +87,12 @@ private struct TabItemView: View {
 // MARK: - Tab Bar Container
 
 struct TabBarContainer<Content: View>: View {
-    @Binding var selectedTab: TabItem
-    let content: (TabItem) -> Content
+    @Binding var selectedTab: Tab
+    let content: (Tab) -> Content
 
     init(
-        selectedTab: Binding<TabItem>,
-        @ViewBuilder content: @escaping (TabItem) -> Content
+        selectedTab: Binding<Tab>,
+        @ViewBuilder content: @escaping (Tab) -> Content
     ) {
         self._selectedTab = selectedTab
         self.content = content
@@ -151,7 +115,7 @@ struct TabBarContainer<Content: View>: View {
 // MARK: - View Extension
 
 extension View {
-    func withCustomTabBar(selectedTab: Binding<TabItem>) -> some View {
+    func withCustomTabBar(selectedTab: Binding<Tab>) -> some View {
         ZStack(alignment: .bottom) {
             self
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -167,7 +131,7 @@ extension View {
 
 #Preview {
     struct PreviewWrapper: View {
-        @State private var selectedTab: TabItem = .scan
+        @State private var selectedTab: Tab = .scan
 
         var body: some View {
             TabBarContainer(selectedTab: $selectedTab) { tab in
