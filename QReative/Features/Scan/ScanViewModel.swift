@@ -95,9 +95,14 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(cameraService: CameraService = CameraService()) {
+    init(cameraService: CameraService) {
         self.cameraService = cameraService
         setupBindings()
+    }
+
+    /// Convenience init that creates its own CameraService
+    convenience init() {
+        self.init(cameraService: CameraService())
     }
 
     // MARK: - Setup
