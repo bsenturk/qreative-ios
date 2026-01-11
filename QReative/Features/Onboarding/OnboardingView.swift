@@ -16,27 +16,30 @@ struct OnboardingView: View {
             backgroundLayer
 
             VStack(spacing: 0) {
-                Spacer()
-
-                qrCodeSection
-                    .padding(.bottom, 48)
-                    .scaleEffect(isAppeared ? 1 : 0.5)
-                    .opacity(isAppeared ? 1 : 0)
-
-                textSection
-                    .padding(.horizontal, Theme.spacing.screen)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 30)
-
-                Spacer()
+                TabView(selection: $currentPage) {
+                    ForEach(0..<totalPages, id: \.self) { index in
+                        pageContent(for: index)
+                            .tag(index)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .onChange(of: currentPage) { _, _ in
+                    HapticManager.shared.lightTap()
+                }
 
                 pageIndicators
                     .padding(.bottom, 32)
                     .opacity(showContent ? 1 : 0)
 
-                PrimaryButton("Get Started", icon: "arrow.right") {
+                PrimaryButton(currentPage == totalPages - 1 ? "Get Started" : "Next", icon: "arrow.right") {
                     HapticManager.shared.mediumTap()
-                    appCoordinator.completeOnboarding()
+                    if currentPage < totalPages - 1 {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            currentPage += 1
+                        }
+                    } else {
+                        appCoordinator.completeOnboarding()
+                    }
                 }
                 .frame(maxWidth: 320)
                 .padding(.horizontal, Theme.spacing.screen)
@@ -49,6 +52,91 @@ struct OnboardingView: View {
         .onAppear {
             startAnimations()
         }
+    }
+
+    // MARK: - Page Content
+    private func pageContent(for index: Int) -> some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            pageIcon(for: index)
+                .padding(.bottom, 48)
+                .scaleEffect(isAppeared ? 1 : 0.5)
+                .opacity(isAppeared ? 1 : 0)
+
+            VStack(spacing: 16) {
+                Text(headlineText(for: index))
+                    .typography(.largeTitle)
+                    .multilineTextAlignment(.center)
+
+                Text(subheadlineText(for: index))
+                    .typography(.body, color: .textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
+            .padding(.horizontal, Theme.spacing.screen)
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 30)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Page Icon
+    @ViewBuilder
+    private func pageIcon(for index: Int) -> some View {
+        switch index {
+        case 0:
+            qrCodeSection
+        case 1:
+            scanIconSection
+        case 2:
+            historyIconSection
+        default:
+            qrCodeSection
+        }
+    }
+
+    // MARK: - Scan Icon Section
+    private var scanIconSection: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 32)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentPrimary, Color.accentSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 180, height: 180)
+
+            Image(systemName: "qrcode.viewfinder")
+                .font(.system(size: 80, weight: .light))
+                .foregroundStyle(.white)
+        }
+        .offset(y: floatOffset)
+        .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
+    }
+
+    // MARK: - History Icon Section
+    private var historyIconSection: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 32)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentTertiary, Color.accentPrimary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 180, height: 180)
+
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 80, weight: .light))
+                .foregroundStyle(.white)
+        }
+        .offset(y: floatOffset)
+        .shadow(color: Color.accentTertiary.opacity(0.3), radius: 30, x: 0, y: 20)
     }
 
     // MARK: - Background Layer
@@ -117,44 +205,30 @@ struct OnboardingView: View {
         .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
     }
 
-    // MARK: - Text Section
-    private var textSection: some View {
-        VStack(spacing: 16) {
-            Text(headlineText)
-                .typography(.largeTitle)
-                .multilineTextAlignment(.center)
-
-            Text(subheadlineText)
-                .typography(.body, color: .textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-        }
-    }
-
-    // MARK: - Page Content
-    private var headlineText: String {
-        switch currentPage {
+    // MARK: - Page Texts
+    private func headlineText(for index: Int) -> String {
+        switch index {
         case 0:
             return "Create Unique QR Codes"
         case 1:
-            return "Scan Anything Instantly"
+            return "Scan in Seconds"
         case 2:
-            return "Share with Style"
+            return "Access Your History"
         default:
             return "Create Unique QR Codes"
         }
     }
 
-    private var subheadlineText: String {
-        switch currentPage {
+    private func subheadlineText(for index: Int) -> String {
+        switch index {
         case 0:
-            return "Customize colors, shapes, and logos."
+            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
         case 1:
-            return "Fast and accurate QR code scanning."
+            return "Instantly scan any QR code with our fast and accurate scanner."
         case 2:
-            return "Export in high quality formats."
+            return "Access all your previously scanned codes anytime, anywhere."
         default:
-            return "Customize colors, shapes, and logos."
+            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
         }
     }
 

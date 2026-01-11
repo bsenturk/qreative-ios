@@ -6,7 +6,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
     case weekly = "com.qreative.premium.weekly"
     case monthly = "com.qreative.premium.monthly"
     case yearly = "com.qreative.premium.yearly"
-    case lifetime = "com.qreative.premium.lifetime"
 
     var id: String { rawValue }
 
@@ -15,7 +14,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "Weekly"
         case .monthly: return "Monthly"
         case .yearly: return "Yearly"
-        case .lifetime: return "Lifetime"
         }
     }
 
@@ -24,7 +22,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "Billed weekly"
         case .monthly: return "Billed monthly"
         case .yearly: return "Billed yearly"
-        case .lifetime: return "One-time purchase"
         }
     }
 
@@ -33,7 +30,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "$2.99"
         case .monthly: return "$7.99"
         case .yearly: return "$49.99"
-        case .lifetime: return "$99.99"
         }
     }
 
@@ -42,7 +38,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "week"
         case .monthly: return "month"
         case .yearly: return "year"
-        case .lifetime: return "lifetime"
         }
     }
 
@@ -51,7 +46,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "/week"
         case .monthly: return "/month"
         case .yearly: return "/year"
-        case .lifetime: return ""
         }
     }
 
@@ -60,7 +54,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return nil
         case .monthly: return nil
         case .yearly: return "Save 48%"
-        case .lifetime: return "Best Value"
         }
     }
 
@@ -77,7 +70,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return 3
         case .monthly: return 7
         case .yearly: return 7
-        case .lifetime: return 0
         }
     }
 }
