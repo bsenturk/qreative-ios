@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Button Style Variant
-
 enum ButtonVariant {
     case primary
     case secondary
@@ -9,7 +8,6 @@ enum ButtonVariant {
 }
 
 // MARK: - Primary Button
-
 struct PrimaryButton: View {
     let title: String
     let icon: String?
@@ -77,7 +75,6 @@ struct PrimaryButton: View {
     }
 
     // MARK: - Styling
-
     @ViewBuilder
     private var background: some View {
         switch variant {
@@ -125,7 +122,6 @@ struct PrimaryButton: View {
     }
 
     // MARK: - Haptic
-
     private func triggerHaptic() {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
@@ -133,9 +129,7 @@ struct PrimaryButton: View {
 }
 
 // MARK: - Convenience Initializers
-
 extension PrimaryButton {
-    /// Primary gradient button
     static func primary(
         _ title: String,
         icon: String? = nil,
@@ -145,7 +139,6 @@ extension PrimaryButton {
         PrimaryButton(title, icon: icon, variant: .primary, isLoading: isLoading, action: action)
     }
 
-    /// Secondary glass button
     static func secondary(
         _ title: String,
         icon: String? = nil,
@@ -155,7 +148,6 @@ extension PrimaryButton {
         PrimaryButton(title, icon: icon, variant: .secondary, isLoading: isLoading, action: action)
     }
 
-    /// Outline button
     static func outline(
         _ title: String,
         icon: String? = nil,
@@ -166,32 +158,26 @@ extension PrimaryButton {
 }
 
 // MARK: - Preview
-
 #Preview {
     ZStack {
         Color.backgroundPrimary
             .ignoresSafeArea()
 
         VStack(spacing: 20) {
-            // Primary
             PrimaryButton("Get Started", icon: "arrow.right") {
                 print("Primary tapped")
             }
 
-            // Primary loading
             PrimaryButton("Processing...", variant: .primary, isLoading: true) {}
 
-            // Secondary
             PrimaryButton.secondary("Learn More", icon: "info.circle") {
                 print("Secondary tapped")
             }
 
-            // Outline
             PrimaryButton.outline("Skip", icon: "xmark") {
                 print("Outline tapped")
             }
 
-            // Disabled
             PrimaryButton("Disabled", isDisabled: true) {}
         }
         .padding(20)

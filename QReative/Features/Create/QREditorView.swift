@@ -2,7 +2,6 @@ import SwiftUI
 import PhotosUI
 
 // MARK: - QR Editor View
-
 struct QREditorView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
@@ -23,18 +22,15 @@ struct QREditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Navigation Bar
                 navigationBar
                     .padding(.horizontal, Theme.spacing.screen)
                     .padding(.top, 8)
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
-                        // Live Preview
                         livePreviewSection
                             .padding(.top, 24)
 
-                        // Input Section
                         inputSection
 
                         Spacer(minLength: 200)
@@ -42,7 +38,6 @@ struct QREditorView: View {
                     .padding(.horizontal, Theme.spacing.screen)
                 }
 
-                // Customization Panel
                 customizationPanel
             }
         }
@@ -70,7 +65,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Navigation Bar
-
     private var navigationBar: some View {
         HStack {
             Button("Cancel") {
@@ -107,7 +101,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Live Preview Section
-
     private var livePreviewSection: some View {
         VStack(spacing: 0) {
             QRCodePreview(
@@ -130,7 +123,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Input Section
-
     @ViewBuilder
     private var inputSection: some View {
         VStack(spacing: 16) {
@@ -177,14 +169,12 @@ struct QREditorView: View {
 
     private var wifiInputFields: some View {
         VStack(spacing: 12) {
-            // SSID
             inputField(
                 label: "Network Name",
                 placeholder: "WiFi Name",
                 text: $viewModel.wifiSSID
             )
 
-            // Password
             inputField(
                 label: "Password",
                 placeholder: "WiFi Password",
@@ -192,7 +182,6 @@ struct QREditorView: View {
                 isSecure: true
             )
 
-            // Security
             VStack(alignment: .leading, spacing: 8) {
                 Text("Security")
                     .typography(.caption1, color: .textTertiary)
@@ -267,21 +256,16 @@ struct QREditorView: View {
     }
 
     // MARK: - Customization Panel
-
     private var customizationPanel: some View {
         VStack(spacing: 20) {
-            // Top border
             Rectangle()
                 .fill(Color.white.opacity(0.06))
                 .frame(height: 1)
 
-            // Color Picker
             colorPicker
 
-            // Shape Selector
             shapeSelector
 
-            // Add Logo Button
             addLogoButton
         }
         .padding(.horizontal, Theme.spacing.screen)
@@ -291,7 +275,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Color Picker
-
     private var colorPicker: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Color")
@@ -313,7 +296,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Shape Selector
-
     private var shapeSelector: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Shape")
@@ -333,7 +315,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Add Logo Button
-
     private var addLogoButton: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
@@ -358,7 +339,6 @@ struct QREditorView: View {
             }
 
             if let logo = viewModel.logoImage {
-                // Show logo with remove button
                 HStack(spacing: 12) {
                     Image(uiImage: logo)
                         .resizable()
@@ -381,7 +361,6 @@ struct QREditorView: View {
                 .padding(12)
                 .glassCard(cornerRadius: 16, opacity: 0.08)
             } else {
-                // Add logo button
                 PhotosPicker(
                     selection: $selectedPhoto,
                     matching: .images,
@@ -413,7 +392,6 @@ struct QREditorView: View {
     }
 
     // MARK: - Photo Selection
-
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
         guard let item else { return }
 
@@ -428,7 +406,6 @@ struct QREditorView: View {
 }
 
 // MARK: - Color Button
-
 private struct ColorButton: View {
     let color: QRColor
     let isSelected: Bool
@@ -468,7 +445,6 @@ private struct ColorButton: View {
 }
 
 // MARK: - Shape Button
-
 private struct ShapeButton: View {
     let shape: QRShape
     let isSelected: Bool
@@ -502,7 +478,6 @@ private struct ShapeButton: View {
 }
 
 // MARK: - Security Button
-
 private struct SecurityButton: View {
     let title: String
     let isSelected: Bool
@@ -529,7 +504,6 @@ private struct SecurityButton: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     NavigationStack {
         QREditorView(template: QRTypeTemplate.allTemplates[0])

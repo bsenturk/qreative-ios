@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Haptic Style
-
 enum HapticStyle {
     case light
     case medium
@@ -15,17 +14,14 @@ enum HapticStyle {
 }
 
 // MARK: - View Extensions
-
 extension View {
 
     // MARK: - First Appear
-
     func onFirstAppear(_ action: @escaping () -> Void) -> some View {
         modifier(FirstAppearModifier(action: action))
     }
 
     // MARK: - Hide Keyboard
-
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
@@ -37,19 +33,16 @@ extension View {
     }
 
     // MARK: - Corner Radius
-
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCornerShape(radius: radius, corners: corners))
     }
 
     // MARK: - Shimmer Effect
-
     func shimmer(isActive: Bool = true) -> some View {
         modifier(ShimmerModifier(isActive: isActive))
     }
 
     // MARK: - Glow Effect
-
     func glow(color: Color, radius: CGFloat = 20) -> some View {
         self
             .shadow(color: color.opacity(0.6), radius: radius / 3)
@@ -62,7 +55,6 @@ extension View {
     }
 
     // MARK: - Haptic Feedback
-
     func hapticFeedback(_ style: HapticStyle) -> some View {
         self.simultaneousGesture(
             TapGesture().onEnded { _ in
@@ -101,7 +93,6 @@ extension View {
     }
 
     // MARK: - Conditional Modifier
-
     @ViewBuilder
     func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
         if condition {
@@ -121,7 +112,6 @@ extension View {
     }
 
     // MARK: - Read Size
-
     func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
         background(
             GeometryReader { geometry in
@@ -133,14 +123,12 @@ extension View {
     }
 
     // MARK: - Visible
-
     func visible(_ isVisible: Bool) -> some View {
         opacity(isVisible ? 1 : 0)
     }
 }
 
 // MARK: - First Appear Modifier
-
 private struct FirstAppearModifier: ViewModifier {
     let action: () -> Void
     @State private var hasAppeared = false
@@ -156,7 +144,6 @@ private struct FirstAppearModifier: ViewModifier {
 }
 
 // MARK: - Rounded Corner Shape
-
 struct RoundedCornerShape: Shape {
     var radius: CGFloat
     var corners: UIRectCorner
@@ -172,7 +159,6 @@ struct RoundedCornerShape: Shape {
 }
 
 // MARK: - Shimmer Modifier
-
 private struct ShimmerModifier: ViewModifier {
     let isActive: Bool
     @State private var phase: CGFloat = 0
@@ -211,7 +197,6 @@ private struct ShimmerModifier: ViewModifier {
 }
 
 // MARK: - Glow Animated Modifier
-
 private struct GlowAnimatedModifier: ViewModifier {
     let color: Color
     let radius: CGFloat
@@ -236,7 +221,6 @@ private struct GlowAnimatedModifier: ViewModifier {
 }
 
 // MARK: - Size Preference Key
-
 private struct SizePreferenceKey: PreferenceKey {
     static var defaultValue: CGSize = .zero
     static func reduce(value: inout CGSize, nextValue: () -> CGSize) {

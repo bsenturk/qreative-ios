@@ -1,18 +1,17 @@
 import SwiftUI
 
 // MARK: - Typography Style
-
 enum Typography {
-    case largeTitle   // 32pt, bold
-    case title1       // 28pt, bold
-    case title2       // 22pt, semibold
-    case title3       // 17pt, semibold
-    case headline     // 17pt, semibold
-    case body         // 15pt, regular
-    case callout      // 14pt, regular
-    case caption1     // 13pt, regular
-    case caption2     // 12pt, regular
-    case footnote     // 11pt, regular
+    case largeTitle
+    case title1
+    case title2
+    case title3
+    case headline
+    case body
+    case callout
+    case caption1
+    case caption2
+    case footnote
 
     var font: Font {
         switch self {
@@ -54,7 +53,6 @@ enum Typography {
 }
 
 // MARK: - Typography ViewModifier
-
 struct TypographyModifier: ViewModifier {
     let style: Typography
     var color: Color = .textPrimary
@@ -68,7 +66,6 @@ struct TypographyModifier: ViewModifier {
 }
 
 // MARK: - View Extension
-
 extension View {
     func typography(_ style: Typography, color: Color = .textPrimary) -> some View {
         modifier(TypographyModifier(style: style, color: color))

@@ -2,7 +2,6 @@ import SwiftUI
 import Combine
 
 // MARK: - QR Color
-
 enum QRColor: String, CaseIterable, Identifiable {
     case black
     case purple
@@ -44,12 +43,10 @@ enum QRColor: String, CaseIterable, Identifiable {
 }
 
 // MARK: - QR Editor ViewModel
-
 @MainActor
 final class QREditorViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var content: String = ""
     @Published var wifiSSID: String = ""
     @Published var wifiPassword: String = ""
@@ -73,19 +70,16 @@ final class QREditorViewModel: ObservableObject {
     @Published var showError: Bool = false
 
     // MARK: - Properties
-
     let template: QRTypeTemplate
     private(set) var generatedImage: UIImage?
 
     // MARK: - Dependencies
-
     private let qrCodeService = QRCodeService.shared
     private let storageService = StorageService()
     private weak var coordinator: AppCoordinator?
     private weak var tabCoordinator: MainTabCoordinator?
 
     // MARK: - Computed Properties
-
     var qrContent: String {
         buildQRType().generateQRContent()
     }
@@ -111,7 +105,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Init
-
     init(template: QRTypeTemplate) {
         self.template = template
         setupInitialContent()
@@ -124,9 +117,7 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Setup
-
     private func setupInitialContent() {
-        // Set default content based on type
         switch template.type {
         case .website:
             content = ""
@@ -150,14 +141,12 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Coordinator Binding
-
     func bind(appCoordinator: AppCoordinator?, tabCoordinator: MainTabCoordinator?) {
         self.coordinator = appCoordinator
         self.tabCoordinator = tabCoordinator
     }
 
     // MARK: - Build QR Type
-
     private func buildQRType() -> QRType {
         switch template.id {
         case "website":
@@ -194,7 +183,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Color Selection
-
     func selectColor(_ color: QRColor) {
         guard selectedColor != color else { return }
 
@@ -207,7 +195,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Shape Selection
-
     func selectShape(_ shape: QRShape) {
         guard selectedShape != shape else { return }
 
@@ -220,7 +207,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Logo
-
     func addLogo(_ image: UIImage) {
         guard canAddLogo else {
             showPaywall = true
@@ -250,7 +236,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Generate QR Image
-
     func generateQRImage() -> UIImage? {
         let content = qrContent
         guard !content.isEmpty else { return nil }
@@ -281,24 +266,20 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Save
-
     func save() async {
         guard isValid else { return }
 
         isSaving = true
 
         do {
-            // Generate QR code image
             guard let qrImage = generateQRImage() else {
                 throw NSError(domain: "QREditor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate QR code"])
             }
 
             generatedImage = qrImage
 
-            // Save to photos
             try await qrCodeService.saveToPhotos(qrImage)
 
-            // Save to history
             let historyType = HistoryItemType(rawValue: template.id) ?? .unknown
             let historyItem = HistoryItem(
                 content: qrContent,
@@ -314,7 +295,6 @@ final class QREditorViewModel: ObservableObject {
 
             showSaveSuccess = true
 
-            // Navigate back after delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.tabCoordinator?.pop()
             }
@@ -328,7 +308,6 @@ final class QREditorViewModel: ObservableObject {
     }
 
     // MARK: - Cancel
-
     func cancel() {
         tabCoordinator?.pop()
     }

@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Custom Tab Bar
-
 struct CustomTabBar: View {
     @Binding var selectedTab: Tab
     let onTabChange: ((Tab) -> Void)?
@@ -13,12 +12,10 @@ struct CustomTabBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top border
             Rectangle()
                 .fill(Color.white.opacity(0.06))
                 .frame(height: 1)
 
-            // Tab items
             HStack(spacing: 0) {
                 ForEach(Tab.allCases, id: \.self) { tab in
                     TabItemView(
@@ -42,25 +39,20 @@ struct CustomTabBar: View {
     }
 
     // MARK: - Tab Selection
-
     private func selectTab(_ tab: Tab) {
         guard selectedTab != tab else { return }
 
-        // Haptic feedback
         HapticManager.shared.lightTap()
 
-        // Animate selection with spring
         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
             selectedTab = tab
         }
 
-        // Callback
         onTabChange?(tab)
     }
 }
 
 // MARK: - Tab Item View
-
 private struct TabItemView: View {
     let tab: Tab
     let isSelected: Bool
@@ -70,7 +62,6 @@ private struct TabItemView: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 ZStack {
-                    // Glow background for selected state
                     if isSelected {
                         Circle()
                             .fill(Color.accentPrimary.opacity(0.15))
@@ -97,7 +88,6 @@ private struct TabItemView: View {
 }
 
 // MARK: - Tab Bar Container
-
 struct TabBarContainer<Content: View>: View {
     @Binding var selectedTab: Tab
     let content: (Tab) -> Content
@@ -112,12 +102,10 @@ struct TabBarContainer<Content: View>: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Content
             content(selectedTab)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.bottom, 84)
 
-            // Tab bar
             CustomTabBar(selectedTab: $selectedTab)
         }
         .ignoresSafeArea(edges: .bottom)
@@ -125,7 +113,6 @@ struct TabBarContainer<Content: View>: View {
 }
 
 // MARK: - View Extension
-
 extension View {
     func withCustomTabBar(selectedTab: Binding<Tab>) -> some View {
         ZStack(alignment: .bottom) {
@@ -140,7 +127,6 @@ extension View {
 }
 
 // MARK: - Preview
-
 #Preview {
     struct PreviewWrapper: View {
         @State private var selectedTab: Tab = .scan

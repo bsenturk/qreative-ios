@@ -3,7 +3,6 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 
 // MARK: - QR Shape
-
 enum QRShape: String, CaseIterable {
     case squares
     case dots
@@ -27,7 +26,6 @@ enum QRShape: String, CaseIterable {
 }
 
 // MARK: - QR Code Preview
-
 struct QRCodePreview: View {
     let content: String
     let size: CGFloat
@@ -59,11 +57,9 @@ struct QRCodePreview: View {
 
     var body: some View {
         ZStack {
-            // Background
             RoundedRectangle(cornerRadius: 16)
                 .fill(backgroundColor)
 
-            // QR Code
             if !qrMatrix.isEmpty {
                 qrCodeView
                     .padding(size * 0.1)
@@ -72,7 +68,6 @@ struct QRCodePreview: View {
                     .tint(foregroundColor)
             }
 
-            // Logo overlay
             if let logo = logoImage {
                 logoView(logo)
             }
@@ -93,7 +88,6 @@ struct QRCodePreview: View {
     }
 
     // MARK: - QR Code View
-
     @ViewBuilder
     private var qrCodeView: some View {
         let moduleCount = qrMatrix.count
@@ -108,7 +102,6 @@ struct QRCodePreview: View {
                 for col in 0..<moduleCount {
                     guard qrMatrix[row][col] else { continue }
 
-                    // Skip center area for logo
                     if logoImage != nil {
                         let distanceFromCenter = max(abs(row - center), abs(col - center))
                         if distanceFromCenter < logoRadius {
@@ -128,7 +121,6 @@ struct QRCodePreview: View {
     }
 
     // MARK: - Module Path
-
     private func modulePath(for rect: CGRect) -> Path {
         let inset: CGFloat = rect.width * 0.05
 
@@ -156,18 +148,15 @@ struct QRCodePreview: View {
     }
 
     // MARK: - Logo View
-
     @ViewBuilder
     private func logoView(_ logo: UIImage) -> some View {
         let logoSize = size * 0.22
 
         ZStack {
-            // White background circle
             Circle()
                 .fill(.white)
                 .frame(width: logoSize + 8, height: logoSize + 8)
 
-            // Logo image
             Image(uiImage: logo)
                 .resizable()
                 .scaledToFit()
@@ -177,7 +166,6 @@ struct QRCodePreview: View {
     }
 
     // MARK: - QR Generation
-
     private func generateQRMatrix() {
         guard !content.isEmpty else {
             qrMatrix = []
@@ -195,14 +183,12 @@ struct QRCodePreview: View {
             return
         }
 
-        // Get pixel data
         let size = Int(outputImage.extent.width)
         guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
             qrMatrix = []
             return
         }
 
-        // Create bitmap context to read pixels
         guard let dataProvider = cgImage.dataProvider,
               let data = dataProvider.data,
               let bytes = CFDataGetBytePtr(data) else {
@@ -221,7 +207,6 @@ struct QRCodePreview: View {
         for row in 0..<size {
             for col in 0..<size {
                 let offset = row * bytesPerRow + col * bytesPerPixel
-                // QR code: black = 0, white = 255
                 matrix[row][col] = bytes[offset] == 0
             }
         }
@@ -231,9 +216,7 @@ struct QRCodePreview: View {
 }
 
 // MARK: - Static Generator
-
 extension QRCodePreview {
-    /// Generate QR code as UIImage
     static func generateImage(
         content: String,
         size: CGFloat = 512,
@@ -248,11 +231,9 @@ extension QRCodePreview {
 
         guard let outputImage = filter.outputImage else { return nil }
 
-        // Scale up
         let scale = size / outputImage.extent.width
         let scaledImage = outputImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
 
-        // Apply colors
         let colorFilter = CIFilter.falseColor()
         colorFilter.inputImage = scaledImage
         colorFilter.color0 = CIColor(color: foregroundColor)
@@ -268,7 +249,6 @@ extension QRCodePreview {
 }
 
 // MARK: - Preview
-
 #Preview {
     ZStack {
         Color.backgroundPrimary
@@ -276,17 +256,14 @@ extension QRCodePreview {
 
         ScrollView {
             VStack(spacing: 24) {
-                // Default
                 QRCodePreview(content: "https://qreative.app")
 
-                // With glow
                 QRCodePreview(
                     content: "https://qreative.app",
                     foregroundColor: .accentPrimary,
                     isGlowing: true
                 )
 
-                // Dots shape
                 QRCodePreview(
                     content: "Hello World",
                     size: 180,
@@ -294,7 +271,6 @@ extension QRCodePreview {
                     shape: .dots
                 )
 
-                // Rounded shape
                 QRCodePreview(
                     content: "QReative",
                     size: 180,
@@ -302,7 +278,6 @@ extension QRCodePreview {
                     shape: .rounded
                 )
 
-                // All shapes
                 HStack(spacing: 16) {
                     ForEach(QRShape.allCases, id: \.self) { shape in
                         VStack(spacing: 8) {

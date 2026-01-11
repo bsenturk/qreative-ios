@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Tab
-
 enum Tab: Int, Hashable, CaseIterable, Codable {
     case scan
     case create
@@ -37,7 +36,6 @@ enum Tab: Int, Hashable, CaseIterable, Codable {
 }
 
 // MARK: - Settings Route
-
 enum SettingsRoute: Hashable, Codable {
     case general
     case appIcon
@@ -70,7 +68,6 @@ enum SettingsRoute: Hashable, Codable {
 }
 
 // MARK: - Route
-
 enum Route: Hashable {
     case onboarding
     case paywall
@@ -81,7 +78,6 @@ enum Route: Hashable {
     case scanResult(content: String)
 
     // MARK: - Hashable
-
     func hash(into hasher: inout Hasher) {
         switch self {
         case .onboarding:
@@ -129,7 +125,6 @@ enum Route: Hashable {
 }
 
 // MARK: - Router
-
 @Observable
 final class Router {
     var path = NavigationPath()
@@ -138,7 +133,6 @@ final class Router {
     var presentedFullScreenCover: Route?
 
     // MARK: - Navigation
-
     func navigate(to route: Route) {
         path.append(route)
     }
@@ -158,13 +152,11 @@ final class Router {
     }
 
     // MARK: - Tab
-
     func switchTab(to tab: Tab) {
         selectedTab = tab
     }
 
     // MARK: - Sheet
-
     func presentSheet(_ route: Route) {
         presentedSheet = route
     }
@@ -174,7 +166,6 @@ final class Router {
     }
 
     // MARK: - Full Screen Cover
-
     func presentFullScreen(_ route: Route) {
         presentedFullScreenCover = route
     }
@@ -184,7 +175,6 @@ final class Router {
     }
 
     // MARK: - Reset
-
     func reset() {
         path = NavigationPath()
         selectedTab = .scan
@@ -194,7 +184,6 @@ final class Router {
 }
 
 // MARK: - Environment Key
-
 private struct RouterKey: EnvironmentKey {
     static let defaultValue = Router()
 }
@@ -207,7 +196,6 @@ extension EnvironmentValues {
 }
 
 // MARK: - View Extension
-
 extension View {
     func withRouter(_ router: Router) -> some View {
         environment(\.router, router)

@@ -2,7 +2,6 @@ import SwiftUI
 import PhotosUI
 
 // MARK: - Scan View
-
 struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
@@ -11,10 +10,8 @@ struct ScanView: View {
     var body: some View {
         ZStack {
             if viewModel.cameraService.isAuthorized {
-                // Camera content
                 cameraContent
             } else {
-                // Permission denied state
                 permissionDeniedView
             }
         }
@@ -57,19 +54,14 @@ struct ScanView: View {
     }
 
     // MARK: - Camera Content
-
     private var cameraContent: some View {
         ZStack {
-            // Camera Preview
             CameraPreview(cameraService: viewModel.cameraService)
                 .ignoresSafeArea()
 
-            // Viewfinder Overlay
             ViewfinderOverlay()
 
-            // UI Overlays
             VStack(spacing: 0) {
-                // Top Bar
                 topBar
                     .padding(.top, 60)
                     .padding(.horizontal, Theme.spacing.screen)
@@ -78,15 +70,13 @@ struct ScanView: View {
 
                 Spacer()
 
-                // Instruction Text
                 instructionText
                     .padding(.bottom, 40)
                     .opacity(showUI ? 1 : 0)
 
-                // Bottom Area
                 bottomArea
                     .padding(.horizontal, Theme.spacing.screen)
-                    .padding(.bottom, 120) // Tab bar + padding
+                    .padding(.bottom, 120)
                     .opacity(showUI ? 1 : 0)
                     .offset(y: showUI ? 0 : 20)
             }
@@ -94,20 +84,16 @@ struct ScanView: View {
     }
 
     // MARK: - Top Bar
-
     private var topBar: some View {
         HStack(spacing: 16) {
-            // Flash Button
             flashButton
 
             Spacer()
 
-            // Zoom Slider
             zoomControl
 
             Spacer()
 
-            // Placeholder for symmetry
             Color.clear
                 .frame(width: 44, height: 44)
         }
@@ -157,7 +143,6 @@ struct ScanView: View {
     }
 
     // MARK: - Instruction Text
-
     private var instructionText: some View {
         Text("Position QR code within the frame")
             .font(.system(size: 15))
@@ -165,7 +150,6 @@ struct ScanView: View {
     }
 
     // MARK: - Bottom Area
-
     private var bottomArea: some View {
         PhotosPicker(
             selection: $selectedPhoto,
@@ -193,7 +177,6 @@ struct ScanView: View {
     }
 
     // MARK: - Permission Denied View
-
     private var permissionDeniedView: some View {
         VStack(spacing: 24) {
             Spacer()
@@ -224,7 +207,6 @@ struct ScanView: View {
     }
 
     // MARK: - Photo Selection
-
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
         guard let item else { return }
 
@@ -239,7 +221,6 @@ struct ScanView: View {
 }
 
 // MARK: - Scan Result Sheet
-
 struct ScanResultSheet: View {
     let result: ScanResult
     let onCopy: () -> Void
@@ -251,13 +232,11 @@ struct ScanResultSheet: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            // Handle indicator area
             Capsule()
                 .fill(Color.white.opacity(0.3))
                 .frame(width: 36, height: 5)
                 .padding(.top, 8)
 
-            // Result Icon & Type
             VStack(spacing: 12) {
                 ZStack {
                     Circle()
@@ -277,7 +256,6 @@ struct ScanResultSheet: View {
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showContent)
 
-            // Content
             VStack(spacing: 8) {
                 Text("Scanned Content")
                     .typography(.caption1, color: .textTertiary)
@@ -293,18 +271,14 @@ struct ScanResultSheet: View {
             .glassCard(cornerRadius: 12, opacity: 0.05)
             .padding(.horizontal, Theme.spacing.screen)
 
-            // Action Buttons
             VStack(spacing: 12) {
-                // Primary action based on type
                 if result.type == .url || result.type == .email || result.type == .phone {
                     PrimaryButton(result.type.actionTitle, icon: actionIcon) {
                         onOpen()
                     }
                 }
 
-                // Copy & Share row
                 HStack(spacing: 12) {
-                    // Copy Button
                     Button {
                         onCopy()
                         withAnimation {
@@ -327,7 +301,6 @@ struct ScanResultSheet: View {
                         .glassCard(cornerRadius: 12, opacity: 0.08)
                     }
 
-                    // Share Button
                     ShareLink(item: result.content) {
                         HStack(spacing: 8) {
                             Image(systemName: "square.and.arrow.up")
@@ -343,7 +316,6 @@ struct ScanResultSheet: View {
             }
             .padding(.horizontal, Theme.spacing.screen)
 
-            // Scan Again Button
             Button {
                 onDismiss()
             } label: {
@@ -372,7 +344,6 @@ struct ScanResultSheet: View {
 }
 
 // MARK: - Preview
-
 #Preview("Scan View") {
     ScanView()
 }

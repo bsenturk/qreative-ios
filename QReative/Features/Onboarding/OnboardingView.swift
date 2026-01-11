@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Onboarding View
-
 struct OnboardingView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @State private var currentPage: Int = 0
@@ -14,20 +13,16 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Background
             backgroundLayer
 
-            // Content
             VStack(spacing: 0) {
                 Spacer()
 
-                // 3D QR Code
                 qrCodeSection
                     .padding(.bottom, 48)
                     .scaleEffect(isAppeared ? 1 : 0.5)
                     .opacity(isAppeared ? 1 : 0)
 
-                // Text Content
                 textSection
                     .padding(.horizontal, Theme.spacing.screen)
                     .opacity(showContent ? 1 : 0)
@@ -35,12 +30,10 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                // Page Indicators
                 pageIndicators
                     .padding(.bottom, 32)
                     .opacity(showContent ? 1 : 0)
 
-                // Get Started Button
                 PrimaryButton("Get Started", icon: "arrow.right") {
                     HapticManager.shared.mediumTap()
                     appCoordinator.completeOnboarding()
@@ -59,13 +52,10 @@ struct OnboardingView: View {
     }
 
     // MARK: - Background Layer
-
     private var backgroundLayer: some View {
         ZStack {
-            // Base background
             Color.backgroundPrimary
 
-            // Purple orb - top left
             Circle()
                 .fill(
                     RadialGradient(
@@ -83,7 +73,6 @@ struct OnboardingView: View {
                 .blur(radius: 60)
                 .offset(x: -150, y: -200)
 
-            // Cyan orb - bottom right
             Circle()
                 .fill(
                     RadialGradient(
@@ -104,7 +93,6 @@ struct OnboardingView: View {
     }
 
     // MARK: - QR Code Section
-
     private var qrCodeSection: some View {
         QRCodePreview(
             content: "https://qreative.app",
@@ -130,7 +118,6 @@ struct OnboardingView: View {
     }
 
     // MARK: - Text Section
-
     private var textSection: some View {
         VStack(spacing: 16) {
             Text(headlineText)
@@ -145,7 +132,6 @@ struct OnboardingView: View {
     }
 
     // MARK: - Page Content
-
     private var headlineText: String {
         switch currentPage {
         case 0:
@@ -173,7 +159,6 @@ struct OnboardingView: View {
     }
 
     // MARK: - Page Indicators
-
     private var pageIndicators: some View {
         HStack(spacing: 8) {
             ForEach(0..<totalPages, id: \.self) { index in
@@ -189,24 +174,19 @@ struct OnboardingView: View {
     }
 
     // MARK: - Animations
-
     private func startAnimations() {
-        // QR Code appear
         withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
             isAppeared = true
         }
 
-        // Text fade in
         withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
             showContent = true
         }
 
-        // Button appear
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.5)) {
             showButton = true
         }
 
-        // Start floating animation
         withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(0.6)) {
             floatOffset = -12
         }
@@ -214,7 +194,6 @@ struct OnboardingView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     OnboardingView()
         .environmentObject(AppCoordinator())

@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - QR Type Grid Item
-
 struct QRTypeGridItem: View {
     let template: QRTypeTemplate
     let onTap: () -> Void
@@ -15,10 +14,8 @@ struct QRTypeGridItem: View {
             onTap()
         } label: {
             VStack(spacing: 12) {
-                // Icon Container
                 iconContainer
 
-                // Label
                 VStack(spacing: 4) {
                     Text(template.title)
                         .font(.system(size: 14, weight: .medium))
@@ -58,10 +55,8 @@ struct QRTypeGridItem: View {
     }
 
     // MARK: - Icon Container
-
     private var iconContainer: some View {
         ZStack {
-            // Gradient background
             RoundedRectangle(cornerRadius: 16)
                 .fill(template.gradient)
                 .frame(width: 56, height: 56)
@@ -72,7 +67,6 @@ struct QRTypeGridItem: View {
                     y: 4
                 )
 
-            // Icon
             Image(systemName: template.icon)
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(.white)
@@ -80,7 +74,6 @@ struct QRTypeGridItem: View {
     }
 
     // MARK: - Premium Badge
-
     private var premiumBadge: some View {
         HStack(spacing: 4) {
             Image(systemName: "crown.fill")
@@ -99,7 +92,6 @@ struct QRTypeGridItem: View {
     }
 
     // MARK: - Haptic
-
     private func triggerHaptic() {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
@@ -107,7 +99,6 @@ struct QRTypeGridItem: View {
 }
 
 // MARK: - QR Type Grid
-
 struct QRTypeGrid: View {
     let templates: [QRTypeTemplate]
     let onSelect: (QRTypeTemplate) -> Void
@@ -129,7 +120,6 @@ struct QRTypeGrid: View {
 }
 
 // MARK: - Large QR Type Card (for featured items)
-
 struct QRTypeLargeCard: View {
     let template: QRTypeTemplate
     let onTap: () -> Void
@@ -143,7 +133,6 @@ struct QRTypeLargeCard: View {
             onTap()
         } label: {
             HStack(spacing: 16) {
-                // Icon
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(template.gradient)
@@ -160,7 +149,6 @@ struct QRTypeLargeCard: View {
                         .foregroundStyle(.white)
                 }
 
-                // Text
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Text(template.title)
@@ -191,7 +179,6 @@ struct QRTypeLargeCard: View {
 
                 Spacer()
 
-                // Arrow
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.3))
@@ -218,7 +205,6 @@ struct QRTypeLargeCard: View {
 }
 
 // MARK: - Preview
-
 #Preview("Grid Item") {
     ZStack {
         Color.backgroundPrimary

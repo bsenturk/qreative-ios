@@ -5,7 +5,6 @@ import CoreImage.CIFilterBuiltins
 import Photos
 
 // MARK: - QR Code Service Error
-
 enum QRCodeServiceError: LocalizedError {
     case generationFailed
     case invalidContent
@@ -30,24 +29,18 @@ enum QRCodeServiceError: LocalizedError {
 }
 
 // MARK: - QR Code Service
-
 final class QRCodeService {
 
     // MARK: - Singleton
-
     static let shared = QRCodeService()
 
     // MARK: - Private Properties
-
     private let context = CIContext()
 
     // MARK: - Init
-
     private init() {}
 
     // MARK: - Generate Basic QR Code
-
-    /// Generate a basic QR code image
     func generateQRCode(from string: String, size: CGSize = CGSize(width: 512, height: 512)) -> UIImage? {
         guard !string.isEmpty else { return nil }
 
@@ -57,7 +50,6 @@ final class QRCodeService {
 
         guard let outputImage = filter.outputImage else { return nil }
 
-        // Scale to desired size
         let scaleX = size.width / outputImage.extent.width
         let scaleY = size.height / outputImage.extent.height
         let scaledImage = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
@@ -70,8 +62,6 @@ final class QRCodeService {
     }
 
     // MARK: - Generate Styled QR Code
-
-    /// Generate a styled QR code with custom colors, shape, and optional logo
     func generateStyledQRCode(
         content: String,
         size: CGSize = CGSize(width: 512, height: 512),
@@ -82,41 +72,34 @@ final class QRCodeService {
     ) -> UIImage? {
         guard !content.isEmpty else { return nil }
 
-        // Generate base QR code
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(content.utf8)
-        filter.correctionLevel = logo != nil ? "H" : "M" // Higher correction for logo
+        filter.correctionLevel = logo != nil ? "H" : "M"
 
         guard let outputImage = filter.outputImage else { return nil }
 
-        // Get QR matrix
         let qrSize = Int(outputImage.extent.width)
         guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent),
               let matrix = extractMatrix(from: cgImage, size: qrSize) else {
             return nil
         }
 
-        // Render styled QR code
         let renderer = UIGraphicsImageRenderer(size: size)
         let styledImage = renderer.image { ctx in
             let context = ctx.cgContext
 
-            // Fill background
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: .zero, size: size))
 
-            // Calculate module size
             let moduleSize = size.width / CGFloat(qrSize)
             let inset = moduleSize * 0.1
 
-            // Draw modules with selected shape
             context.setFillColor(foregroundColor.cgColor)
 
             for row in 0..<qrSize {
                 for col in 0..<qrSize {
                     guard matrix[row][col] else { continue }
 
-                    // Skip center area for logo
                     if logo != nil {
                         let logoRadius = Int(Double(qrSize) * 0.2)
                         let center = qrSize / 2
@@ -134,7 +117,6 @@ final class QRCodeService {
                 }
             }
 
-            // Draw logo if provided
             if let logo = logo {
                 drawLogo(logo, in: context, canvasSize: size)
             }
@@ -144,8 +126,6 @@ final class QRCodeService {
     }
 
     // MARK: - Generate with Gradient
-
-    /// Generate QR code with gradient foreground
     func generateGradientQRCode(
         content: String,
         size: CGSize = CGSize(width: 512, height: 512),
@@ -156,7 +136,6 @@ final class QRCodeService {
     ) -> UIImage? {
         guard !content.isEmpty, gradientColors.count >= 2 else { return nil }
 
-        // First generate black QR
         guard let blackQR = generateStyledQRCode(
             content: content,
             size: size,
@@ -166,34 +145,28 @@ final class QRCodeService {
             logo: nil
         ) else { return nil }
 
-        // Create gradient
         let renderer = UIGraphicsImageRenderer(size: size)
         let gradientImage = renderer.image { ctx in
             let context = ctx.cgContext
 
-            // Draw background
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: .zero, size: size))
 
-            // Create gradient
             let colorSpace = CGColorSpaceCreateDeviceRGB()
             let colors = gradientColors.map { $0.cgColor } as CFArray
             let locations: [CGFloat] = gradientColors.enumerated().map { CGFloat($0.offset) / CGFloat(gradientColors.count - 1) }
 
             guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: locations) else { return }
 
-            // Draw gradient
             let startPoint = CGPoint.zero
             let endPoint = CGPoint(x: size.width, y: size.height)
             context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
 
-            // Mask with QR code
             guard let qrCGImage = blackQR.cgImage else { return }
             context.clip(to: CGRect(origin: .zero, size: size), mask: qrCGImage)
             context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
         }
 
-        // Add logo if provided
         if let logo = logo {
             return addLogo(logo, to: gradientImage, size: size)
         }
@@ -202,8 +175,6 @@ final class QRCodeService {
     }
 
     // MARK: - Read QR Code
-
-    /// Read QR code content from an image
     func readQRCode(from image: UIImage) -> String? {
         guard let ciImage = CIImage(image: image) else { return nil }
 
@@ -221,7 +192,6 @@ final class QRCodeService {
         return qrFeature.messageString
     }
 
-    /// Read multiple QR codes from an image
     func readAllQRCodes(from image: UIImage) -> [String] {
         guard let ciImage = CIImage(image: image) else { return [] }
 
@@ -239,10 +209,7 @@ final class QRCodeService {
     }
 
     // MARK: - Save to Photos
-
-    /// Save QR code image to photo library
     func saveToPhotos(_ image: UIImage) async throws {
-        // Check authorization
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
 
         guard status == .authorized || status == .limited else {
@@ -265,7 +232,6 @@ final class QRCodeService {
     }
 
     // MARK: - Private Helpers
-
     private func extractMatrix(from cgImage: CGImage, size: Int) -> [[Bool]]? {
         guard let dataProvider = cgImage.dataProvider,
               let data = dataProvider.data,
@@ -284,7 +250,6 @@ final class QRCodeService {
         for row in 0..<size {
             for col in 0..<size {
                 let offset = row * bytesPerRow + col * bytesPerPixel
-                // QR code: black = 0 (module), white = 255 (background)
                 matrix[row][col] = bytes[offset] == 0
             }
         }
@@ -324,7 +289,6 @@ final class QRCodeService {
             height: logoSize
         )
 
-        // Draw white circle background
         let backgroundSize = logoSize + 8
         let backgroundRect = CGRect(
             x: (canvasSize.width - backgroundSize) / 2,
@@ -335,9 +299,7 @@ final class QRCodeService {
         context.setFillColor(UIColor.white.cgColor)
         context.fillEllipse(in: backgroundRect)
 
-        // Draw logo
         if let cgImage = logo.cgImage {
-            // Clip to circle
             context.saveGState()
             context.addEllipse(in: logoRect)
             context.clip()
@@ -355,23 +317,18 @@ final class QRCodeService {
     }
 
     // MARK: - Get PNG Data
-
-    /// Get PNG data for sharing/saving
     func getPNGData(from image: UIImage) -> Data? {
         image.pngData()
     }
 
-    /// Get JPEG data with quality
     func getJPEGData(from image: UIImage, quality: CGFloat = 0.9) -> Data? {
         image.jpegData(compressionQuality: quality)
     }
 }
 
 // MARK: - Convenience Extensions
-
 extension QRCodeService {
 
-    /// Quick generate for common use cases
     func quickGenerate(content: String, style: QuickStyle = .default) -> UIImage? {
         switch style {
         case .default:

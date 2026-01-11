@@ -3,7 +3,6 @@ import StoreKit
 import Combine
 
 // MARK: - Settings Item
-
 struct SettingsItem: Identifiable {
     let id = UUID()
     let icon: String
@@ -31,19 +30,16 @@ struct SettingsItem: Identifiable {
 }
 
 // MARK: - Settings Group
-
 struct SettingsGroup: Identifiable {
     let id = UUID()
     let items: [SettingsItem]
 }
 
 // MARK: - Settings ViewModel
-
 @MainActor
 final class SettingsViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var isPremium: Bool = false
     @Published var showPaywall: Bool = false
     @Published var showRestoreAlert: Bool = false
@@ -52,12 +48,10 @@ final class SettingsViewModel: ObservableObject {
     @Published var showShareSheet: Bool = false
 
     // MARK: - Dependencies
-
     private weak var coordinator: AppCoordinator?
     private weak var tabCoordinator: MainTabCoordinator?
 
     // MARK: - App Info
-
     var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -65,10 +59,8 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Settings Groups
-
     var settingsGroups: [SettingsGroup] {
         [
-            // General group
             SettingsGroup(items: [
                 SettingsItem(
                     icon: "gearshape.fill",
@@ -85,7 +77,6 @@ final class SettingsViewModel: ObservableObject {
                 ),
             ]),
 
-            // Support group
             SettingsGroup(items: [
                 SettingsItem(
                     icon: "questionmark.circle.fill",
@@ -104,7 +95,6 @@ final class SettingsViewModel: ObservableObject {
                 ),
             ]),
 
-            // Share group
             SettingsGroup(items: [
                 SettingsItem(
                     icon: "star.fill",
@@ -122,7 +112,6 @@ final class SettingsViewModel: ObservableObject {
                 ),
             ]),
 
-            // About group
             SettingsGroup(items: [
                 SettingsItem(
                     icon: "doc.text.fill",
@@ -141,11 +130,9 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Init
-
     init() {}
 
     // MARK: - Coordinator Binding
-
     func bind(appCoordinator: AppCoordinator?, tabCoordinator: MainTabCoordinator?) {
         self.coordinator = appCoordinator
         self.tabCoordinator = tabCoordinator
@@ -153,7 +140,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Actions
-
     func showUpgrade() {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
@@ -162,7 +148,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Navigation
-
     func openGeneral() {
         tabCoordinator?.pushToSettings(.settings(.general))
     }
@@ -192,20 +177,15 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Restore Purchases
-
     func restorePurchases() async {
         guard !isRestoring else { return }
 
         isRestoring = true
 
         do {
-            // Simulate restore or use real StoreKit
             try await Task.sleep(nanoseconds: 1_500_000_000)
 
-            // TODO: Implement with actual StoreKit
-            // let restored = try await purchaseService.restorePurchases()
-
-            let restored = false // Simulated
+            let restored = false
 
             if restored {
                 isPremium = true
@@ -224,7 +204,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Rate App
-
     func rateApp() {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
@@ -235,7 +214,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     // MARK: - Share App
-
     func shareApp() {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()

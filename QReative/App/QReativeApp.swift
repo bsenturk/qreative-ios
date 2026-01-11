@@ -1,9 +1,3 @@
-//
-//  QReativeApp.swift
-//  QReative
-//
-//  Created by Burak Ahmet Şentürk on 10.01.2026.
-//
 
 import SwiftUI
 
@@ -25,7 +19,6 @@ struct QReativeApp: App {
 }
 
 // MARK: - Root View
-
 struct RootView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
 
@@ -56,7 +49,6 @@ struct RootView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     RootView()
         .environmentObject(AppCoordinator())
