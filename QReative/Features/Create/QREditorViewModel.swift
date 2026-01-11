@@ -299,11 +299,13 @@ final class QREditorViewModel: ObservableObject {
             try await qrCodeService.saveToPhotos(qrImage)
 
             // Save to history
+            let historyType = HistoryItemType(rawValue: template.id) ?? .unknown
             let historyItem = HistoryItem(
-                type: .created,
-                qrType: template.id,
                 content: qrContent,
-                title: template.title
+                type: historyType,
+                customColor: selectedColor.rawValue,
+                customShape: selectedShape.rawValue,
+                hasLogo: logoImage != nil
             )
             try await storageService.saveItem(historyItem)
 
