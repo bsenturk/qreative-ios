@@ -38,6 +38,24 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         }
     }
 
+    var period: String {
+        switch self {
+        case .weekly: return "week"
+        case .monthly: return "month"
+        case .yearly: return "year"
+        case .lifetime: return "lifetime"
+        }
+    }
+
+    var periodShort: String {
+        switch self {
+        case .weekly: return "/week"
+        case .monthly: return "/month"
+        case .yearly: return "/year"
+        case .lifetime: return ""
+        }
+    }
+
     var savings: String? {
         switch self {
         case .weekly: return nil
@@ -49,6 +67,19 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
 
     var isPopular: Bool {
         self == .yearly
+    }
+
+    var isBestValue: Bool {
+        self == .yearly
+    }
+
+    var trialDays: Int {
+        switch self {
+        case .weekly: return 3
+        case .monthly: return 7
+        case .yearly: return 7
+        case .lifetime: return 0
+        }
     }
 }
 

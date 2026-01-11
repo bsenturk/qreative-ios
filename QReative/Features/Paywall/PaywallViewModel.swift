@@ -1,54 +1,6 @@
 import SwiftUI
 import Combine
 
-// MARK: - Subscription Plan
-
-enum SubscriptionPlan: String, CaseIterable, Identifiable {
-    case weekly
-    case yearly
-
-    var id: String { rawValue }
-
-    var price: String {
-        switch self {
-        case .weekly: return "$2.99"
-        case .yearly: return "$29.99"
-        }
-    }
-
-    var period: String {
-        switch self {
-        case .weekly: return "week"
-        case .yearly: return "year"
-        }
-    }
-
-    var periodShort: String {
-        switch self {
-        case .weekly: return "/week"
-        case .yearly: return "/year"
-        }
-    }
-
-    var savings: String? {
-        switch self {
-        case .weekly: return nil
-        case .yearly: return "Save 80%"
-        }
-    }
-
-    var isBestValue: Bool {
-        self == .yearly
-    }
-
-    var trialDays: Int {
-        switch self {
-        case .weekly: return 3
-        case .yearly: return 7
-        }
-    }
-}
-
 // MARK: - Paywall Feature
 
 struct PaywallFeature: Identifiable {
@@ -56,13 +8,6 @@ struct PaywallFeature: Identifiable {
     let icon: String
     let title: String
     let description: String
-}
-
-// MARK: - Purchase Service Protocol
-
-protocol PurchaseServiceProtocol {
-    func purchase(plan: SubscriptionPlan) async throws -> Bool
-    func restorePurchases() async throws -> Bool
 }
 
 // MARK: - Paywall ViewModel
@@ -151,8 +96,8 @@ final class PaywallViewModel: ObservableObject {
         do {
             // Simulate purchase or use real service
             if let service = purchaseService {
-                let success = try await service.purchase(plan: selectedPlan)
-                handlePurchaseResult(success)
+                try await service.purchase(selectedPlan)
+                handlePurchaseResult(true)
             } else {
                 // Simulate delay for demo
                 try await Task.sleep(nanoseconds: 1_500_000_000)
@@ -173,8 +118,10 @@ final class PaywallViewModel: ObservableObject {
 
         do {
             if let service = purchaseService {
-                let success = try await service.restorePurchases()
-                if success {
+                try await service.restorePurchases()
+                // Check if premium status was restored
+                let isPremium = await service.checkSubscriptionStatus()
+                if isPremium {
                     handlePurchaseResult(true)
                 } else {
                     showError = true
