@@ -5,6 +5,8 @@ import SwiftUI
 struct ViewfinderOverlay: View {
     @State private var scanLineOffset: CGFloat = 0
     @State private var isAnimating: Bool = false
+    @State private var bracketScale: CGFloat = 1.0
+    @State private var bracketOpacity: Double = 1.0
 
     let frameSize: CGFloat
     let bracketLength: CGFloat
@@ -29,6 +31,8 @@ struct ViewfinderOverlay: View {
             ZStack {
                 // Corner brackets
                 cornerBrackets
+                    .scaleEffect(bracketScale)
+                    .opacity(bracketOpacity)
 
                 // Scanning line
                 scanningLine
@@ -40,6 +44,7 @@ struct ViewfinderOverlay: View {
         }
         .onAppear {
             startScanAnimation()
+            startBracketPulse()
         }
     }
 
@@ -109,6 +114,16 @@ struct ViewfinderOverlay: View {
             .repeatForever(autoreverses: true)
         ) {
             scanLineOffset = frameSize / 2 - 20
+        }
+    }
+
+    private func startBracketPulse() {
+        withAnimation(
+            .easeInOut(duration: 1.5)
+            .repeatForever(autoreverses: true)
+        ) {
+            bracketScale = 1.02
+            bracketOpacity = 0.85
         }
     }
 }

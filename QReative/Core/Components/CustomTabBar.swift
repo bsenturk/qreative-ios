@@ -47,11 +47,10 @@ struct CustomTabBar: View {
         guard selectedTab != tab else { return }
 
         // Haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.lightTap()
 
-        // Animate selection
-        withAnimation(Theme.animation.spring) {
+        // Animate selection with spring
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
             selectedTab = tab
         }
 
@@ -70,15 +69,28 @@ private struct TabItemView: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
-                    .font(.system(size: 22, weight: .medium))
-                    .scaleEffect(isSelected ? 1.1 : 1.0)
+                ZStack {
+                    // Glow background for selected state
+                    if isSelected {
+                        Circle()
+                            .fill(Color.accentPrimary.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                            .blur(radius: 8)
+                    }
+
+                    Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
+                        .font(.system(size: 22, weight: .medium))
+                        .scaleEffect(isSelected ? 1.15 : 1.0)
+                        .symbolEffect(.bounce, value: isSelected)
+                }
+                .frame(height: 28)
 
                 Text(tab.title)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
             }
             .foregroundStyle(isSelected ? Color.accentPrimary : Color.white.opacity(0.4))
             .frame(maxWidth: .infinity)
+            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isSelected)
         }
         .buttonStyle(.plain)
     }

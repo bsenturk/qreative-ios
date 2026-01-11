@@ -5,6 +5,7 @@ import SwiftUI
 struct HistoryView: View {
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = HistoryViewModel()
+    @State private var showContent = false
 
     var body: some View {
         ZStack {
@@ -21,6 +22,9 @@ struct HistoryView: View {
             viewModel.bind(tabCoordinator: tabCoordinator)
             Task {
                 await viewModel.loadHistory()
+            }
+            withAnimation(.easeOut(duration: 0.4)) {
+                showContent = true
             }
         }
         .refreshable {
@@ -65,11 +69,14 @@ struct HistoryView: View {
                 Circle()
                     .fill(Color.accentPrimary.opacity(0.1))
                     .frame(width: 120, height: 120)
+                    .scaleEffect(showContent ? 1 : 0.5)
 
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.system(size: 48))
                     .foregroundStyle(Color.accentPrimary.opacity(0.5))
+                    .scaleEffect(showContent ? 1 : 0)
             }
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showContent)
 
             VStack(spacing: 8) {
                 Text("No QR codes yet")
@@ -80,6 +87,9 @@ struct HistoryView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 20)
+            .animation(.easeOut(duration: 0.4).delay(0.2), value: showContent)
 
             Spacer()
         }
@@ -96,16 +106,24 @@ struct HistoryView: View {
                     .padding(.top, 60)
                     .padding(.bottom, 24)
                     .padding(.horizontal, Theme.spacing.screen)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
 
                 // Items
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.items) { item in
+                    ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
                         HistoryRowView(
                             item: item,
                             onTap: { viewModel.selectItem(item) },
-                            onDelete: { viewModel.confirmDelete(item) },
+                            onDelete: {
+                                HapticManager.shared.warning()
+                                viewModel.confirmDelete(item)
+                            },
                             onShare: { viewModel.shareItem(item) }
                         )
+                        .opacity(showContent ? 1 : 0)
+                        .offset(x: showContent ? 0 : 50)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(min(index, 10)) * 0.05 + 0.15), value: showContent)
                     }
                 }
                 .padding(.horizontal, Theme.spacing.screen)

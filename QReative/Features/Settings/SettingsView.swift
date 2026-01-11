@@ -6,6 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = SettingsViewModel()
+    @State private var showContent = false
+    @State private var bannerGlow = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -14,22 +16,31 @@ struct SettingsView: View {
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 24)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
 
                 // PRO Banner (if not premium)
                 if !viewModel.isPremium {
                     proBanner
                         .padding(.bottom, 24)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: showContent)
                 }
 
                 // Settings Groups
-                ForEach(viewModel.settingsGroups) { group in
+                ForEach(Array(viewModel.settingsGroups.enumerated()), id: \.element.id) { index, group in
                     settingsGroup(group)
                         .padding(.bottom, 20)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.08 + 0.15), value: showContent)
                 }
 
                 // Footer
                 footerSection
                     .padding(.top, 20)
+                    .opacity(showContent ? 1 : 0)
 
                 Spacer(minLength: 100)
             }
@@ -39,6 +50,10 @@ struct SettingsView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
+            withAnimation(.easeOut(duration: 0.4)) {
+                showContent = true
+            }
+            startBannerPulse()
         }
         .alert("Restore Purchases", isPresented: $viewModel.showRestoreAlert) {
             Button("OK", role: .cancel) {}
@@ -47,6 +62,12 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $viewModel.showShareSheet) {
             ShareSheet(items: viewModel.shareItems)
+        }
+    }
+
+    private func startBannerPulse() {
+        withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(1)) {
+            bannerGlow = true
         }
     }
 
@@ -61,6 +82,7 @@ struct SettingsView: View {
 
     private var proBanner: some View {
         Button {
+            HapticManager.shared.mediumTap()
             viewModel.showUpgrade()
         } label: {
             HStack(spacing: 16) {
@@ -69,7 +91,7 @@ struct SettingsView: View {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(LinearGradient.goldGradient)
                         .frame(width: 48, height: 48)
-                        .shadow(color: Color.warning.opacity(0.5), radius: 12, x: 0, y: 4)
+                        .shadow(color: Color.warning.opacity(bannerGlow ? 0.7 : 0.4), radius: bannerGlow ? 16 : 10, x: 0, y: 4)
 
                     Image(systemName: "crown.fill")
                         .font(.system(size: 22))
@@ -110,10 +132,10 @@ struct SettingsView: View {
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.accentPrimary.opacity(0.5), lineWidth: 1)
+                    .stroke(Color.accentPrimary.opacity(bannerGlow ? 0.7 : 0.4), lineWidth: bannerGlow ? 1.5 : 1)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle(scale: 0.98))
     }
 
     // MARK: - Settings Group
@@ -144,6 +166,7 @@ struct SettingsView: View {
 
     private func settingsRow(_ item: SettingsItem) -> some View {
         Button {
+            HapticManager.shared.lightTap()
             item.action()
         } label: {
             HStack(spacing: 12) {
@@ -199,8 +222,9 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .contentShape(Rectangle())
+            .background(Color.white.opacity(0.001)) // For tap area
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SettingsRowButtonStyle())
     }
 
     // MARK: - Footer Section
@@ -284,6 +308,19 @@ struct HelpSupportView: View {
         }
         .navigationTitle("Help & Support")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Settings Row Button Style
+
+private struct SettingsRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(configuration.isPressed ? Color.white.opacity(0.05) : Color.clear)
+            )
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 

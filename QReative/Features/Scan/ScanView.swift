@@ -6,6 +6,7 @@ import PhotosUI
 struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showUI = false
 
     var body: some View {
         ZStack {
@@ -21,6 +22,9 @@ struct ScanView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.onAppear()
+            withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
+                showUI = true
+            }
         }
         .onDisappear {
             viewModel.onDisappear()
@@ -39,6 +43,11 @@ struct ScanView: View {
         }
         .onChange(of: selectedPhoto) { _, newValue in
             handleSelectedPhoto(newValue)
+        }
+        .onChange(of: viewModel.showResult) { _, isShowing in
+            if isShowing {
+                HapticManager.shared.success()
+            }
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
@@ -64,17 +73,22 @@ struct ScanView: View {
                 topBar
                     .padding(.top, 60)
                     .padding(.horizontal, Theme.spacing.screen)
+                    .opacity(showUI ? 1 : 0)
+                    .offset(y: showUI ? 0 : -20)
 
                 Spacer()
 
                 // Instruction Text
                 instructionText
                     .padding(.bottom, 40)
+                    .opacity(showUI ? 1 : 0)
 
                 // Bottom Area
                 bottomArea
                     .padding(.horizontal, Theme.spacing.screen)
                     .padding(.bottom, 120) // Tab bar + padding
+                    .opacity(showUI ? 1 : 0)
+                    .offset(y: showUI ? 0 : 20)
             }
         }
     }
@@ -101,6 +115,7 @@ struct ScanView: View {
 
     private var flashButton: some View {
         Button {
+            HapticManager.shared.lightTap()
             viewModel.toggleFlash()
         } label: {
             Image(systemName: viewModel.isFlashOn ? "bolt.fill" : "bolt.slash.fill")
@@ -108,7 +123,10 @@ struct ScanView: View {
                 .foregroundStyle(viewModel.isFlashOn ? Color.warning : Color.white)
                 .frame(width: 44, height: 44)
                 .glassCardSubtle(cornerRadius: 12)
+                .scaleEffect(viewModel.isFlashOn ? 1.05 : 1)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.isFlashOn)
         }
+        .buttonStyle(PressableStyle())
     }
 
     private var zoomControl: some View {
@@ -229,6 +247,7 @@ struct ScanResultSheet: View {
     let onDismiss: () -> Void
 
     @State private var isCopied: Bool = false
+    @State private var showContent = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -244,15 +263,19 @@ struct ScanResultSheet: View {
                     Circle()
                         .fill(Color.accentPrimary.opacity(0.15))
                         .frame(width: 64, height: 64)
+                        .scaleEffect(showContent ? 1 : 0.5)
 
                     Image(systemName: result.type.icon)
                         .font(.system(size: 28))
                         .foregroundStyle(Color.accentPrimary)
+                        .scaleEffect(showContent ? 1 : 0)
                 }
 
                 Text(result.type.title)
                     .typography(.headline, color: .textSecondary)
+                    .opacity(showContent ? 1 : 0)
             }
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showContent)
 
             // Content
             VStack(spacing: 8) {
@@ -331,6 +354,11 @@ struct ScanResultSheet: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color.backgroundPrimary)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1)) {
+                showContent = true
+            }
+        }
     }
 
     private var actionIcon: String {

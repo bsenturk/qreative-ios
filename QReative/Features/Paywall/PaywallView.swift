@@ -5,6 +5,10 @@ import SwiftUI
 struct PaywallView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @StateObject private var viewModel = PaywallViewModel()
+    @State private var showHeader = false
+    @State private var showFeatures = false
+    @State private var showPricing = false
+    @State private var showCTA = false
 
     var body: some View {
         ZStack {
@@ -17,22 +21,31 @@ struct PaywallView: View {
                     // Header
                     headerSection
                         .padding(.top, 20)
+                        .opacity(showHeader ? 1 : 0)
+                        .offset(y: showHeader ? 0 : 20)
 
                     // Features Card
                     featuresCard
                         .padding(.horizontal, Theme.spacing.screen)
+                        .opacity(showFeatures ? 1 : 0)
+                        .offset(y: showFeatures ? 0 : 30)
 
                     // Pricing Options
                     pricingSection
                         .padding(.horizontal, Theme.spacing.screen)
+                        .opacity(showPricing ? 1 : 0)
+                        .offset(y: showPricing ? 0 : 30)
 
                     // CTA Button
                     ctaSection
                         .padding(.horizontal, Theme.spacing.screen)
+                        .opacity(showCTA ? 1 : 0)
+                        .scaleEffect(showCTA ? 1 : 0.9)
 
                     // Footer
                     footerSection
                         .padding(.bottom, 40)
+                        .opacity(showCTA ? 1 : 0)
                 }
             }
 
@@ -42,11 +55,27 @@ struct PaywallView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.bind(to: appCoordinator)
+            startAnimations()
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage)
+        }
+    }
+
+    private func startAnimations() {
+        withAnimation(.easeOut(duration: 0.4)) {
+            showHeader = true
+        }
+        withAnimation(.easeOut(duration: 0.5).delay(0.15)) {
+            showFeatures = true
+        }
+        withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
+            showPricing = true
+        }
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.45)) {
+            showCTA = true
         }
     }
 
@@ -241,7 +270,10 @@ private struct PricingCard: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            HapticManager.shared.lightTap()
+            action()
+        } label: {
             VStack(spacing: 8) {
                 // Best Value Badge
                 if plan.isBestValue {
@@ -306,8 +338,10 @@ private struct PricingCard: View {
                         lineWidth: isSelected ? 2 : 1
                     )
             }
+            .scaleEffect(isSelected ? 1.02 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle(scale: 0.96))
     }
 }
 

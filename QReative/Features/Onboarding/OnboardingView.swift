@@ -6,6 +6,9 @@ struct OnboardingView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @State private var currentPage: Int = 0
     @State private var floatOffset: CGFloat = 0
+    @State private var isAppeared = false
+    @State private var showContent = false
+    @State private var showButton = false
 
     private let totalPages = 3
 
@@ -21,29 +24,37 @@ struct OnboardingView: View {
                 // 3D QR Code
                 qrCodeSection
                     .padding(.bottom, 48)
+                    .scaleEffect(isAppeared ? 1 : 0.5)
+                    .opacity(isAppeared ? 1 : 0)
 
                 // Text Content
                 textSection
                     .padding(.horizontal, Theme.spacing.screen)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 30)
 
                 Spacer()
 
                 // Page Indicators
                 pageIndicators
                     .padding(.bottom, 32)
+                    .opacity(showContent ? 1 : 0)
 
                 // Get Started Button
                 PrimaryButton("Get Started", icon: "arrow.right") {
+                    HapticManager.shared.mediumTap()
                     appCoordinator.completeOnboarding()
                 }
                 .frame(maxWidth: 320)
                 .padding(.horizontal, Theme.spacing.screen)
                 .padding(.bottom, 60)
+                .scaleEffect(showButton ? 1 : 0.8)
+                .opacity(showButton ? 1 : 0)
             }
         }
         .ignoresSafeArea()
         .onAppear {
-            startFloatAnimation()
+            startAnimations()
         }
     }
 
@@ -179,11 +190,24 @@ struct OnboardingView: View {
 
     // MARK: - Animations
 
-    private func startFloatAnimation() {
-        withAnimation(
-            .easeInOut(duration: 3)
-            .repeatForever(autoreverses: true)
-        ) {
+    private func startAnimations() {
+        // QR Code appear
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+            isAppeared = true
+        }
+
+        // Text fade in
+        withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
+            showContent = true
+        }
+
+        // Button appear
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.5)) {
+            showButton = true
+        }
+
+        // Start floating animation
+        withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(0.6)) {
             floatOffset = -12
         }
     }

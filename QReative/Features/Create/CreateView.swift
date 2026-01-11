@@ -6,6 +6,7 @@ struct CreateView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = CreateViewModel()
+    @State private var showContent = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -19,6 +20,8 @@ struct CreateView: View {
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 30)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
 
                 // QR Type Grid
                 qrTypeGrid
@@ -31,6 +34,9 @@ struct CreateView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
+            withAnimation(.easeOut(duration: 0.4)) {
+                showContent = true
+            }
         }
         .sheet(isPresented: $viewModel.showMoreTypes) {
             MoreTypesSheet(
@@ -61,16 +67,22 @@ struct CreateView: View {
     private var qrTypeGrid: some View {
         LazyVGrid(columns: columns, spacing: 16) {
             // Primary types
-            ForEach(viewModel.primaryTemplates) { template in
+            ForEach(Array(viewModel.primaryTemplates.enumerated()), id: \.element.id) { index, template in
                 QRTypeGridItem(template: template) {
                     viewModel.selectType(template)
                 }
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 30)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.05 + 0.1), value: showContent)
             }
 
             // More button
             MoreGridItem {
                 viewModel.showMoreOptions()
             }
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 30)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(viewModel.primaryTemplates.count) * 0.05 + 0.1), value: showContent)
         }
     }
 }
@@ -80,12 +92,9 @@ struct CreateView: View {
 private struct MoreGridItem: View {
     let onTap: () -> Void
 
-    @State private var isPressed: Bool = false
-
     var body: some View {
         Button {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            HapticManager.shared.lightTap()
             onTap()
         } label: {
             VStack(spacing: 12) {
@@ -126,14 +135,7 @@ private struct MoreGridItem: View {
                     .stroke(Color.white.opacity(0.06), lineWidth: 1)
             }
         }
-        .buttonStyle(.plain)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(Theme.animation.springQuick, value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
+        .buttonStyle(PressableStyle(scale: 0.97))
     }
 }
 
