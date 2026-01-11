@@ -210,6 +210,22 @@ enum QRType: Identifiable, Equatable {
         return escaped
     }
 
+    // MARK: - Factory
+
+    static func fromId(_ id: String) -> QRType? {
+        switch id {
+        case "website": return .website(url: "")
+        case "wifi": return .wifi(ssid: "", password: "", security: .wpa)
+        case "instagram": return .instagram(username: "")
+        case "text": return .text(content: "")
+        case "vcard": return .vcard(name: "", phone: nil, email: nil, company: nil)
+        case "email": return .email(address: "", subject: nil, body: nil)
+        case "phone": return .phone(number: "")
+        case "sms": return .sms(number: "", message: nil)
+        default: return nil
+        }
+    }
+
     // MARK: - Validation
 
     var isValid: Bool {

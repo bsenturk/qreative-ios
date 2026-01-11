@@ -38,7 +38,7 @@ struct MainTabView: View {
         ZStack {
             // Scan Tab
             NavigationStack(path: tabCoordinator.navigationPath(for: .scan)) {
-                ScanViewPlaceholder()
+                ScanView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
@@ -48,7 +48,7 @@ struct MainTabView: View {
 
             // Create Tab
             NavigationStack(path: tabCoordinator.navigationPath(for: .create)) {
-                CreateViewPlaceholder()
+                CreateView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
@@ -58,7 +58,7 @@ struct MainTabView: View {
 
             // History Tab
             NavigationStack(path: tabCoordinator.navigationPath(for: .history)) {
-                HistoryViewPlaceholder()
+                HistoryView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
@@ -68,7 +68,7 @@ struct MainTabView: View {
 
             // Settings Tab
             NavigationStack(path: tabCoordinator.navigationPath(for: .settings)) {
-                SettingsViewPlaceholder()
+                SettingsView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
@@ -104,7 +104,11 @@ struct MainTabView: View {
     private func destinationView(for route: Route) -> some View {
         switch route {
         case .qrEditor(let qrTypeId):
-            QREditorPlaceholder(qrTypeId: qrTypeId)
+            if let qrType = QRType.fromId(qrTypeId) {
+                QREditorView(viewModel: QREditorViewModel(qrType: qrType))
+            } else {
+                EmptyView()
+            }
 
         case .qrDetail(let historyItemId):
             QRDetailPlaceholder(historyItemId: historyItemId)
@@ -121,83 +125,7 @@ struct MainTabView: View {
     }
 }
 
-// MARK: - Placeholder Views
-
-struct ScanViewPlaceholder: View {
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: "viewfinder")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentPrimary)
-                Text("Scan")
-                    .typography(.title1)
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct CreateViewPlaceholder: View {
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: "qrcode.viewfinder")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentPrimary)
-                Text("Create")
-                    .typography(.title1)
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct HistoryViewPlaceholder: View {
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentPrimary)
-                Text("History")
-                    .typography(.title1)
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct SettingsViewPlaceholder: View {
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentPrimary)
-                Text("Settings")
-                    .typography(.title1)
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct QREditorPlaceholder: View {
-    let qrTypeId: String
-
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            Text("QR Editor: \(qrTypeId)")
-                .typography(.title1)
-        }
-    }
-}
+// MARK: - Placeholder Views (for routes not yet implemented)
 
 struct QRDetailPlaceholder: View {
     let historyItemId: String
