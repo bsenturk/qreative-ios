@@ -10,14 +10,18 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             tabContent
-                .padding(.bottom, 84)
+                .padding(.bottom, 134)
 
-            CustomTabBar(
-                selectedTab: Binding(
-                    get: { tabCoordinator.selectedTab },
-                    set: { selectTab($0) }
+            VStack(spacing: 0) {
+                BannerContainerView()
+
+                CustomTabBar(
+                    selectedTab: Binding(
+                        get: { tabCoordinator.selectedTab },
+                        set: { selectTab($0) }
+                    )
                 )
-            )
+            }
         }
         .ignoresSafeArea(edges: .bottom)
         .ignoresSafeArea(.keyboard)

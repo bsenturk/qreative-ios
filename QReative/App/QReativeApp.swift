@@ -1,10 +1,14 @@
-
 import SwiftUI
+import GoogleMobileAds
 
 @main
 struct QReativeApp: App {
     @StateObject private var appCoordinator = AppCoordinator()
     @StateObject private var tabCoordinator = MainTabCoordinator()
+
+    init() {
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
+    }
 
     var body: some Scene {
         WindowGroup {
