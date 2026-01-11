@@ -13,6 +13,10 @@ struct QREditorView: View {
         _viewModel = StateObject(wrappedValue: QREditorViewModel(template: template))
     }
 
+    init(viewModel: QREditorViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
         ZStack {
             Color.backgroundPrimary

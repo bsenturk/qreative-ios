@@ -75,9 +75,12 @@ final class QREditorViewModel: ObservableObject {
     // MARK: - Properties
 
     let template: QRTypeTemplate
+    private(set) var generatedImage: UIImage?
 
     // MARK: - Dependencies
 
+    private let qrCodeService = QRCodeService.shared
+    private let storageService = StorageService()
     private weak var coordinator: AppCoordinator?
     private weak var tabCoordinator: MainTabCoordinator?
 
@@ -112,6 +115,12 @@ final class QREditorViewModel: ObservableObject {
     init(template: QRTypeTemplate) {
         self.template = template
         setupInitialContent()
+    }
+
+    convenience init(qrType: QRType) {
+        let isPremium = qrType.id == "vcard" || qrType.id == "sms"
+        let template = QRTypeTemplate(id: qrType.id, type: qrType, isPremium: isPremium)
+        self.init(template: template)
     }
 
     // MARK: - Setup
@@ -240,6 +249,37 @@ final class QREditorViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Generate QR Image
+
+    func generateQRImage() -> UIImage? {
+        let content = qrContent
+        guard !content.isEmpty else { return nil }
+
+        let size = CGSize(width: 512, height: 512)
+        let fgColor = UIColor(selectedColor.foregroundColor)
+        let bgColor = UIColor.white
+
+        if selectedColor == .gradient {
+            return qrCodeService.generateGradientQRCode(
+                content: content,
+                size: size,
+                gradientColors: selectedColor.colors.map { UIColor($0) },
+                backgroundColor: bgColor,
+                shape: selectedShape,
+                logo: logoImage
+            )
+        } else {
+            return qrCodeService.generateStyledQRCode(
+                content: content,
+                size: size,
+                foregroundColor: fgColor,
+                backgroundColor: bgColor,
+                shape: selectedShape,
+                logo: logoImage
+            )
+        }
+    }
+
     // MARK: - Save
 
     func save() async {
@@ -248,12 +288,24 @@ final class QREditorViewModel: ObservableObject {
         isSaving = true
 
         do {
-            // TODO: Implement with QRCodeService and StorageService
-            // let qrImage = try await qrCodeService.generate(...)
-            // try await storageService.save(...)
+            // Generate QR code image
+            guard let qrImage = generateQRImage() else {
+                throw NSError(domain: "QREditor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate QR code"])
+            }
 
-            // Simulate save
-            try await Task.sleep(nanoseconds: 1_000_000_000)
+            generatedImage = qrImage
+
+            // Save to photos
+            try await qrCodeService.saveToPhotos(qrImage)
+
+            // Save to history
+            let historyItem = HistoryItem(
+                type: .created,
+                qrType: template.id,
+                content: qrContent,
+                title: template.title
+            )
+            try await storageService.saveItem(historyItem)
 
             let notification = UINotificationFeedbackGenerator()
             notification.notificationOccurred(.success)
