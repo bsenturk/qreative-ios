@@ -20,8 +20,8 @@ struct BannerAdView: UIViewRepresentable {
         self.adUnitID = adUnitID
     }
 
-    func makeUIView(context: Context) -> GADBannerView {
-        let bannerView = GADBannerView(adSize: GADAdSizeBanner)
+    func makeUIView(context: Context) -> BannerView {
+        let bannerView = BannerView(adSize: AdSizeBanner)
         bannerView.adUnitID = adUnitID
         bannerView.backgroundColor = .clear
 
@@ -30,11 +30,11 @@ struct BannerAdView: UIViewRepresentable {
             bannerView.rootViewController = rootViewController
         }
 
-        bannerView.load(GADRequest())
+        bannerView.load(Request())
         return bannerView
     }
 
-    func updateUIView(_ uiView: GADBannerView, context: Context) {}
+    func updateUIView(_ uiView: BannerView, context: Context) {}
 }
 
 // MARK: - Banner Container View

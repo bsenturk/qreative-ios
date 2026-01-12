@@ -7,7 +7,7 @@ struct QReativeApp: App {
     @StateObject private var tabCoordinator = MainTabCoordinator()
 
     init() {
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start()
     }
 
     var body: some Scene {
