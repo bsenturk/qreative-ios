@@ -136,6 +136,7 @@ final class ScanViewModel: ObservableObject {
             if authorized {
                 cameraService.setupSession()
                 cameraService.startSession()
+                AppOpenAdManager.shared.showAdOnceAfterPermission()
             } else {
                 showPermissionAlert = true
             }

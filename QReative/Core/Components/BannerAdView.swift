@@ -10,6 +10,14 @@ enum AdUnitID {
         return "ca-app-pub-2545255000258244/3873748432"
         #endif
     }
+
+    static var appOpen: String {
+        #if DEBUG
+        return "ca-app-pub-3940256099942544/5575463023"
+        #else
+        return "ca-app-pub-2545255000258244/4361312520"
+        #endif
+    }
 }
 
 // MARK: - Banner Ad View
