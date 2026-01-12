@@ -3,12 +3,10 @@ import SwiftUI
 import Combine
 
 // MARK: - Camera Service
-
 @MainActor
 final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var isAuthorized: Bool = false
     @Published var isSessionRunning: Bool = false
     @Published var detectedQRCode: String?
@@ -17,21 +15,18 @@ final class CameraService: NSObject, ObservableObject {
     @Published var error: CameraError?
 
     // MARK: - AVCapture Properties
-
     let captureSession = AVCaptureSession()
     private var videoDeviceInput: AVCaptureDeviceInput?
     private let metadataOutput = AVCaptureMetadataOutput()
     private let sessionQueue = DispatchQueue(label: "com.qreative.camera.session")
 
     // MARK: - Configuration
-
     private var shouldStopOnDetection: Bool = true
     private var lastDetectedCode: String?
     private var lastDetectionTime: Date?
     private let detectionCooldown: TimeInterval = 1.0
 
     // MARK: - Camera Error
-
     enum CameraError: LocalizedError {
         case notAuthorized
         case configurationFailed
@@ -53,20 +48,17 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     // MARK: - Init
-
     override init() {
         super.init()
         checkInitialPermission()
     }
 
     // MARK: - Permission
-
     private func checkInitialPermission() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         isAuthorized = status == .authorized
     }
 
-    /// Check current camera permission status
     func checkPermission() async -> Bool {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
 
@@ -89,7 +81,6 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
-    /// Request camera permission
     func requestPermission() async -> Bool {
         let granted = await AVCaptureDevice.requestAccess(for: .video)
         await MainActor.run {
@@ -102,8 +93,6 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     // MARK: - Session Setup
-
-    /// Configure the capture session
     func setupSession() {
         sessionQueue.async { [weak self] in
             self?.configureSession()
@@ -121,7 +110,6 @@ final class CameraService: NSObject, ObservableObject {
         captureSession.beginConfiguration()
         captureSession.sessionPreset = .high
 
-        // Add video input
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             Task { @MainActor in
                 error = .deviceNotAvailable
@@ -151,7 +139,6 @@ final class CameraService: NSObject, ObservableObject {
             return
         }
 
-        // Add metadata output for QR code detection
         if captureSession.canAddOutput(metadataOutput) {
             captureSession.addOutput(metadataOutput)
 
@@ -172,8 +159,6 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     // MARK: - Session Control
-
-    /// Start the capture session
     func startSession() {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
@@ -190,7 +175,6 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
-    /// Stop the capture session
     func stopSession() {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
@@ -205,7 +189,6 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
-    /// Resume scanning after detection
     func resumeScanning() {
         detectedQRCode = nil
         lastDetectedCode = nil
@@ -213,8 +196,6 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     // MARK: - Torch Control
-
-    /// Toggle torch on/off
     func toggleTorch() {
         guard let device = videoDeviceInput?.device,
               device.hasTorch else {
@@ -245,7 +226,6 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
-    /// Set torch mode explicitly
     func setTorch(_ mode: AVCaptureDevice.TorchMode) {
         guard let device = videoDeviceInput?.device,
               device.hasTorch,
@@ -263,14 +243,11 @@ final class CameraService: NSObject, ObservableObject {
                     self?.torchMode = mode
                 }
             } catch {
-                // Silently fail
             }
         }
     }
 
     // MARK: - Zoom Control
-
-    /// Set zoom factor
     func setZoom(_ factor: CGFloat) {
         guard let device = videoDeviceInput?.device else { return }
 
@@ -288,42 +265,34 @@ final class CameraService: NSObject, ObservableObject {
                     self?.zoomFactor = clampedFactor
                 }
             } catch {
-                // Silently fail
             }
         }
     }
 
-    /// Increase zoom
     func zoomIn() {
         setZoom(zoomFactor + 0.5)
     }
 
-    /// Decrease zoom
     func zoomOut() {
         setZoom(zoomFactor - 0.5)
     }
 
     // MARK: - Configuration
-
-    /// Configure whether to stop scanning on detection
     func setShouldStopOnDetection(_ stop: Bool) {
         shouldStopOnDetection = stop
     }
 
     // MARK: - Cleanup
-
     func cleanup() {
         stopSession()
         setTorch(.off)
     }
 
     deinit {
-        // Note: cleanup should be called before deinit on MainActor
     }
 }
 
 // MARK: - AVCaptureMetadataOutputObjectsDelegate
-
 extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
 
     nonisolated func metadataOutput(
@@ -344,7 +313,6 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
 
     @MainActor
     private func handleDetectedCode(_ code: String) {
-        // Cooldown check to prevent rapid-fire detections
         if let lastTime = lastDetectionTime,
            let lastCode = lastDetectedCode,
            lastCode == code,
@@ -356,11 +324,9 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
         lastDetectionTime = Date()
         detectedQRCode = code
 
-        // Haptic feedback
         let notification = UINotificationFeedbackGenerator()
         notification.notificationOccurred(.success)
 
-        // Stop session if configured
         if shouldStopOnDetection {
             stopSession()
         }
@@ -368,7 +334,6 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
 }
 
 // MARK: - Camera Preview UIViewRepresentable
-
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
 

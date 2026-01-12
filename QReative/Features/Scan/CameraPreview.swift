@@ -2,30 +2,25 @@ import SwiftUI
 import AVFoundation
 
 // MARK: - Preview View (UIKit)
-
 final class PreviewView: UIView {
 
     // MARK: - Layer Class Override
-
     override class var layerClass: AnyClass {
         AVCaptureVideoPreviewLayer.self
     }
 
     // MARK: - Preview Layer
-
     var previewLayer: AVCaptureVideoPreviewLayer {
         layer as! AVCaptureVideoPreviewLayer
     }
 
     // MARK: - Session
-
     var session: AVCaptureSession? {
         get { previewLayer.session }
         set { previewLayer.session = newValue }
     }
 
     // MARK: - Init
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayer()
@@ -37,27 +32,22 @@ final class PreviewView: UIView {
     }
 
     // MARK: - Setup
-
     private func setupLayer() {
         backgroundColor = .black
         previewLayer.videoGravity = .resizeAspectFill
     }
 
     // MARK: - Layout
-
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Layer automatically resizes with view due to layerClass override
     }
 }
 
 // MARK: - Camera Preview (SwiftUI)
-
 struct CameraPreview: UIViewRepresentable {
     let cameraService: CameraService
 
     // MARK: - Configuration
-
     var videoGravity: AVLayerVideoGravity = .resizeAspectFill
     var cornerRadius: CGFloat = 0
 
@@ -75,15 +65,12 @@ struct CameraPreview: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: PreviewView, context: Context) {
-        // Update session if changed
         if uiView.session !== cameraService.captureSession {
             uiView.session = cameraService.captureSession
         }
 
-        // Update video gravity
         uiView.previewLayer.videoGravity = videoGravity
 
-        // Update corner radius
         if cornerRadius > 0 {
             uiView.layer.cornerRadius = cornerRadius
             uiView.clipsToBounds = true
@@ -94,7 +81,6 @@ struct CameraPreview: UIViewRepresentable {
     }
 
     // MARK: - Modifiers
-
     func videoGravity(_ gravity: AVLayerVideoGravity) -> CameraPreview {
         var preview = self
         preview.videoGravity = gravity
@@ -109,7 +95,6 @@ struct CameraPreview: UIViewRepresentable {
 }
 
 // MARK: - Camera Preview with Overlay
-
 struct CameraPreviewWithOverlay<Overlay: View>: View {
     let cameraService: CameraService
     let overlay: () -> Overlay
@@ -133,16 +118,13 @@ struct CameraPreviewWithOverlay<Overlay: View>: View {
 }
 
 // MARK: - Convenience Extension
-
 extension CameraPreview {
 
-    /// Create a full-screen camera preview
     static func fullScreen(cameraService: CameraService) -> some View {
         CameraPreview(cameraService: cameraService)
             .ignoresSafeArea()
     }
 
-    /// Create a camera preview with rounded corners
     static func rounded(
         cameraService: CameraService,
         cornerRadius: CGFloat = 20
@@ -153,14 +135,12 @@ extension CameraPreview {
 }
 
 // MARK: - Preview
-
 #Preview {
     ZStack {
         Color.backgroundPrimary
             .ignoresSafeArea()
 
         VStack(spacing: 20) {
-            // Simulated preview placeholder
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.backgroundTertiary)
                 .aspectRatio(3/4, contentMode: .fit)

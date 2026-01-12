@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - History Row View
-
 struct HistoryRowView: View {
     let item: HistoryItem
     let onTap: () -> Void
@@ -42,15 +41,11 @@ struct HistoryRowView: View {
     }
 
     // MARK: - Row Content
-
     private var rowContent: some View {
         HStack(spacing: 12) {
-            // QR Thumbnail
             qrThumbnail
 
-            // Text Content
             VStack(alignment: .leading, spacing: 4) {
-                // Type indicator + Title
                 HStack(spacing: 6) {
                     Image(systemName: item.typeIcon)
                         .font(.system(size: 10))
@@ -63,14 +58,12 @@ struct HistoryRowView: View {
                         .truncationMode(.tail)
                 }
 
-                // Date
                 Text(item.formattedDate)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.white.opacity(0.4))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Chevron
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.white.opacity(0.3))
@@ -88,7 +81,6 @@ struct HistoryRowView: View {
     }
 
     // MARK: - QR Thumbnail
-
     private var qrThumbnail: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
@@ -102,7 +94,6 @@ struct HistoryRowView: View {
                     .frame(width: 42, height: 42)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             } else {
-                // Generate mini QR preview
                 QRCodePreview(
                     content: item.content.isEmpty ? "QR" : item.content,
                     size: 42,
@@ -118,7 +109,6 @@ struct HistoryRowView: View {
 }
 
 // MARK: - Compact History Row
-
 struct HistoryRowCompact: View {
     let item: HistoryItem
     let onTap: () -> Void
@@ -126,7 +116,6 @@ struct HistoryRowCompact: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                // Icon
                 ZStack {
                     Circle()
                         .fill(item.accentColor.opacity(0.15))
@@ -137,7 +126,6 @@ struct HistoryRowCompact: View {
                         .foregroundStyle(item.accentColor)
                 }
 
-                // Content
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.displayTitle)
                         .font(.system(size: 14, weight: .medium))
@@ -167,7 +155,6 @@ struct HistoryRowCompact: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     ZStack {
         Color.backgroundPrimary

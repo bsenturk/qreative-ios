@@ -1,56 +1,7 @@
 import SwiftUI
 import Combine
 
-// MARK: - Subscription Plan
-
-enum SubscriptionPlan: String, CaseIterable, Identifiable {
-    case weekly
-    case yearly
-
-    var id: String { rawValue }
-
-    var price: String {
-        switch self {
-        case .weekly: return "$2.99"
-        case .yearly: return "$29.99"
-        }
-    }
-
-    var period: String {
-        switch self {
-        case .weekly: return "week"
-        case .yearly: return "year"
-        }
-    }
-
-    var periodShort: String {
-        switch self {
-        case .weekly: return "/week"
-        case .yearly: return "/year"
-        }
-    }
-
-    var savings: String? {
-        switch self {
-        case .weekly: return nil
-        case .yearly: return "Save 80%"
-        }
-    }
-
-    var isBestValue: Bool {
-        self == .yearly
-    }
-
-    var trialDays: Int {
-        switch self {
-        case .weekly: return 3
-        case .yearly: return 7
-        }
-    }
-}
-
 // MARK: - Paywall Feature
-
 struct PaywallFeature: Identifiable {
     let id = UUID()
     let icon: String
@@ -58,20 +9,11 @@ struct PaywallFeature: Identifiable {
     let description: String
 }
 
-// MARK: - Purchase Service Protocol
-
-protocol PurchaseServiceProtocol {
-    func purchase(plan: SubscriptionPlan) async throws -> Bool
-    func restorePurchases() async throws -> Bool
-}
-
 // MARK: - Paywall ViewModel
-
 @MainActor
 final class PaywallViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var selectedPlan: SubscriptionPlan = .yearly
     @Published var isLoading: Bool = false
     @Published var showError: Bool = false
@@ -79,7 +21,6 @@ final class PaywallViewModel: ObservableObject {
     @Published var isPurchaseSuccessful: Bool = false
 
     // MARK: - Properties
-
     let features: [PaywallFeature] = [
         PaywallFeature(
             icon: "crown.fill",
@@ -104,12 +45,10 @@ final class PaywallViewModel: ObservableObject {
     ]
 
     // MARK: - Dependencies
-
     private weak var coordinator: AppCoordinator?
     private var purchaseService: PurchaseServiceProtocol?
 
     // MARK: - Computed Properties
-
     var ctaButtonTitle: String {
         if isLoading {
             return "Processing..."
@@ -123,14 +62,12 @@ final class PaywallViewModel: ObservableObject {
     }
 
     // MARK: - Init
-
     init(coordinator: AppCoordinator? = nil, purchaseService: PurchaseServiceProtocol? = nil) {
         self.coordinator = coordinator
         self.purchaseService = purchaseService
     }
 
     // MARK: - Methods
-
     func selectPlan(_ plan: SubscriptionPlan) {
         guard selectedPlan != plan else { return }
 
@@ -149,12 +86,10 @@ final class PaywallViewModel: ObservableObject {
         showError = false
 
         do {
-            // Simulate purchase or use real service
             if let service = purchaseService {
-                let success = try await service.purchase(plan: selectedPlan)
-                handlePurchaseResult(success)
+                try await service.purchase(selectedPlan)
+                handlePurchaseResult(true)
             } else {
-                // Simulate delay for demo
                 try await Task.sleep(nanoseconds: 1_500_000_000)
                 handlePurchaseResult(true)
             }
@@ -173,8 +108,9 @@ final class PaywallViewModel: ObservableObject {
 
         do {
             if let service = purchaseService {
-                let success = try await service.restorePurchases()
-                if success {
+                try await service.restorePurchases()
+                let isPremium = await service.checkSubscriptionStatus()
+                if isPremium {
                     handlePurchaseResult(true)
                 } else {
                     showError = true
@@ -182,7 +118,6 @@ final class PaywallViewModel: ObservableObject {
                     isLoading = false
                 }
             } else {
-                // Simulate
                 try await Task.sleep(nanoseconds: 1_000_000_000)
                 showError = true
                 errorMessage = "No purchases to restore"
@@ -200,7 +135,6 @@ final class PaywallViewModel: ObservableObject {
     }
 
     // MARK: - Private Methods
-
     private func handlePurchaseResult(_ success: Bool) {
         isLoading = false
 
@@ -209,7 +143,6 @@ final class PaywallViewModel: ObservableObject {
             let notification = UINotificationFeedbackGenerator()
             notification.notificationOccurred(.success)
 
-            // Delay to show success state
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.coordinator?.handlePurchaseSuccess()
             }
@@ -217,7 +150,6 @@ final class PaywallViewModel: ObservableObject {
     }
 
     // MARK: - Coordinator Binding
-
     func bind(to coordinator: AppCoordinator) {
         self.coordinator = coordinator
     }

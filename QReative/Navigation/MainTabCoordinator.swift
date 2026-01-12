@@ -2,12 +2,10 @@ import SwiftUI
 import Combine
 
 // MARK: - Main Tab Coordinator
-
 @MainActor
 final class MainTabCoordinator: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var selectedTab: Tab = .scan
 
     @Published var scanNavigationPath = NavigationPath()
@@ -16,21 +14,16 @@ final class MainTabCoordinator: ObservableObject {
     @Published var settingsNavigationPath = NavigationPath()
 
     // MARK: - Private
-
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
-
     init() {
         setupTabChangeObserver()
     }
 
     // MARK: - Tab Selection
-
-    /// Select a tab with haptic feedback
     func selectTab(_ tab: Tab) {
         guard selectedTab != tab else {
-            // Double tap on same tab - pop to root
             popToRoot(tab: tab)
             return
         }
@@ -40,8 +33,6 @@ final class MainTabCoordinator: ObservableObject {
     }
 
     // MARK: - Navigation Path Access
-
-    /// Get navigation path for a specific tab
     func navigationPath(for tab: Tab) -> Binding<NavigationPath> {
         switch tab {
         case .scan:
@@ -67,14 +58,11 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Get current navigation path based on selected tab
     var currentNavigationPath: Binding<NavigationPath> {
         navigationPath(for: selectedTab)
     }
 
     // MARK: - Push Navigation
-
-    /// Push route to scan tab
     func pushToScan(_ route: Route) {
         scanNavigationPath.append(route)
         if selectedTab != .scan {
@@ -82,7 +70,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Push route to create tab
     func pushToCreate(_ route: Route) {
         createNavigationPath.append(route)
         if selectedTab != .create {
@@ -90,7 +77,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Push route to history tab
     func pushToHistory(_ route: Route) {
         historyNavigationPath.append(route)
         if selectedTab != .history {
@@ -98,7 +84,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Push route to settings tab
     func pushToSettings(_ route: Route) {
         settingsNavigationPath.append(route)
         if selectedTab != .settings {
@@ -106,7 +91,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Push route to current tab
     func push(_ route: Route) {
         switch selectedTab {
         case .scan:
@@ -121,8 +105,6 @@ final class MainTabCoordinator: ObservableObject {
     }
 
     // MARK: - Pop Navigation
-
-    /// Pop last route from current tab
     func pop() {
         switch selectedTab {
         case .scan:
@@ -136,7 +118,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Pop to root of a specific tab
     func popToRoot(tab: Tab) {
         switch tab {
         case .scan:
@@ -150,12 +131,10 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Pop to root of current tab
     func popToRoot() {
         popToRoot(tab: selectedTab)
     }
 
-    /// Reset all navigation paths
     func resetAllPaths() {
         scanNavigationPath = NavigationPath()
         createNavigationPath = NavigationPath()
@@ -164,8 +143,6 @@ final class MainTabCoordinator: ObservableObject {
     }
 
     // MARK: - Stack Info
-
-    /// Check if current tab has navigation stack
     var canPopCurrentTab: Bool {
         switch selectedTab {
         case .scan: return !scanNavigationPath.isEmpty
@@ -175,7 +152,6 @@ final class MainTabCoordinator: ObservableObject {
         }
     }
 
-    /// Get stack depth for a tab
     func stackDepth(for tab: Tab) -> Int {
         switch tab {
         case .scan: return scanNavigationPath.count
@@ -186,7 +162,6 @@ final class MainTabCoordinator: ObservableObject {
     }
 
     // MARK: - Private Methods
-
     private func setupTabChangeObserver() {
         $selectedTab
             .dropFirst()
@@ -203,7 +178,6 @@ final class MainTabCoordinator: ObservableObject {
 }
 
 // MARK: - Environment Key
-
 private struct MainTabCoordinatorKey: EnvironmentKey {
     static let defaultValue = MainTabCoordinator()
 }
@@ -216,7 +190,6 @@ extension EnvironmentValues {
 }
 
 // MARK: - View Extension
-
 extension View {
     func withTabCoordinator(_ coordinator: MainTabCoordinator) -> some View {
         environment(\.tabCoordinator, coordinator)

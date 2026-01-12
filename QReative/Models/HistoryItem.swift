@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - History Item Type (Codable version of QRType)
-
 enum HistoryItemType: String, Codable, CaseIterable {
     case website
     case wifi
@@ -78,7 +77,6 @@ enum HistoryItemType: String, Codable, CaseIterable {
     }
 
     // MARK: - Detection
-
     static func detect(from content: String) -> HistoryItemType {
         let lowercased = content.lowercased()
 
@@ -104,11 +102,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
 }
 
 // MARK: - History Item
-
 struct HistoryItem: Identifiable, Codable, Equatable {
 
     // MARK: - Properties
-
     let id: UUID
     let content: String
     let type: HistoryItemType
@@ -119,7 +115,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     var hasLogo: Bool
 
     // MARK: - Init
-
     init(
         id: UUID = UUID(),
         content: String,
@@ -141,8 +136,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 
     // MARK: - Computed Properties
-
-    /// Display title based on content type
     var displayTitle: String {
         switch type {
         case .website:
@@ -167,7 +160,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         }
     }
 
-    /// Formatted date string
     var formattedDate: String {
         let calendar = Calendar.current
         let now = Date()
@@ -185,7 +177,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         }
     }
 
-    /// Short formatted date
     var shortFormattedDate: String {
         let calendar = Calendar.current
 
@@ -210,14 +201,12 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         type.gradient
     }
 
-    /// Get thumbnail image if available
     var thumbnailImage: UIImage? {
         guard let data = thumbnailData else { return nil }
         return UIImage(data: data)
     }
 
     // MARK: - Private Formatters
-
     private var timeFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
@@ -249,19 +238,16 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 
     // MARK: - Content Extraction Helpers
-
     private func formatURL(_ url: String) -> String {
         var formatted = url
             .replacingOccurrences(of: "https://", with: "")
             .replacingOccurrences(of: "http://", with: "")
             .replacingOccurrences(of: "www.", with: "")
 
-        // Remove trailing slash
         if formatted.hasSuffix("/") {
             formatted = String(formatted.dropLast())
         }
 
-        // Truncate if too long
         if formatted.count > 40 {
             formatted = String(formatted.prefix(37)) + "..."
         }
@@ -270,7 +256,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 
     private func extractWiFiSSID(_ content: String) -> String? {
-        // Format: WIFI:T:WPA;S:networkname;P:password;;
         guard let ssidRange = content.range(of: "S:"),
               let endRange = content.range(of: ";", range: ssidRange.upperBound..<content.endIndex) else {
             return nil
@@ -293,7 +278,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 
     private func extractVCardName(_ content: String) -> String? {
-        // Look for FN: line
         let lines = content.components(separatedBy: "\n")
         for line in lines {
             if line.hasPrefix("FN:") {
@@ -320,7 +304,6 @@ struct HistoryItem: Identifiable, Codable, Equatable {
 }
 
 // MARK: - Sample Data
-
 extension HistoryItem {
     static let samples: [HistoryItem] = [
         HistoryItem(

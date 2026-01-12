@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Create View
-
 struct CreateView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
@@ -16,14 +15,12 @@ struct CreateView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                // Header
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 30)
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)
 
-                // QR Type Grid
                 qrTypeGrid
 
                 Spacer(minLength: 100)
@@ -51,7 +48,6 @@ struct CreateView: View {
     }
 
     // MARK: - Header Section
-
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Create")
@@ -63,10 +59,8 @@ struct CreateView: View {
     }
 
     // MARK: - QR Type Grid
-
     private var qrTypeGrid: some View {
         LazyVGrid(columns: columns, spacing: 16) {
-            // Primary types
             ForEach(Array(viewModel.primaryTemplates.enumerated()), id: \.element.id) { index, template in
                 QRTypeGridItem(template: template) {
                     viewModel.selectType(template)
@@ -76,7 +70,6 @@ struct CreateView: View {
                 .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.05 + 0.1), value: showContent)
             }
 
-            // More button
             MoreGridItem {
                 viewModel.showMoreOptions()
             }
@@ -88,7 +81,6 @@ struct CreateView: View {
 }
 
 // MARK: - More Grid Item
-
 private struct MoreGridItem: View {
     let onTap: () -> Void
 
@@ -98,7 +90,6 @@ private struct MoreGridItem: View {
             onTap()
         } label: {
             VStack(spacing: 12) {
-                // Icon Container
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
@@ -118,7 +109,6 @@ private struct MoreGridItem: View {
                         .foregroundStyle(.white)
                 }
 
-                // Label
                 Text("More")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.white)
@@ -140,28 +130,24 @@ private struct MoreGridItem: View {
 }
 
 // MARK: - More Types Sheet
-
 private struct MoreTypesSheet: View {
     let templates: [QRTypeTemplate]
     let onSelect: (QRTypeTemplate) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            // Handle
             Capsule()
                 .fill(Color.white.opacity(0.3))
                 .frame(width: 36, height: 5)
                 .padding(.top, 8)
                 .padding(.bottom, 20)
 
-            // Header
             Text("More QR Types")
                 .typography(.title2)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Theme.spacing.screen)
                 .padding(.bottom, 20)
 
-            // List
             VStack(spacing: 12) {
                 ForEach(templates) { template in
                     QRTypeLargeCard(template: template) {
@@ -179,7 +165,6 @@ private struct MoreTypesSheet: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     CreateView()
         .environmentObject(AppCoordinator())

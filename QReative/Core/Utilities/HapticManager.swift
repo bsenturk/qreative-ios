@@ -1,15 +1,12 @@
 import UIKit
 
 // MARK: - Haptic Manager
-
 final class HapticManager {
 
     // MARK: - Singleton
-
     static let shared = HapticManager()
 
     // MARK: - Generators
-
     private let impactLight = UIImpactFeedbackGenerator(style: .light)
     private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
     private let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
@@ -19,13 +16,11 @@ final class HapticManager {
     private let selection = UISelectionFeedbackGenerator()
 
     // MARK: - Init
-
     private init() {
         prepareGenerators()
     }
 
     // MARK: - Prepare
-
     private func prepareGenerators() {
         impactLight.prepare()
         impactMedium.prepare()
@@ -37,7 +32,6 @@ final class HapticManager {
     }
 
     // MARK: - Impact Feedback
-
     func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         switch style {
         case .light:
@@ -73,19 +67,16 @@ final class HapticManager {
     }
 
     // MARK: - Notification Feedback
-
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         notification.notificationOccurred(type)
     }
 
     // MARK: - Selection Feedback
-
     func selectionChanged() {
         selection.selectionChanged()
     }
 
     // MARK: - Convenience Methods
-
     func lightTap() {
         impactLight.impactOccurred()
     }
@@ -120,7 +111,6 @@ final class HapticManager {
 }
 
 // MARK: - SwiftUI Extension
-
 import SwiftUI
 
 extension View {

@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - History View
-
 struct HistoryView: View {
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = HistoryViewModel()
@@ -59,12 +58,10 @@ struct HistoryView: View {
     }
 
     // MARK: - Empty State
-
     private var emptyState: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Illustration
             ZStack {
                 Circle()
                     .fill(Color.accentPrimary.opacity(0.1))
@@ -97,11 +94,9 @@ struct HistoryView: View {
     }
 
     // MARK: - History List
-
     private var historyList: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                // Header
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 24)
@@ -109,7 +104,6 @@ struct HistoryView: View {
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)
 
-                // Items
                 LazyVStack(spacing: 12) {
                     ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
                         HistoryRowView(
@@ -134,7 +128,6 @@ struct HistoryView: View {
     }
 
     // MARK: - Header Section
-
     private var headerSection: some View {
         HStack {
             Text("History")
@@ -162,7 +155,6 @@ struct HistoryView: View {
 }
 
 // MARK: - Share Sheet
-
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
 
@@ -174,7 +166,6 @@ struct ShareSheet: UIViewControllerRepresentable {
 }
 
 // MARK: - Grouped History View (Alternative)
-
 struct GroupedHistoryView: View {
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = HistoryViewModel()
@@ -216,22 +207,18 @@ struct GroupedHistoryView: View {
     private var groupedHistoryList: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 24) {
-                // Header
                 Text("History")
                     .typography(.largeTitle)
                     .padding(.top, 60)
                     .padding(.horizontal, Theme.spacing.screen)
 
-                // Grouped sections
                 ForEach(viewModel.sortedGroupKeys, id: \.self) { key in
                     if let items = viewModel.groupedItems[key] {
                         VStack(alignment: .leading, spacing: 12) {
-                            // Section header
                             Text(key)
                                 .typography(.caption1, color: .textTertiary)
                                 .padding(.horizontal, Theme.spacing.screen)
 
-                            // Items
                             VStack(spacing: 8) {
                                 ForEach(items) { item in
                                     HistoryRowView(
@@ -254,7 +241,6 @@ struct GroupedHistoryView: View {
 }
 
 // MARK: - Preview
-
 #Preview("History View") {
     HistoryView()
         .environmentObject(MainTabCoordinator())

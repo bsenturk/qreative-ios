@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Paywall View
-
 struct PaywallView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @StateObject private var viewModel = PaywallViewModel()
@@ -12,44 +11,36 @@ struct PaywallView: View {
 
     var body: some View {
         ZStack {
-            // Background
             backgroundLayer
 
-            // Content
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
-                    // Header
                     headerSection
                         .padding(.top, 20)
                         .opacity(showHeader ? 1 : 0)
                         .offset(y: showHeader ? 0 : 20)
 
-                    // Features Card
                     featuresCard
                         .padding(.horizontal, Theme.spacing.screen)
                         .opacity(showFeatures ? 1 : 0)
                         .offset(y: showFeatures ? 0 : 30)
 
-                    // Pricing Options
                     pricingSection
                         .padding(.horizontal, Theme.spacing.screen)
                         .opacity(showPricing ? 1 : 0)
                         .offset(y: showPricing ? 0 : 30)
 
-                    // CTA Button
                     ctaSection
                         .padding(.horizontal, Theme.spacing.screen)
                         .opacity(showCTA ? 1 : 0)
                         .scaleEffect(showCTA ? 1 : 0.9)
 
-                    // Footer
                     footerSection
                         .padding(.bottom, 40)
                         .opacity(showCTA ? 1 : 0)
                 }
             }
 
-            // Close Button
             closeButton
         }
         .ignoresSafeArea()
@@ -80,12 +71,10 @@ struct PaywallView: View {
     }
 
     // MARK: - Background
-
     private var backgroundLayer: some View {
         ZStack {
             Color.backgroundPrimary
 
-            // Purple gradient orb at top
             Circle()
                 .fill(
                     RadialGradient(
@@ -106,7 +95,6 @@ struct PaywallView: View {
     }
 
     // MARK: - Close Button
-
     private var closeButton: some View {
         VStack {
             HStack {
@@ -128,10 +116,8 @@ struct PaywallView: View {
     }
 
     // MARK: - Header Section
-
     private var headerSection: some View {
         VStack(spacing: 16) {
-            // PRO Badge
             HStack(spacing: 8) {
                 Image(systemName: "crown.fill")
                     .font(.system(size: 20))
@@ -141,19 +127,16 @@ struct PaywallView: View {
             .foregroundStyle(Color.warning)
             .padding(.top, 40)
 
-            // Title
             Text("Unlock QReative PRO")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(.white)
 
-            // Subtitle
             Text("Get unlimited access to all features")
                 .typography(.body, color: .textSecondary)
         }
     }
 
     // MARK: - Features Card
-
     private var featuresCard: some View {
         VStack(spacing: 0) {
             ForEach(Array(viewModel.features.enumerated()), id: \.element.id) { index, feature in
@@ -172,7 +155,6 @@ struct PaywallView: View {
 
     private func featureRow(_ feature: PaywallFeature) -> some View {
         HStack(spacing: 12) {
-            // Green checkmark
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.success.opacity(0.15))
@@ -200,7 +182,6 @@ struct PaywallView: View {
     }
 
     // MARK: - Pricing Section
-
     private var pricingSection: some View {
         HStack(spacing: 12) {
             ForEach(SubscriptionPlan.allCases) { plan in
@@ -215,7 +196,6 @@ struct PaywallView: View {
     }
 
     // MARK: - CTA Section
-
     private var ctaSection: some View {
         VStack(spacing: 16) {
             PrimaryButton(
@@ -228,7 +208,6 @@ struct PaywallView: View {
                 }
             }
 
-            // Restore Purchases
             Button {
                 Task {
                     await viewModel.restorePurchases()
@@ -241,7 +220,6 @@ struct PaywallView: View {
     }
 
     // MARK: - Footer Section
-
     private var footerSection: some View {
         VStack(spacing: 8) {
             Text(viewModel.footerText)
@@ -263,7 +241,6 @@ struct PaywallView: View {
 }
 
 // MARK: - Pricing Card
-
 private struct PricingCard: View {
     let plan: SubscriptionPlan
     let isSelected: Bool
@@ -275,7 +252,6 @@ private struct PricingCard: View {
             action()
         } label: {
             VStack(spacing: 8) {
-                // Best Value Badge
                 if plan.isBestValue {
                     Text("BEST VALUE")
                         .font(.system(size: 10, weight: .bold))
@@ -285,7 +261,6 @@ private struct PricingCard: View {
                         .background(Color.accentPrimary)
                         .clipShape(Capsule())
                 } else {
-                    // Spacer for alignment
                     Text(" ")
                         .font(.system(size: 10, weight: .bold))
                         .padding(.horizontal, 8)
@@ -293,12 +268,10 @@ private struct PricingCard: View {
                         .opacity(0)
                 }
 
-                // Period
                 Text(plan.period.capitalized)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.6))
 
-                // Price
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(plan.price)
                         .font(.system(size: 24, weight: .bold))
@@ -309,7 +282,6 @@ private struct PricingCard: View {
                         .foregroundStyle(Color.white.opacity(0.5))
                 }
 
-                // Savings
                 if let savings = plan.savings {
                     Text(savings)
                         .font(.system(size: 11, weight: .semibold))
@@ -346,7 +318,6 @@ private struct PricingCard: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     PaywallView()
         .environmentObject(AppCoordinator())

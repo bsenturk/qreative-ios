@@ -3,7 +3,6 @@ import PhotosUI
 import CoreImage
 
 // MARK: - Scan Result
-
 struct ScanResult: Identifiable, Equatable {
     let id = UUID()
     let content: String
@@ -69,12 +68,10 @@ enum ScanResultType {
 }
 
 // MARK: - Scan ViewModel
-
 @MainActor
 final class ScanViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var isFlashOn: Bool = false
     @Published var zoomLevel: CGFloat = 1.0
     @Published var scanResult: ScanResult?
@@ -86,29 +83,23 @@ final class ScanViewModel: ObservableObject {
     @Published var showError: Bool = false
 
     // MARK: - Camera Service
-
     let cameraService: CameraService
 
     // MARK: - Private Properties
-
     private var hasAppeared: Bool = false
 
     // MARK: - Init
-
     init(cameraService: CameraService) {
         self.cameraService = cameraService
         setupBindings()
     }
 
-    /// Convenience init that creates its own CameraService
     convenience init() {
         self.init(cameraService: CameraService())
     }
 
     // MARK: - Setup
-
     private func setupBindings() {
-        // Observe camera service detected code
         cameraService.$detectedQRCode
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
@@ -117,13 +108,11 @@ final class ScanViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Sync flash state
         cameraService.$torchMode
             .map { $0 == .on }
             .receive(on: DispatchQueue.main)
             .assign(to: &$isFlashOn)
 
-        // Sync zoom
         cameraService.$zoomFactor
             .receive(on: DispatchQueue.main)
             .assign(to: &$zoomLevel)
@@ -132,10 +121,8 @@ final class ScanViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Lifecycle
-
     func onAppear() {
         guard !hasAppeared else {
-            // Resume if returning to view
             if cameraService.isAuthorized && scanResult == nil {
                 cameraService.startSession()
             }
@@ -149,6 +136,7 @@ final class ScanViewModel: ObservableObject {
             if authorized {
                 cameraService.setupSession()
                 cameraService.startSession()
+                AppOpenAdManager.shared.showAdIfAvailable()
             } else {
                 showPermissionAlert = true
             }
@@ -161,7 +149,6 @@ final class ScanViewModel: ObservableObject {
     }
 
     // MARK: - Camera Controls
-
     func toggleFlash() {
         cameraService.toggleTorch()
 
@@ -174,19 +161,16 @@ final class ScanViewModel: ObservableObject {
     }
 
     // MARK: - Detection Handling
-
     private func handleDetectedCode(_ code: String) {
         guard scanResult == nil else { return }
 
         scanResult = ScanResult(content: code)
         showResult = true
 
-        // Save to history
         saveToHistory()
     }
 
     // MARK: - Gallery Processing
-
     func processGalleryImage(_ image: UIImage) {
         isProcessingImage = true
 
@@ -216,7 +200,6 @@ final class ScanViewModel: ObservableObject {
     }
 
     // MARK: - Result Actions
-
     func copyToClipboard() {
         guard let content = scanResult?.content else { return }
 
@@ -227,7 +210,6 @@ final class ScanViewModel: ObservableObject {
     }
 
     func shareCode() {
-        // Share is handled in View with ShareLink
     }
 
     func openURL() {
@@ -235,10 +217,9 @@ final class ScanViewModel: ObservableObject {
 
         var urlString = content
 
-        // Handle different types
         switch scanResult?.type {
         case .url:
-            break // Already a URL
+            break
         case .email:
             if !urlString.lowercased().hasPrefix("mailto:") {
                 urlString = "mailto:\(urlString)"
@@ -259,19 +240,15 @@ final class ScanViewModel: ObservableObject {
     func saveToHistory() {
         guard let result = scanResult else { return }
 
-        // TODO: Implement with StorageService
-        // storageService.saveHistoryItem(result)
         print("Saved to history: \(result.content)")
     }
 
     // MARK: - Result Management
-
     func dismissResult() {
         withAnimation(Theme.animation.spring) {
             showResult = false
         }
 
-        // Delay clearing result and resuming
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.scanResult = nil
             self?.cameraService.resumeScanning()
@@ -283,14 +260,12 @@ final class ScanViewModel: ObservableObject {
     }
 
     // MARK: - Settings
-
     func openSettings() {
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(settingsURL)
     }
 
     // MARK: - Error Handling
-
     private func showError(message: String) {
         errorMessage = message
         showError = true
@@ -298,5 +273,4 @@ final class ScanViewModel: ObservableObject {
 }
 
 // MARK: - Combine Import
-
 import Combine

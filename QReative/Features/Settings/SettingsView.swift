@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Settings View
-
 struct SettingsView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
@@ -12,14 +11,12 @@ struct SettingsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                // Header
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 24)
                     .opacity(showContent ? 1 : 0)
                     .offset(y: showContent ? 0 : 20)
 
-                // PRO Banner (if not premium)
                 if !viewModel.isPremium {
                     proBanner
                         .padding(.bottom, 24)
@@ -28,7 +25,6 @@ struct SettingsView: View {
                         .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: showContent)
                 }
 
-                // Settings Groups
                 ForEach(Array(viewModel.settingsGroups.enumerated()), id: \.element.id) { index, group in
                     settingsGroup(group)
                         .padding(.bottom, 20)
@@ -37,7 +33,6 @@ struct SettingsView: View {
                         .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.08 + 0.15), value: showContent)
                 }
 
-                // Footer
                 footerSection
                     .padding(.top, 20)
                     .opacity(showContent ? 1 : 0)
@@ -72,21 +67,18 @@ struct SettingsView: View {
     }
 
     // MARK: - Header Section
-
     private var headerSection: some View {
         Text("Settings")
             .typography(.largeTitle)
     }
 
     // MARK: - PRO Banner
-
     private var proBanner: some View {
         Button {
             HapticManager.shared.mediumTap()
             viewModel.showUpgrade()
         } label: {
             HStack(spacing: 16) {
-                // Crown Icon
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(LinearGradient.goldGradient)
@@ -98,7 +90,6 @@ struct SettingsView: View {
                         .foregroundStyle(.white)
                 }
 
-                // Text
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Upgrade to PRO")
                         .font(.system(size: 17, weight: .semibold))
@@ -111,7 +102,6 @@ struct SettingsView: View {
 
                 Spacer()
 
-                // Chevron
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.5))
@@ -139,7 +129,6 @@ struct SettingsView: View {
     }
 
     // MARK: - Settings Group
-
     private func settingsGroup(_ group: SettingsGroup) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
@@ -163,14 +152,12 @@ struct SettingsView: View {
     }
 
     // MARK: - Settings Row
-
     private func settingsRow(_ item: SettingsItem) -> some View {
         Button {
             HapticManager.shared.lightTap()
             item.action()
         } label: {
             HStack(spacing: 12) {
-                // Icon
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(item.iconColor.opacity(0.15))
@@ -181,14 +168,12 @@ struct SettingsView: View {
                         .foregroundStyle(item.iconColor)
                 }
 
-                // Title
                 Text(item.title)
                     .font(.system(size: 15))
                     .foregroundStyle(.white)
 
                 Spacer()
 
-                // Subtitle (PRO badge)
                 if let subtitle = item.subtitle {
                     HStack(spacing: 3) {
                         Image(systemName: "crown.fill")
@@ -205,14 +190,12 @@ struct SettingsView: View {
                     }
                 }
 
-                // Loading indicator for restore
                 if item.title == "Restore Purchases" && viewModel.isRestoring {
                     ProgressView()
                         .tint(.white)
                         .scaleEffect(0.8)
                 }
 
-                // Chevron
                 if item.showChevron {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
@@ -222,13 +205,12 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .contentShape(Rectangle())
-            .background(Color.white.opacity(0.001)) // For tap area
+            .background(Color.white.opacity(0.001))
         }
         .buttonStyle(SettingsRowButtonStyle())
     }
 
     // MARK: - Footer Section
-
     private var footerSection: some View {
         VStack(spacing: 8) {
             Text("QReative")
@@ -249,7 +231,6 @@ struct SettingsView: View {
 }
 
 // MARK: - General Settings View (Placeholder)
-
 struct GeneralSettingsView: View {
     var body: some View {
         ZStack {
@@ -270,7 +251,6 @@ struct GeneralSettingsView: View {
 }
 
 // MARK: - App Icon Settings View (Placeholder)
-
 struct AppIconSettingsView: View {
     var body: some View {
         ZStack {
@@ -291,7 +271,6 @@ struct AppIconSettingsView: View {
 }
 
 // MARK: - Help & Support View (Placeholder)
-
 struct HelpSupportView: View {
     var body: some View {
         ZStack {
@@ -312,7 +291,6 @@ struct HelpSupportView: View {
 }
 
 // MARK: - Settings Row Button Style
-
 private struct SettingsRowButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -325,7 +303,6 @@ private struct SettingsRowButtonStyle: ButtonStyle {
 }
 
 // MARK: - Preview
-
 #Preview {
     SettingsView()
         .environmentObject(AppCoordinator())

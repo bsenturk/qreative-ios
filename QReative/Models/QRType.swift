@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - WiFi Security
-
 enum WifiSecurity: String, CaseIterable, Identifiable {
     case wpa = "WPA"
     case wep = "WEP"
@@ -19,7 +18,6 @@ enum WifiSecurity: String, CaseIterable, Identifiable {
 }
 
 // MARK: - QR Type
-
 enum QRType: Identifiable, Equatable {
     case website(url: String)
     case wifi(ssid: String, password: String, security: WifiSecurity)
@@ -31,7 +29,6 @@ enum QRType: Identifiable, Equatable {
     case sms(number: String, message: String?)
 
     // MARK: - Identifiable
-
     var id: String {
         switch self {
         case .website: return "website"
@@ -46,7 +43,6 @@ enum QRType: Identifiable, Equatable {
     }
 
     // MARK: - Display Properties
-
     var icon: String {
         switch self {
         case .website: return "globe"
@@ -129,18 +125,15 @@ enum QRType: Identifiable, Equatable {
     }
 
     // MARK: - QR Content Generation
-
     func generateQRContent() -> String {
         switch self {
         case .website(let url):
-            // Ensure URL has protocol
             if url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") {
                 return url
             }
             return "https://\(url)"
 
         case .wifi(let ssid, let password, let security):
-            // WiFi QR format: WIFI:T:WPA;S:mynetwork;P:mypass;;
             let securityType = security.rawValue
             if security == .none {
                 return "WIFI:T:\(securityType);S:\(escapeWifiString(ssid));;"
@@ -198,9 +191,7 @@ enum QRType: Identifiable, Equatable {
     }
 
     // MARK: - Helpers
-
     private func escapeWifiString(_ string: String) -> String {
-        // Escape special characters in WiFi QR strings
         var escaped = string
         escaped = escaped.replacingOccurrences(of: "\\", with: "\\\\")
         escaped = escaped.replacingOccurrences(of: ";", with: "\\;")
@@ -211,7 +202,6 @@ enum QRType: Identifiable, Equatable {
     }
 
     // MARK: - Factory
-
     static func fromId(_ id: String) -> QRType? {
         switch id {
         case "website": return .website(url: "")
@@ -227,7 +217,6 @@ enum QRType: Identifiable, Equatable {
     }
 
     // MARK: - Validation
-
     var isValid: Bool {
         switch self {
         case .website(let url):
@@ -251,7 +240,6 @@ enum QRType: Identifiable, Equatable {
 }
 
 // MARK: - QR Type Template (for selection grid)
-
 struct QRTypeTemplate: Identifiable {
     let id: String
     let type: QRType

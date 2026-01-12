@@ -2,12 +2,10 @@ import SwiftUI
 import Combine
 
 // MARK: - History ViewModel
-
 @MainActor
 final class HistoryViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var items: [HistoryItem] = []
     @Published var isLoading: Bool = false
     @Published var selectedItem: HistoryItem?
@@ -19,16 +17,13 @@ final class HistoryViewModel: ObservableObject {
     @Published var showError: Bool = false
 
     // MARK: - Dependencies
-
     private let storageService: StorageService
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Coordinators
-
     private weak var tabCoordinator: MainTabCoordinator?
 
     // MARK: - Computed Properties
-
     var isEmpty: Bool {
         items.isEmpty && !isLoading
     }
@@ -49,14 +44,12 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Init
-
     init(storageService: StorageService = .shared) {
         self.storageService = storageService
         setupBindings()
     }
 
     // MARK: - Setup
-
     private func setupBindings() {
         storageService.$historyItems
             .receive(on: DispatchQueue.main)
@@ -68,7 +61,6 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Load History
-
     func loadHistory() async {
         isLoading = true
 
@@ -82,7 +74,6 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Delete
-
     func confirmDelete(_ item: HistoryItem) {
         itemToDelete = item
         showDeleteConfirmation = true
@@ -115,19 +106,16 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Selection
-
     func selectItem(_ item: HistoryItem) {
         selectedItem = item
 
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
 
-        // Navigate to detail
         tabCoordinator?.pushToHistory(.qrDetail(historyItemId: item.id.uuidString))
     }
 
     // MARK: - Share
-
     func shareItem(_ item: HistoryItem) {
         itemToShare = item
         showShareSheet = true
@@ -139,7 +127,6 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Copy
-
     func copyContent(_ item: HistoryItem) {
         UIPasteboard.general.string = item.content
 
@@ -148,7 +135,6 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Clear All
-
     func clearAllHistory() async {
         do {
             try await storageService.clearHistory()
@@ -163,7 +149,6 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Helpers
-
     private func groupKey(for date: Date) -> String {
         let calendar = Calendar.current
         let now = Date()

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9B4FB88B2F144E6500881D52 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 9B4FB88A2F144E6500881D52 /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9B4FB7D02F1253BE00881D52 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +33,22 @@
 		9B4FB7D92F1253BE00881D52 /* QReativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QReativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9B4FB8852F1418C400881D52 /* Exceptions for "QReative" folder in "QReative" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9B4FB7C12F1253BD00881D52 /* QReative */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9B4FB7C42F1253BD00881D52 /* QReative */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9B4FB8852F1418C400881D52 /* Exceptions for "QReative" folder in "QReative" target */,
+			);
 			path = QReative;
 			sourceTree = "<group>";
 		};
@@ -52,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B4FB88B2F144E6500881D52 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +96,7 @@
 				9B4FB7C42F1253BD00881D52 /* QReative */,
 				9B4FB7D22F1253BE00881D52 /* QReativeTests */,
 				9B4FB7DC2F1253BE00881D52 /* QReativeUITests */,
+				9B4FB8892F144E6500881D52 /* Frameworks */,
 				9B4FB7C32F1253BD00881D52 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +109,13 @@
 				9B4FB7D92F1253BE00881D52 /* QReativeUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9B4FB8892F144E6500881D52 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +138,7 @@
 			);
 			name = QReative;
 			packageProductDependencies = (
+				9B4FB88A2F144E6500881D52 /* GoogleMobileAds */,
 			);
 			productName = QReative;
 			productReference = 9B4FB7C22F1253BD00881D52 /* QReative.app */;
@@ -195,6 +222,9 @@
 			);
 			mainGroup = 9B4FB7B92F1253BD00881D52;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9B4FB8862F14495600881D52 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9B4FB7C32F1253BD00881D52 /* Products */;
 			projectDirPath = "";
@@ -400,6 +430,8 @@
 				DEVELOPMENT_TEAM = ADPP457ME6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QReative/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "QReative needs camera access to scan QR codes\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -437,6 +469,8 @@
 				DEVELOPMENT_TEAM = ADPP457ME6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QReative/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "QReative needs camera access to scan QR codes\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -588,6 +622,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9B4FB8862F14495600881D52 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.14.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9B4FB88A2F144E6500881D52 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9B4FB8862F14495600881D52 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9B4FB7BA2F1253BD00881D52 /* Project object */;
 }

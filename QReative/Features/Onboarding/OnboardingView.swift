@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Onboarding View
-
 struct OnboardingView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @State private var currentPage: Int = 0
@@ -14,36 +13,33 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Background
             backgroundLayer
 
-            // Content
             VStack(spacing: 0) {
-                Spacer()
+                TabView(selection: $currentPage) {
+                    ForEach(0..<totalPages, id: \.self) { index in
+                        pageContent(for: index)
+                            .tag(index)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .onChange(of: currentPage) { _, _ in
+                    HapticManager.shared.lightTap()
+                }
 
-                // 3D QR Code
-                qrCodeSection
-                    .padding(.bottom, 48)
-                    .scaleEffect(isAppeared ? 1 : 0.5)
-                    .opacity(isAppeared ? 1 : 0)
-
-                // Text Content
-                textSection
-                    .padding(.horizontal, Theme.spacing.screen)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 30)
-
-                Spacer()
-
-                // Page Indicators
                 pageIndicators
                     .padding(.bottom, 32)
                     .opacity(showContent ? 1 : 0)
 
-                // Get Started Button
-                PrimaryButton("Get Started", icon: "arrow.right") {
+                PrimaryButton(currentPage == totalPages - 1 ? "Get Started" : "Next", icon: "arrow.right") {
                     HapticManager.shared.mediumTap()
-                    appCoordinator.completeOnboarding()
+                    if currentPage < totalPages - 1 {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            currentPage += 1
+                        }
+                    } else {
+                        appCoordinator.completeOnboarding()
+                    }
                 }
                 .frame(maxWidth: 320)
                 .padding(.horizontal, Theme.spacing.screen)
@@ -58,14 +54,96 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Background Layer
+    // MARK: - Page Content
+    private func pageContent(for index: Int) -> some View {
+        VStack(spacing: 0) {
+            Spacer()
 
+            pageIcon(for: index)
+                .padding(.bottom, 48)
+                .scaleEffect(isAppeared ? 1 : 0.5)
+                .opacity(isAppeared ? 1 : 0)
+
+            VStack(spacing: 16) {
+                Text(headlineText(for: index))
+                    .typography(.largeTitle)
+                    .multilineTextAlignment(.center)
+
+                Text(subheadlineText(for: index))
+                    .typography(.body, color: .textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
+            .padding(.horizontal, Theme.spacing.screen)
+            .opacity(showContent ? 1 : 0)
+            .offset(y: showContent ? 0 : 30)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Page Icon
+    @ViewBuilder
+    private func pageIcon(for index: Int) -> some View {
+        switch index {
+        case 0:
+            qrCodeSection
+        case 1:
+            scanIconSection
+        case 2:
+            historyIconSection
+        default:
+            qrCodeSection
+        }
+    }
+
+    // MARK: - Scan Icon Section
+    private var scanIconSection: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 32)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentPrimary, Color.accentSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 180, height: 180)
+
+            Image(systemName: "qrcode.viewfinder")
+                .font(.system(size: 80, weight: .light))
+                .foregroundStyle(.white)
+        }
+        .offset(y: floatOffset)
+        .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
+    }
+
+    // MARK: - History Icon Section
+    private var historyIconSection: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 32)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.accentTertiary, Color.accentPrimary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 180, height: 180)
+
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 80, weight: .light))
+                .foregroundStyle(.white)
+        }
+        .offset(y: floatOffset)
+        .shadow(color: Color.accentTertiary.opacity(0.3), radius: 30, x: 0, y: 20)
+    }
+
+    // MARK: - Background Layer
     private var backgroundLayer: some View {
         ZStack {
-            // Base background
             Color.backgroundPrimary
 
-            // Purple orb - top left
             Circle()
                 .fill(
                     RadialGradient(
@@ -83,7 +161,6 @@ struct OnboardingView: View {
                 .blur(radius: 60)
                 .offset(x: -150, y: -200)
 
-            // Cyan orb - bottom right
             Circle()
                 .fill(
                     RadialGradient(
@@ -104,7 +181,6 @@ struct OnboardingView: View {
     }
 
     // MARK: - QR Code Section
-
     private var qrCodeSection: some View {
         QRCodePreview(
             content: "https://qreative.app",
@@ -129,51 +205,34 @@ struct OnboardingView: View {
         .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
     }
 
-    // MARK: - Text Section
-
-    private var textSection: some View {
-        VStack(spacing: 16) {
-            Text(headlineText)
-                .typography(.largeTitle)
-                .multilineTextAlignment(.center)
-
-            Text(subheadlineText)
-                .typography(.body, color: .textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-        }
-    }
-
-    // MARK: - Page Content
-
-    private var headlineText: String {
-        switch currentPage {
+    // MARK: - Page Texts
+    private func headlineText(for index: Int) -> String {
+        switch index {
         case 0:
             return "Create Unique QR Codes"
         case 1:
-            return "Scan Anything Instantly"
+            return "Scan in Seconds"
         case 2:
-            return "Share with Style"
+            return "Access Your History"
         default:
             return "Create Unique QR Codes"
         }
     }
 
-    private var subheadlineText: String {
-        switch currentPage {
+    private func subheadlineText(for index: Int) -> String {
+        switch index {
         case 0:
-            return "Customize colors, shapes, and logos."
+            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
         case 1:
-            return "Fast and accurate QR code scanning."
+            return "Instantly scan any QR code with our fast and accurate scanner."
         case 2:
-            return "Export in high quality formats."
+            return "Access all your previously scanned codes anytime, anywhere."
         default:
-            return "Customize colors, shapes, and logos."
+            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
         }
     }
 
     // MARK: - Page Indicators
-
     private var pageIndicators: some View {
         HStack(spacing: 8) {
             ForEach(0..<totalPages, id: \.self) { index in
@@ -189,24 +248,19 @@ struct OnboardingView: View {
     }
 
     // MARK: - Animations
-
     private func startAnimations() {
-        // QR Code appear
         withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
             isAppeared = true
         }
 
-        // Text fade in
         withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
             showContent = true
         }
 
-        // Button appear
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.5)) {
             showButton = true
         }
 
-        // Start floating animation
         withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(0.6)) {
             floatOffset = -12
         }
@@ -214,7 +268,6 @@ struct OnboardingView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     OnboardingView()
         .environmentObject(AppCoordinator())

@@ -2,12 +2,10 @@ import Foundation
 import Combine
 
 // MARK: - Subscription Plan
-
 enum SubscriptionPlan: String, CaseIterable, Identifiable {
     case weekly = "com.qreative.premium.weekly"
     case monthly = "com.qreative.premium.monthly"
     case yearly = "com.qreative.premium.yearly"
-    case lifetime = "com.qreative.premium.lifetime"
 
     var id: String { rawValue }
 
@@ -16,7 +14,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "Weekly"
         case .monthly: return "Monthly"
         case .yearly: return "Yearly"
-        case .lifetime: return "Lifetime"
         }
     }
 
@@ -25,7 +22,6 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "Billed weekly"
         case .monthly: return "Billed monthly"
         case .yearly: return "Billed yearly"
-        case .lifetime: return "One-time purchase"
         }
     }
 
@@ -34,7 +30,22 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return "$2.99"
         case .monthly: return "$7.99"
         case .yearly: return "$49.99"
-        case .lifetime: return "$99.99"
+        }
+    }
+
+    var period: String {
+        switch self {
+        case .weekly: return "week"
+        case .monthly: return "month"
+        case .yearly: return "year"
+        }
+    }
+
+    var periodShort: String {
+        switch self {
+        case .weekly: return "/week"
+        case .monthly: return "/month"
+        case .yearly: return "/year"
         }
     }
 
@@ -43,17 +54,27 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         case .weekly: return nil
         case .monthly: return nil
         case .yearly: return "Save 48%"
-        case .lifetime: return "Best Value"
         }
     }
 
     var isPopular: Bool {
         self == .yearly
     }
+
+    var isBestValue: Bool {
+        self == .yearly
+    }
+
+    var trialDays: Int {
+        switch self {
+        case .weekly: return 3
+        case .monthly: return 7
+        case .yearly: return 7
+        }
+    }
 }
 
 // MARK: - Purchase Error
-
 enum PurchaseError: LocalizedError {
     case productNotFound
     case purchaseFailed
@@ -81,7 +102,6 @@ enum PurchaseError: LocalizedError {
 }
 
 // MARK: - Purchase Service Protocol
-
 protocol PurchaseServiceProtocol: AnyObject {
     var isPremium: Bool { get }
     var isPremiumPublisher: AnyPublisher<Bool, Never> { get }
@@ -92,54 +112,43 @@ protocol PurchaseServiceProtocol: AnyObject {
 }
 
 // MARK: - Mock Purchase Service (Development)
-
 @MainActor
 final class MockPurchaseService: PurchaseServiceProtocol, ObservableObject {
 
     // MARK: - Published Properties
-
     @Published private(set) var isPremium: Bool = false
 
     // MARK: - Publishers
-
     var isPremiumPublisher: AnyPublisher<Bool, Never> {
         $isPremium.eraseToAnyPublisher()
     }
 
     // MARK: - Constants
-
     private let premiumKey = "com.qreative.isPremium"
     private let purchaseDateKey = "com.qreative.purchaseDate"
     private let planKey = "com.qreative.purchasedPlan"
 
     // MARK: - Singleton
-
     static let shared = MockPurchaseService()
 
     // MARK: - Init
-
     private init() {
         loadPremiumStatus()
     }
 
     // MARK: - Load Status
-
     private func loadPremiumStatus() {
         isPremium = UserDefaults.standard.bool(forKey: premiumKey)
     }
 
     // MARK: - Purchase
-
     func purchase(_ plan: SubscriptionPlan) async throws {
-        // Simulate network delay
         try await Task.sleep(nanoseconds: 1_500_000_000)
 
-        // Simulate random failure (10% chance)
         if Int.random(in: 1...10) == 1 {
             throw PurchaseError.purchaseFailed
         }
 
-        // Save purchase
         UserDefaults.standard.set(true, forKey: premiumKey)
         UserDefaults.standard.set(Date(), forKey: purchaseDateKey)
         UserDefaults.standard.set(plan.rawValue, forKey: planKey)
@@ -148,32 +157,25 @@ final class MockPurchaseService: PurchaseServiceProtocol, ObservableObject {
     }
 
     // MARK: - Restore Purchases
-
     func restorePurchases() async throws {
-        // Simulate network delay
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
-        // Check if there was a previous purchase
         if UserDefaults.standard.object(forKey: purchaseDateKey) != nil {
             isPremium = true
             UserDefaults.standard.set(true, forKey: premiumKey)
         } else {
-            // No purchases to restore
             isPremium = false
         }
     }
 
     // MARK: - Check Subscription Status
-
     func checkSubscriptionStatus() async -> Bool {
-        // Simulate network delay
         try? await Task.sleep(nanoseconds: 500_000_000)
 
         return isPremium
     }
 
     // MARK: - Debug Methods
-
     #if DEBUG
     func debugSetPremium(_ value: Bool) {
         isPremium = value
@@ -200,10 +202,8 @@ final class MockPurchaseService: PurchaseServiceProtocol, ObservableObject {
 }
 
 // MARK: - Purchase Service Factory
-
 enum PurchaseServiceFactory {
     static func create() -> any PurchaseServiceProtocol {
-        // TODO: Return StoreKitPurchaseService for production
         return MockPurchaseService.shared
     }
 }

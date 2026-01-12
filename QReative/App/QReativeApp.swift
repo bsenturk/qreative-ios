@@ -1,16 +1,14 @@
-//
-//  QReativeApp.swift
-//  QReative
-//
-//  Created by Burak Ahmet Şentürk on 10.01.2026.
-//
-
 import SwiftUI
+import GoogleMobileAds
 
 @main
 struct QReativeApp: App {
     @StateObject private var appCoordinator = AppCoordinator()
     @StateObject private var tabCoordinator = MainTabCoordinator()
+
+    init() {
+        MobileAds.shared.start()
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -25,7 +23,6 @@ struct QReativeApp: App {
 }
 
 // MARK: - Root View
-
 struct RootView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
 
@@ -56,7 +53,6 @@ struct RootView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     RootView()
         .environmentObject(AppCoordinator())

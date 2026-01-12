@@ -2,7 +2,6 @@ import SwiftUI
 import Combine
 
 // MARK: - Onboarding Page
-
 struct OnboardingPage: Identifiable {
     let id: Int
     let headline: String
@@ -12,17 +11,14 @@ struct OnboardingPage: Identifiable {
 }
 
 // MARK: - Onboarding ViewModel
-
 @MainActor
 final class OnboardingViewModel: ObservableObject {
 
     // MARK: - Published Properties
-
     @Published var currentPage: Int = 0
     @Published var isAnimating: Bool = false
 
     // MARK: - Properties
-
     let totalPages: Int = 3
 
     let pages: [OnboardingPage] = [
@@ -50,11 +46,9 @@ final class OnboardingViewModel: ObservableObject {
     ]
 
     // MARK: - Coordinator Reference
-
     private weak var coordinator: AppCoordinator?
 
     // MARK: - Computed Properties
-
     var currentPageData: OnboardingPage {
         pages[currentPage]
     }
@@ -72,14 +66,11 @@ final class OnboardingViewModel: ObservableObject {
     }
 
     // MARK: - Init
-
     init(coordinator: AppCoordinator? = nil) {
         self.coordinator = coordinator
     }
 
     // MARK: - Methods
-
-    /// Go to next page or complete onboarding
     func nextPage() {
         guard !isAnimating else { return }
 
@@ -90,14 +81,12 @@ final class OnboardingViewModel: ObservableObject {
             withAnimation(Theme.animation.spring) {
                 currentPage += 1
             }
-            // Reset animation flag
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.isAnimating = false
             }
         }
     }
 
-    /// Go to previous page
     func previousPage() {
         guard !isAnimating, !isFirstPage else { return }
 
@@ -110,7 +99,6 @@ final class OnboardingViewModel: ObservableObject {
         }
     }
 
-    /// Jump to specific page
     func goToPage(_ page: Int) {
         guard page >= 0, page < totalPages, page != currentPage else { return }
 
@@ -119,25 +107,21 @@ final class OnboardingViewModel: ObservableObject {
         }
     }
 
-    /// Complete onboarding and navigate to paywall
     func completeOnboarding() {
         coordinator?.completeOnboarding()
     }
 
-    /// Skip onboarding (go directly to main app)
     func skipOnboarding() {
         coordinator?.skipOnboarding()
     }
 
     // MARK: - Coordinator Binding
-
     func bind(to coordinator: AppCoordinator) {
         self.coordinator = coordinator
     }
 }
 
 // MARK: - Environment Key
-
 private struct OnboardingViewModelKey: EnvironmentKey {
     static let defaultValue = OnboardingViewModel()
 }

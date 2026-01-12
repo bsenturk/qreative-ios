@@ -1,18 +1,15 @@
 import SwiftUI
 
 // MARK: - Animation Extensions
-
 extension Animation {
 
     // MARK: - Spring Animations
-
     static let gentleSpring = Animation.spring(response: 0.4, dampingFraction: 0.75)
     static let bouncySpring = Animation.spring(response: 0.5, dampingFraction: 0.6)
     static let quickSpring = Animation.spring(response: 0.3, dampingFraction: 0.7)
     static let snappySpring = Animation.spring(response: 0.25, dampingFraction: 0.8)
 
     // MARK: - Timing Animations
-
     static let smoothEaseOut = Animation.easeOut(duration: 0.3)
     static let mediumEaseOut = Animation.easeOut(duration: 0.4)
     static let slowEaseOut = Animation.easeOut(duration: 0.6)
@@ -21,7 +18,6 @@ extension Animation {
     static let smoothEaseInOut = Animation.easeInOut(duration: 0.35)
 
     // MARK: - Stagger Delay
-
     static func staggered(index: Int, baseDelay: Double = 0.05) -> Animation {
         .spring(response: 0.4, dampingFraction: 0.75)
         .delay(Double(index) * baseDelay)
@@ -33,38 +29,32 @@ extension Animation {
     }
 
     // MARK: - Loop Animations
-
     static let floatLoop = Animation.easeInOut(duration: 3).repeatForever(autoreverses: true)
     static let pulseLoop = Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true)
     static let scanLineLoop = Animation.linear(duration: 2).repeatForever(autoreverses: false)
     static let glowLoop = Animation.easeInOut(duration: 2).repeatForever(autoreverses: true)
 
     // MARK: - Transition Helpers
-
     static func delayedSpring(_ delay: Double) -> Animation {
         .spring(response: 0.4, dampingFraction: 0.75).delay(delay)
     }
 }
 
 // MARK: - Transition Extensions
-
 extension AnyTransition {
 
     // MARK: - Slide Transitions
-
     static let slideUp = AnyTransition.move(edge: .bottom).combined(with: .opacity)
     static let slideDown = AnyTransition.move(edge: .top).combined(with: .opacity)
     static let slideLeft = AnyTransition.move(edge: .trailing).combined(with: .opacity)
     static let slideRight = AnyTransition.move(edge: .leading).combined(with: .opacity)
 
     // MARK: - Scale Transitions
-
     static let scaleUp = AnyTransition.scale(scale: 0.8).combined(with: .opacity)
     static let scaleDown = AnyTransition.scale(scale: 1.2).combined(with: .opacity)
     static let popIn = AnyTransition.scale(scale: 0.5).combined(with: .opacity)
 
     // MARK: - Custom Transitions
-
     static let fadeSlideUp = AnyTransition.asymmetric(
         insertion: .move(edge: .bottom).combined(with: .opacity),
         removal: .opacity
@@ -86,7 +76,6 @@ extension AnyTransition {
 }
 
 // MARK: - Animation Modifiers
-
 struct FloatingAnimation: ViewModifier {
     @State private var isFloating = false
     let duration: Double
@@ -191,7 +180,6 @@ struct BounceButtonStyle: ButtonStyle {
 }
 
 // MARK: - View Extensions
-
 extension View {
     func floating(duration: Double = 3, distance: CGFloat = 10) -> some View {
         modifier(FloatingAnimation(duration: duration, distance: distance))
