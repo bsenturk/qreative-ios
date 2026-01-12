@@ -1,5 +1,6 @@
 import GoogleMobileAds
 import UIKit
+import Combine
 
 // MARK: - App Open Ad Manager
 @MainActor
@@ -9,7 +10,7 @@ final class AppOpenAdManager: NSObject, ObservableObject {
     static let shared = AppOpenAdManager()
 
     // MARK: - Properties
-    private var appOpenAd: GADAppOpenAd?
+    private var appOpenAd: AppOpenAd?
     private var isLoadingAd = false
     private var isShowingAd = false
     private var loadTime: Date?
@@ -17,7 +18,6 @@ final class AppOpenAdManager: NSObject, ObservableObject {
     @Published private(set) var isAdReady = false
 
     private let shownKey = "qreative.appOpenAdShown"
-    var shouldShowAfterCameraPermission = false
 
     // MARK: - Constants
     private let timeoutInterval: TimeInterval = 4 * 60 * 60
@@ -39,9 +39,9 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
         isLoadingAd = true
 
-        let request = GADRequest()
-        GADAppOpenAd.load(
-            withAdUnitID: AdUnitID.appOpen,
+        let request = Request()
+        AppOpenAd.load(
+            with: AdUnitID.appOpen,
             request: request
         ) { [weak self] ad, error in
             Task { @MainActor in
@@ -82,19 +82,7 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
         isShowingAd = true
 
-        appOpenAd?.present(fromRootViewController: rootViewController)
-    }
-
-    func showAdOnceAfterPermission() {
-        guard shouldShowAfterCameraPermission, !hasShownOnce else { return }
-
-        showAdIfAvailable {
-            self.hasShownOnce = true
-            self.shouldShowAfterCameraPermission = false
-        }
-
-        hasShownOnce = true
-        shouldShowAfterCameraPermission = false
+        appOpenAd?.present(from: rootViewController)
     }
 
     // MARK: - Ad Availability
@@ -109,8 +97,8 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 }
 
 // MARK: - GADFullScreenContentDelegate
-extension AppOpenAdManager: GADFullScreenContentDelegate {
-    nonisolated func adDidDismissFullScreenContent(_ ad: GADFullScreenPresentingAd) {
+extension AppOpenAdManager: FullScreenContentDelegate {
+    nonisolated func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
         Task { @MainActor in
             isShowingAd = false
             isAdReady = false
@@ -120,7 +108,7 @@ extension AppOpenAdManager: GADFullScreenContentDelegate {
         }
     }
 
-    nonisolated func ad(_ ad: GADFullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+    nonisolated func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
         Task { @MainActor in
             print("App Open Ad failed to present: \(error.localizedDescription)")
             isShowingAd = false
@@ -131,7 +119,7 @@ extension AppOpenAdManager: GADFullScreenContentDelegate {
         }
     }
 
-    nonisolated func adWillPresentFullScreenContent(_ ad: GADFullScreenPresentingAd) {
+    nonisolated func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
         print("App Open Ad will present")
     }
 }

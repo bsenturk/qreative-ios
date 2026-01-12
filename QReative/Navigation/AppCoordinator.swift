@@ -77,7 +77,6 @@ final class AppCoordinator: ObservableObject {
     func completeOnboarding() {
         isOnboardingCompleted = true
         AppOpenAdManager.shared.loadAd()
-        AppOpenAdManager.shared.shouldShowAfterCameraPermission = true
         showPaywall()
     }
 
