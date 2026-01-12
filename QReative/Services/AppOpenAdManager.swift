@@ -49,6 +49,7 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
                 self?.appOpenAd = ad
                 self?.appOpenAd?.fullScreenContentDelegate = self
+                self?.showAdIfAvailable()
                 print("App Open Ad loaded successfully")
             }
         }
@@ -68,14 +69,6 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
         isShowingAd = true
         ad.present(from: rootViewController)
-    }
-
-    func showAdOnceAfterPermission() {
-        guard shouldShowAfterCameraPermission, !hasShownOnce else { return }
-
-        hasShownOnce = true
-        shouldShowAfterCameraPermission = false
-        showAdIfAvailable()
     }
 }
 
