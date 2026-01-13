@@ -122,13 +122,14 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Lifecycle
     func onAppear() {
-        guard !hasAppeared else {
-            if cameraService.isAuthorized && scanResult == nil {
+        if cameraService.isAuthorized {
+            if scanResult == nil {
                 cameraService.startSession()
             }
             return
         }
 
+        guard !hasAppeared else { return }
         hasAppeared = true
 
         Task {
