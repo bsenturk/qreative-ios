@@ -50,7 +50,6 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
                 self.appOpenAd = ad
                 self.appOpenAd?.fullScreenContentDelegate = self
-                self.showAdIfAvailable()
                 print("App Open Ad loaded successfully")
             }
         }
