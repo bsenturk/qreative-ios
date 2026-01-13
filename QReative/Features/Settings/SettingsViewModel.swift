@@ -185,15 +185,9 @@ final class SettingsViewModel: ObservableObject {
         do {
             try await Task.sleep(nanoseconds: 1_500_000_000)
 
-            let restored = false
-
-            if restored {
-                isPremium = true
-                coordinator?.handlePurchaseSuccess()
-                restoreMessage = "Purchases restored successfully!"
-            } else {
-                restoreMessage = "No purchases to restore."
-            }
+            // TODO: Implement actual restore purchases logic with StoreKit
+            // For now, always show "no purchases" message
+            restoreMessage = "No purchases to restore."
 
         } catch {
             restoreMessage = "Failed to restore purchases. Please try again."

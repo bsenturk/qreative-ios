@@ -39,17 +39,18 @@ final class AppOpenAdManager: NSObject, ObservableObject {
             with: AdUnitID.appOpen,
             request: request
         ) { [weak self] ad, error in
-            Task { @MainActor in
-                self?.isLoadingAd = false
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isLoadingAd = false
 
                 if let error = error {
                     print("App Open Ad failed to load: \(error.localizedDescription)")
                     return
                 }
 
-                self?.appOpenAd = ad
-                self?.appOpenAd?.fullScreenContentDelegate = self
-                self?.showAdIfAvailable()
+                self.appOpenAd = ad
+                self.appOpenAd?.fullScreenContentDelegate = self
+                self.showAdIfAvailable()
                 print("App Open Ad loaded successfully")
             }
         }
