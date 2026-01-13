@@ -70,10 +70,6 @@ struct ScanView: View {
 
                 Spacer()
 
-                instructionText
-                    .padding(.bottom, 40)
-                    .opacity(showUI ? 1 : 0)
-
                 bottomArea
                     .padding(.horizontal, Theme.spacing.screen)
                     .padding(.bottom, 120)
@@ -140,13 +136,6 @@ struct ScanView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .glassCardSubtle(cornerRadius: 20)
-    }
-
-    // MARK: - Instruction Text
-    private var instructionText: some View {
-        Text("Position QR code within the frame")
-            .font(.system(size: 15))
-            .foregroundStyle(Color.white.opacity(0.7))
     }
 
     // MARK: - Bottom Area
