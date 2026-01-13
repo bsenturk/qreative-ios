@@ -151,13 +151,14 @@ struct ScanView: View {
 
     // MARK: - Bottom Area
     private var bottomArea: some View {
-        PhotosPicker(
+        let isProcessing = viewModel.isProcessingImage
+        return PhotosPicker(
             selection: $selectedPhoto,
             matching: .images,
             photoLibrary: .shared()
         ) {
             HStack(spacing: 10) {
-                if viewModel.isProcessingImage {
+                if isProcessing {
                     ProgressView()
                         .tint(.white)
                 } else {
@@ -173,7 +174,7 @@ struct ScanView: View {
             .padding(.vertical, 16)
             .glassCard(cornerRadius: 16, opacity: 0.08)
         }
-        .disabled(viewModel.isProcessingImage)
+        .disabled(isProcessing)
     }
 
     // MARK: - Permission Denied View

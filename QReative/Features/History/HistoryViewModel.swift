@@ -44,8 +44,8 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Init
-    init(storageService: StorageService = .shared) {
-        self.storageService = storageService
+    init(storageService: StorageService? = nil) {
+        self.storageService = storageService ?? StorageService.shared
         setupBindings()
     }
 

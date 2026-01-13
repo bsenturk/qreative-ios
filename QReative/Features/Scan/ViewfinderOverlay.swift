@@ -222,13 +222,6 @@ private struct DimmedBackground: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let rect = CGRect(
-                x: (geometry.size.width - frameSize) / 2,
-                y: (geometry.size.height - frameSize) / 2,
-                width: frameSize,
-                height: frameSize
-            )
-
             Rectangle()
                 .fill(Color.black.opacity(0.6))
                 .reverseMask {
