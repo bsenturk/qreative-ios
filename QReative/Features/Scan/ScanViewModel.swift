@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import CoreImage
+import Combine
 
 // MARK: - Scan Result
 struct ScanResult: Identifiable, Equatable {
@@ -278,6 +279,3 @@ final class ScanViewModel: ObservableObject {
         showError = true
     }
 }
-
-// MARK: - Combine Import
-import Combine
