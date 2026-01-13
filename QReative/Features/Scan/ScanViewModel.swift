@@ -133,6 +133,7 @@ final class ScanViewModel: ObservableObject {
             if scanResult == nil {
                 cameraService.startSession()
             }
+            AppOpenAdManager.shared.showAdIfAvailable()
             return
         }
 
