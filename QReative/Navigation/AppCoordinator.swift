@@ -38,6 +38,7 @@ final class AppCoordinator: ObservableObject {
     func start() {
         if isOnboardingCompleted {
             currentRoute = .mainTab(.scan)
+            AppOpenAdManager.shared.loadAd()
         } else {
             currentRoute = .onboarding
         }

@@ -81,6 +81,7 @@ final class ScanViewModel: ObservableObject {
     @Published var isProcessingImage: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
+    @Published var isCameraAuthorized: Bool = false
 
     // MARK: - Camera Service
     let cameraService: CameraService
@@ -91,6 +92,7 @@ final class ScanViewModel: ObservableObject {
     // MARK: - Init
     init(cameraService: CameraService) {
         self.cameraService = cameraService
+        self.isCameraAuthorized = cameraService.isAuthorized
         setupBindings()
     }
 
@@ -116,6 +118,10 @@ final class ScanViewModel: ObservableObject {
         cameraService.$zoomFactor
             .receive(on: DispatchQueue.main)
             .assign(to: &$zoomLevel)
+
+        cameraService.$isAuthorized
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isCameraAuthorized)
     }
 
     private var cancellables = Set<AnyCancellable>()

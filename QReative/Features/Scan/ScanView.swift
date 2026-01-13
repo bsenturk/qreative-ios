@@ -10,7 +10,7 @@ struct ScanView: View {
 
     var body: some View {
         ZStack {
-            if viewModel.cameraService.isAuthorized {
+            if viewModel.isCameraAuthorized {
                 cameraContent
             } else {
                 permissionDeniedView
