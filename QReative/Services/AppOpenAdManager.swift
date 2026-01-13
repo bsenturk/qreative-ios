@@ -13,19 +13,11 @@ final class AppOpenAdManager: NSObject, ObservableObject {
     private var appOpenAd: AppOpenAd?
     private var isLoadingAd = false
     private var isShowingAd = false
-
-    private let shownKey = "qreative.appOpenAdShown"
-    var shouldShowAfterCameraPermission = false
+    private var shouldShowWhenLoaded = false
 
     // MARK: - Init
     private override init() {
         super.init()
-    }
-
-    // MARK: - First Time Check
-    var hasShownOnce: Bool {
-        get { UserDefaults.standard.bool(forKey: shownKey) }
-        set { UserDefaults.standard.set(newValue, forKey: shownKey) }
     }
 
     // MARK: - Load Ad
@@ -45,19 +37,28 @@ final class AppOpenAdManager: NSObject, ObservableObject {
 
                 if let error = error {
                     print("App Open Ad failed to load: \(error.localizedDescription)")
+                    self.shouldShowWhenLoaded = false
                     return
                 }
 
                 self.appOpenAd = ad
                 self.appOpenAd?.fullScreenContentDelegate = self
                 print("App Open Ad loaded successfully")
+
+                if self.shouldShowWhenLoaded {
+                    self.shouldShowWhenLoaded = false
+                    self.showAdIfAvailable()
+                }
             }
         }
     }
 
     // MARK: - Show Ad
     func showAdIfAvailable() {
-        guard !isShowingAd, let ad = appOpenAd else {
+        guard !isShowingAd else { return }
+
+        guard let ad = appOpenAd else {
+            shouldShowWhenLoaded = true
             loadAd()
             return
         }
