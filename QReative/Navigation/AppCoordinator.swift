@@ -79,6 +79,7 @@ final class AppCoordinator: ObservableObject {
     func completeOnboarding() {
         isOnboardingCompleted = true
         AppOpenAdManager.shared.loadAd()
+        navigate(to: .mainTab(.scan))
         showPaywall()
     }
 
@@ -95,12 +96,10 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Paywall
     func showPaywall() {
         isPaywallPresented = true
-        currentRoute = .paywall
     }
 
     func dismissPaywall() {
         isPaywallPresented = false
-        navigate(to: .mainTab(.scan))
     }
 
     func handlePurchaseSuccess() {

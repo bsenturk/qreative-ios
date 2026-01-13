@@ -33,10 +33,6 @@ struct RootView: View {
                 OnboardingView()
                     .transition(.opacity)
 
-            case .paywall:
-                PaywallView()
-                    .transition(.opacity)
-
             case .mainTab:
                 MainTabView()
                     .transition(.opacity)
@@ -46,6 +42,9 @@ struct RootView: View {
             }
         }
         .animation(Theme.animation.easeInOut, value: appCoordinator.currentRoute)
+        .fullScreenCover(isPresented: $appCoordinator.isPaywallPresented) {
+            PaywallView()
+        }
         .onAppear {
             appCoordinator.start()
         }
