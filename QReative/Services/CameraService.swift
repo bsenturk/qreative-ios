@@ -211,14 +211,14 @@ final class CameraService: NSObject, ObservableObject {
                 if device.isTorchModeSupported(newMode) {
                     device.torchMode = newMode
 
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         self?.torchMode = newMode
                     }
                 }
 
                 device.unlockForConfiguration()
             } catch {
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.error = .torchNotAvailable
                 }
             }
@@ -238,7 +238,7 @@ final class CameraService: NSObject, ObservableObject {
                 device.torchMode = mode
                 device.unlockForConfiguration()
 
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.torchMode = mode
                 }
             } catch {
@@ -260,7 +260,7 @@ final class CameraService: NSObject, ObservableObject {
                 device.videoZoomFactor = clampedFactor
                 device.unlockForConfiguration()
 
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.zoomFactor = clampedFactor
                 }
             } catch {
