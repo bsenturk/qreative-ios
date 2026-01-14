@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import CoreImage
+import Combine
 
 // MARK: - Scan Result
 struct ScanResult: Identifiable, Equatable {
@@ -81,9 +82,13 @@ final class ScanViewModel: ObservableObject {
     @Published var isProcessingImage: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
+    @Published var isCameraAuthorized: Bool = false
 
     // MARK: - Camera Service
     let cameraService: CameraService
+
+    // MARK: - Dependencies
+    private weak var coordinator: AppCoordinator?
 
     // MARK: - Private Properties
     private var hasAppeared: Bool = false
@@ -91,11 +96,17 @@ final class ScanViewModel: ObservableObject {
     // MARK: - Init
     init(cameraService: CameraService) {
         self.cameraService = cameraService
+        self.isCameraAuthorized = cameraService.isAuthorized
         setupBindings()
     }
 
     convenience init() {
         self.init(cameraService: CameraService())
+    }
+
+    // MARK: - Coordinator Binding
+    func bind(coordinator: AppCoordinator?) {
+        self.coordinator = coordinator
     }
 
     // MARK: - Setup
@@ -116,27 +127,34 @@ final class ScanViewModel: ObservableObject {
         cameraService.$zoomFactor
             .receive(on: DispatchQueue.main)
             .assign(to: &$zoomLevel)
+
+        cameraService.$isAuthorized
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isCameraAuthorized)
     }
 
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Lifecycle
     func onAppear() {
-        guard !hasAppeared else {
-            if cameraService.isAuthorized && scanResult == nil {
+        let isPremium = coordinator?.isPremiumUser ?? false
+
+        if cameraService.isAuthorized {
+            if scanResult == nil {
                 cameraService.startSession()
             }
+            AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             return
         }
 
+        guard !hasAppeared else { return }
         hasAppeared = true
 
         Task {
             let authorized = await cameraService.checkPermission()
             if authorized {
                 cameraService.setupSession()
-                cameraService.startSession()
-                AppOpenAdManager.shared.showAdIfAvailable()
+                AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             } else {
                 showPermissionAlert = true
             }
@@ -271,6 +289,3 @@ final class ScanViewModel: ObservableObject {
         showError = true
     }
 }
-
-// MARK: - Combine Import
-import Combine

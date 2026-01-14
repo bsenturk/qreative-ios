@@ -38,6 +38,7 @@ struct CreateView: View {
         .sheet(isPresented: $viewModel.showMoreTypes) {
             MoreTypesSheet(
                 templates: viewModel.additionalTemplates,
+                isPremiumUser: appCoordinator.isPremiumUser,
                 onSelect: { template in
                     viewModel.selectFromMoreOptions(template)
                 }
@@ -62,7 +63,7 @@ struct CreateView: View {
     private var qrTypeGrid: some View {
         LazyVGrid(columns: columns, spacing: 16) {
             ForEach(Array(viewModel.primaryTemplates.enumerated()), id: \.element.id) { index, template in
-                QRTypeGridItem(template: template) {
+                QRTypeGridItem(template: template, isPremiumUser: appCoordinator.isPremiumUser) {
                     viewModel.selectType(template)
                 }
                 .opacity(showContent ? 1 : 0)
@@ -132,6 +133,7 @@ private struct MoreGridItem: View {
 // MARK: - More Types Sheet
 private struct MoreTypesSheet: View {
     let templates: [QRTypeTemplate]
+    let isPremiumUser: Bool
     let onSelect: (QRTypeTemplate) -> Void
 
     var body: some View {
@@ -150,7 +152,7 @@ private struct MoreTypesSheet: View {
 
             VStack(spacing: 12) {
                 ForEach(templates) { template in
-                    QRTypeLargeCard(template: template) {
+                    QRTypeLargeCard(template: template, isPremiumUser: isPremiumUser) {
                         onSelect(template)
                     }
                 }

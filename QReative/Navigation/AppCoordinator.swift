@@ -6,7 +6,7 @@ import Combine
 final class AppCoordinator: ObservableObject {
 
     // MARK: - Published Properties
-    @Published var currentRoute: Route = .onboarding
+    @Published var currentRoute: Route
     @Published var selectedTab: Tab = .scan
     @Published var navigationPath = NavigationPath()
     @Published var isPremiumUser: Bool = false
@@ -28,14 +28,17 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Init
     init() {
-        self.isOnboardingCompleted = UserDefaults.standard.bool(forKey: Keys.onboardingCompleted)
+        let onboardingCompleted = UserDefaults.standard.bool(forKey: Keys.onboardingCompleted)
+        self.isOnboardingCompleted = onboardingCompleted
         self.isPremiumUser = UserDefaults.standard.bool(forKey: Keys.isPremiumUser)
+        self.currentRoute = onboardingCompleted ? .mainTab(.scan) : .onboarding
     }
 
     // MARK: - Start
     func start() {
         if isOnboardingCompleted {
             currentRoute = .mainTab(.scan)
+            AppOpenAdManager.shared.loadAd()
         } else {
             currentRoute = .onboarding
         }
@@ -77,6 +80,7 @@ final class AppCoordinator: ObservableObject {
     func completeOnboarding() {
         isOnboardingCompleted = true
         AppOpenAdManager.shared.loadAd()
+        navigate(to: .mainTab(.scan))
         showPaywall()
     }
 
@@ -93,12 +97,10 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Paywall
     func showPaywall() {
         isPaywallPresented = true
-        currentRoute = .paywall
     }
 
     func dismissPaywall() {
         isPaywallPresented = false
-        navigate(to: .mainTab(.scan))
     }
 
     func handlePurchaseSuccess() {

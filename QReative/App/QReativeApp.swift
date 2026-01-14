@@ -1,10 +1,20 @@
 import SwiftUI
 import GoogleMobileAds
+import FirebaseCore
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    FirebaseApp.configure()
+    return true
+  }
+}
 
 @main
 struct QReativeApp: App {
     @StateObject private var appCoordinator = AppCoordinator()
     @StateObject private var tabCoordinator = MainTabCoordinator()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
         MobileAds.shared.start()
@@ -33,10 +43,6 @@ struct RootView: View {
                 OnboardingView()
                     .transition(.opacity)
 
-            case .paywall:
-                PaywallView()
-                    .transition(.opacity)
-
             case .mainTab:
                 MainTabView()
                     .transition(.opacity)
@@ -46,6 +52,9 @@ struct RootView: View {
             }
         }
         .animation(Theme.animation.easeInOut, value: appCoordinator.currentRoute)
+        .fullScreenCover(isPresented: $appCoordinator.isPaywallPresented) {
+            PaywallView()
+        }
         .onAppear {
             appCoordinator.start()
         }

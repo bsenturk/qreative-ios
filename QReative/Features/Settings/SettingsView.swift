@@ -5,7 +5,6 @@ struct SettingsView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = SettingsViewModel()
-    @State private var showContent = false
     @State private var bannerGlow = false
 
     var body: some View {
@@ -14,28 +13,19 @@ struct SettingsView: View {
                 headerSection
                     .padding(.top, 60)
                     .padding(.bottom, 24)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
 
-                if !viewModel.isPremium {
+                if !appCoordinator.isPremiumUser {
                     proBanner
                         .padding(.bottom, 24)
-                        .opacity(showContent ? 1 : 0)
-                        .offset(y: showContent ? 0 : 20)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: showContent)
                 }
 
-                ForEach(Array(viewModel.settingsGroups.enumerated()), id: \.element.id) { index, group in
+                ForEach(Array(viewModel.settingsGroups.enumerated()), id: \.offset) { index, group in
                     settingsGroup(group)
                         .padding(.bottom, 20)
-                        .opacity(showContent ? 1 : 0)
-                        .offset(y: showContent ? 0 : 20)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.08 + 0.15), value: showContent)
                 }
 
                 footerSection
                     .padding(.top, 20)
-                    .opacity(showContent ? 1 : 0)
 
                 Spacer(minLength: 100)
             }
@@ -45,9 +35,6 @@ struct SettingsView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
-            withAnimation(.easeOut(duration: 0.4)) {
-                showContent = true
-            }
             startBannerPulse()
         }
         .alert("Restore Purchases", isPresented: $viewModel.showRestoreAlert) {
@@ -131,7 +118,7 @@ struct SettingsView: View {
     // MARK: - Settings Group
     private func settingsGroup(_ group: SettingsGroup) -> some View {
         VStack(spacing: 0) {
-            ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+            ForEach(Array(group.items.enumerated()), id: \.offset) { index, item in
                 settingsRow(item)
 
                 if index < group.items.count - 1 {
@@ -220,11 +207,6 @@ struct SettingsView: View {
             Text(viewModel.appVersion)
                 .font(.system(size: 13))
                 .foregroundStyle(Color.white.opacity(0.3))
-
-            Text("Made with ❤️")
-                .font(.system(size: 12))
-                .foregroundStyle(Color.white.opacity(0.2))
-                .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
     }

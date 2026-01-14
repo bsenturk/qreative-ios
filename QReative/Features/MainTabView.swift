@@ -10,10 +10,12 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             tabContent
-                .padding(.bottom, 134)
+                .padding(.bottom, appCoordinator.isPremiumUser ? 84 : 134)
 
             VStack(spacing: 0) {
-                BannerContainerView()
+                if !appCoordinator.isPremiumUser {
+                    BannerContainerView()
+                }
 
                 CustomTabBar(
                     selectedTab: Binding(

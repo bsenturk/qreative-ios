@@ -3,13 +3,14 @@ import PhotosUI
 
 // MARK: - Scan View
 struct ScanView: View {
+    @EnvironmentObject var appCoordinator: AppCoordinator
     @StateObject private var viewModel = ScanViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showUI = false
 
     var body: some View {
         ZStack {
-            if viewModel.cameraService.isAuthorized {
+            if viewModel.isCameraAuthorized {
                 cameraContent
             } else {
                 permissionDeniedView
@@ -18,13 +19,25 @@ struct ScanView: View {
         .background(Color.black)
         .ignoresSafeArea()
         .onAppear {
-            viewModel.onAppear()
+            viewModel.bind(coordinator: appCoordinator)
             withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
                 showUI = true
+            }
+            Task {
+                if !appCoordinator.isPaywallPresented {
+                    viewModel.onAppear()
+                }
             }
         }
         .onDisappear {
             viewModel.onDisappear()
+        }
+        .onChange(of: appCoordinator.isPaywallPresented) { _, isPresented in
+            Task {
+                if !isPresented {
+                    viewModel.onAppear()
+                }
+            }
         }
         .sheet(isPresented: $viewModel.showResult) {
             if let result = viewModel.scanResult {
@@ -69,10 +82,6 @@ struct ScanView: View {
                     .offset(y: showUI ? 0 : -20)
 
                 Spacer()
-
-                instructionText
-                    .padding(.bottom, 40)
-                    .opacity(showUI ? 1 : 0)
 
                 bottomArea
                     .padding(.horizontal, Theme.spacing.screen)
@@ -142,22 +151,16 @@ struct ScanView: View {
         .glassCardSubtle(cornerRadius: 20)
     }
 
-    // MARK: - Instruction Text
-    private var instructionText: some View {
-        Text("Position QR code within the frame")
-            .font(.system(size: 15))
-            .foregroundStyle(Color.white.opacity(0.7))
-    }
-
     // MARK: - Bottom Area
     private var bottomArea: some View {
-        PhotosPicker(
+        let isProcessing = viewModel.isProcessingImage
+        return PhotosPicker(
             selection: $selectedPhoto,
             matching: .images,
             photoLibrary: .shared()
         ) {
             HStack(spacing: 10) {
-                if viewModel.isProcessingImage {
+                if isProcessing {
                     ProgressView()
                         .tint(.white)
                 } else {
@@ -173,7 +176,7 @@ struct ScanView: View {
             .padding(.vertical, 16)
             .glassCard(cornerRadius: 16, opacity: 0.08)
         }
-        .disabled(viewModel.isProcessingImage)
+        .disabled(isProcessing)
     }
 
     // MARK: - Permission Denied View

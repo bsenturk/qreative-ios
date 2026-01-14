@@ -13,19 +13,11 @@ final class AppOpenAdManager: NSObject, ObservableObject {
     private var appOpenAd: AppOpenAd?
     private var isLoadingAd = false
     private var isShowingAd = false
-
-    private let shownKey = "qreative.appOpenAdShown"
-    var shouldShowAfterCameraPermission = false
+    private var shouldShowWhenLoaded = false
 
     // MARK: - Init
     private override init() {
         super.init()
-    }
-
-    // MARK: - First Time Check
-    var hasShownOnce: Bool {
-        get { UserDefaults.standard.bool(forKey: shownKey) }
-        set { UserDefaults.standard.set(newValue, forKey: shownKey) }
     }
 
     // MARK: - Load Ad
@@ -39,25 +31,40 @@ final class AppOpenAdManager: NSObject, ObservableObject {
             with: AdUnitID.appOpen,
             request: request
         ) { [weak self] ad, error in
-            Task { @MainActor in
-                self?.isLoadingAd = false
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isLoadingAd = false
 
                 if let error = error {
                     print("App Open Ad failed to load: \(error.localizedDescription)")
+                    self.shouldShowWhenLoaded = false
                     return
                 }
 
-                self?.appOpenAd = ad
-                self?.appOpenAd?.fullScreenContentDelegate = self
-                self?.showAdIfAvailable()
+                self.appOpenAd = ad
+                self.appOpenAd?.fullScreenContentDelegate = self
                 print("App Open Ad loaded successfully")
+
+                if self.shouldShowWhenLoaded {
+                    self.shouldShowWhenLoaded = false
+                    self.showAdIfAvailable()
+                }
             }
         }
     }
 
     // MARK: - Show Ad
-    func showAdIfAvailable() {
-        guard !isShowingAd, let ad = appOpenAd else {
+    func showAdIfAvailable(isPremiumUser: Bool = false) {
+        // Skip ads for premium users
+        guard !isPremiumUser else {
+            print("App Open Ad: Skipping for premium user")
+            return
+        }
+
+        guard !isShowingAd else { return }
+
+        guard let ad = appOpenAd else {
+            shouldShowWhenLoaded = true
             loadAd()
             return
         }

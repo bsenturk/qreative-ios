@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import SwiftUI
 import Combine
 
@@ -15,9 +15,9 @@ final class CameraService: NSObject, ObservableObject {
     @Published var error: CameraError?
 
     // MARK: - AVCapture Properties
-    let captureSession = AVCaptureSession()
-    private var videoDeviceInput: AVCaptureDeviceInput?
-    private let metadataOutput = AVCaptureMetadataOutput()
+    nonisolated(unsafe) let captureSession = AVCaptureSession()
+    nonisolated(unsafe) private var videoDeviceInput: AVCaptureDeviceInput?
+    nonisolated(unsafe) private let metadataOutput = AVCaptureMetadataOutput()
     private let sessionQueue = DispatchQueue(label: "com.qreative.camera.session")
 
     // MARK: - Configuration
@@ -94,15 +94,16 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Session Setup
     func setupSession() {
+        let authorized = isAuthorized
         sessionQueue.async { [weak self] in
-            self?.configureSession()
+            self?.configureSession(authorized: authorized)
         }
     }
 
-    private func configureSession() {
-        guard isAuthorized else {
-            Task { @MainActor in
-                error = .notAuthorized
+    private nonisolated func configureSession(authorized: Bool) {
+        guard authorized else {
+            Task { @MainActor [weak self] in
+                self?.error = .notAuthorized
             }
             return
         }
@@ -111,8 +112,8 @@ final class CameraService: NSObject, ObservableObject {
         captureSession.sessionPreset = .high
 
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-            Task { @MainActor in
-                error = .deviceNotAvailable
+            Task { @MainActor [weak self] in
+                self?.error = .deviceNotAvailable
             }
             captureSession.commitConfiguration()
             return
@@ -125,15 +126,15 @@ final class CameraService: NSObject, ObservableObject {
                 captureSession.addInput(videoInput)
                 videoDeviceInput = videoInput
             } else {
-                Task { @MainActor in
-                    error = .configurationFailed
+                Task { @MainActor [weak self] in
+                    self?.error = .configurationFailed
                 }
                 captureSession.commitConfiguration()
                 return
             }
         } catch {
-            Task { @MainActor in
-                self.error = .configurationFailed
+            Task { @MainActor [weak self] in
+                self?.error = .configurationFailed
             }
             captureSession.commitConfiguration()
             return
@@ -148,42 +149,51 @@ final class CameraService: NSObject, ObservableObject {
                 metadataOutput.metadataObjectTypes = [.qr, .ean8, .ean13, .pdf417, .aztec, .dataMatrix]
             }
         } else {
-            Task { @MainActor in
-                error = .configurationFailed
+            Task { @MainActor [weak self] in
+                self?.error = .configurationFailed
             }
             captureSession.commitConfiguration()
             return
         }
 
         captureSession.commitConfiguration()
+
+        // Start session after configuration is complete
+        if !captureSession.isRunning {
+            captureSession.startRunning()
+
+            Task { @MainActor [weak self] in
+                self?.isSessionRunning = true
+                self?.detectedQRCode = nil
+                self?.lastDetectedCode = nil
+            }
+        }
     }
 
     // MARK: - Session Control
     func startSession() {
+        let session = captureSession
         sessionQueue.async { [weak self] in
-            guard let self = self else { return }
+            if !session.isRunning {
+                session.startRunning()
 
-            if !self.captureSession.isRunning {
-                self.captureSession.startRunning()
-
-                Task { @MainActor in
-                    self.isSessionRunning = true
-                    self.detectedQRCode = nil
-                    self.lastDetectedCode = nil
+                Task { @MainActor [weak self] in
+                    self?.isSessionRunning = true
+                    self?.detectedQRCode = nil
+                    self?.lastDetectedCode = nil
                 }
             }
         }
     }
 
     func stopSession() {
+        let session = captureSession
         sessionQueue.async { [weak self] in
-            guard let self = self else { return }
+            if session.isRunning {
+                session.stopRunning()
 
-            if self.captureSession.isRunning {
-                self.captureSession.stopRunning()
-
-                Task { @MainActor in
-                    self.isSessionRunning = false
+                Task { @MainActor [weak self] in
+                    self?.isSessionRunning = false
                 }
             }
         }
@@ -212,14 +222,14 @@ final class CameraService: NSObject, ObservableObject {
                 if device.isTorchModeSupported(newMode) {
                     device.torchMode = newMode
 
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         self?.torchMode = newMode
                     }
                 }
 
                 device.unlockForConfiguration()
             } catch {
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.error = .torchNotAvailable
                 }
             }
@@ -239,7 +249,7 @@ final class CameraService: NSObject, ObservableObject {
                 device.torchMode = mode
                 device.unlockForConfiguration()
 
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.torchMode = mode
                 }
             } catch {
@@ -261,7 +271,7 @@ final class CameraService: NSObject, ObservableObject {
                 device.videoZoomFactor = clampedFactor
                 device.unlockForConfiguration()
 
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.zoomFactor = clampedFactor
                 }
             } catch {
