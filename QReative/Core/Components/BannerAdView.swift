@@ -47,21 +47,15 @@ struct BannerAdView: UIViewRepresentable {
 
 // MARK: - Banner Container View
 struct BannerContainerView: View {
-    let isPremiumUser: Bool
-
     var body: some View {
-        Group {
-            if !isPremiumUser {
-                BannerAdView()
-                    .frame(height: 50)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.backgroundPrimary)
-            }
-        }
+        BannerAdView()
+            .frame(height: 50)
+            .frame(maxWidth: .infinity)
+            .background(Color.backgroundPrimary)
     }
 }
 
 // MARK: - Preview
 #Preview {
-    BannerContainerView(isPremiumUser: false)
+    BannerContainerView()
 }
