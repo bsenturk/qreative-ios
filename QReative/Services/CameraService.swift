@@ -157,6 +157,17 @@ final class CameraService: NSObject, ObservableObject {
         }
 
         captureSession.commitConfiguration()
+
+        // Start session after configuration is complete
+        if !captureSession.isRunning {
+            captureSession.startRunning()
+
+            Task { @MainActor [weak self] in
+                self?.isSessionRunning = true
+                self?.detectedQRCode = nil
+                self?.lastDetectedCode = nil
+            }
+        }
     }
 
     // MARK: - Session Control

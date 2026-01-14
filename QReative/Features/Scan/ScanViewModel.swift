@@ -144,7 +144,6 @@ final class ScanViewModel: ObservableObject {
             let authorized = await cameraService.checkPermission()
             if authorized {
                 cameraService.setupSession()
-                cameraService.startSession()
                 AppOpenAdManager.shared.showAdIfAvailable()
             } else {
                 showPermissionAlert = true
