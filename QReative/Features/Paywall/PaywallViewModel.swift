@@ -23,24 +23,34 @@ final class PaywallViewModel: ObservableObject {
     // MARK: - Properties
     let features: [PaywallFeature] = [
         PaywallFeature(
-            icon: "crown.fill",
-            title: "Custom Logos",
-            description: "Add your brand logo to QR codes"
-        ),
-        PaywallFeature(
-            icon: "infinity",
-            title: "Unlimited Scans",
-            description: "No daily limits on scanning"
-        ),
-        PaywallFeature(
             icon: "eye.slash.fill",
-            title: "No Ads",
-            description: "Distraction-free experience"
+            title: "Ad-Free Experience",
+            description: "Enjoy scanning without any interruptions"
         ),
         PaywallFeature(
-            icon: "sparkles",
-            title: "Premium Designs",
-            description: "Exclusive templates and styles"
+            icon: "paintpalette.fill",
+            title: "Custom QR Designs",
+            description: "Colors, gradients & unique patterns"
+        ),
+        PaywallFeature(
+            icon: "sparkle",
+            title: "Logo & Emoji",
+            description: "Add your brand logo or emoji to QR codes"
+        ),
+        PaywallFeature(
+            icon: "qrcode",
+            title: "All QR Formats",
+            description: "Wi-Fi, VCard, Instagram, Spotify & more"
+        ),
+        PaywallFeature(
+            icon: "arrow.down.doc.fill",
+            title: "HD Export",
+            description: "High-resolution PNG, SVG & PDF export"
+        ),
+        PaywallFeature(
+            icon: "clock.arrow.circlepath",
+            title: "Unlimited History",
+            description: "Save all scans with CSV export"
         )
     ]
 
