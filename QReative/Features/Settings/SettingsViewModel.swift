@@ -54,8 +54,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - App Info
     var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        return "v\(version) (\(build))"
+        return "v\(version)"
     }
 
     // MARK: - Settings Groups
@@ -67,13 +66,6 @@ final class SettingsViewModel: ObservableObject {
                     iconColor: Color(hex: "8E8E93"),
                     title: "General",
                     action: { [weak self] in self?.openGeneral() }
-                ),
-                SettingsItem(
-                    icon: "app.badge.fill",
-                    iconColor: Color(hex: "007AFF"),
-                    title: "App Icon",
-                    subtitle: isPremium ? nil : "PRO",
-                    action: { [weak self] in self?.openAppIcon() }
                 ),
             ]),
 
@@ -149,19 +141,19 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Navigation
     func openGeneral() {
-        tabCoordinator?.pushToSettings(.settings(.general))
-    }
-
-    func openAppIcon() {
-        if isPremium {
-            tabCoordinator?.pushToSettings(.settings(.appIcon))
-        } else {
-            coordinator?.showPaywall()
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
 
     func openHelp() {
-        tabCoordinator?.pushToSettings(.settings(.helpSupport))
+        let email = "buraksenturktr@icloud.com"
+        let subject = "QReative Support"
+        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        if let url = URL(string: "mailto:\(email)?subject=\(encodedSubject)") {
+            UIApplication.shared.open(url)
+        }
     }
 
     func openPrivacyPolicy() {

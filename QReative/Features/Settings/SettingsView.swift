@@ -207,11 +207,6 @@ struct SettingsView: View {
             Text(viewModel.appVersion)
                 .font(.system(size: 13))
                 .foregroundStyle(Color.white.opacity(0.3))
-
-            Text("Made with ❤️")
-                .font(.system(size: 12))
-                .foregroundStyle(Color.white.opacity(0.2))
-                .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
     }
