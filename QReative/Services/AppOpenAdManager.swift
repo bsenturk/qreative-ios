@@ -54,7 +54,13 @@ final class AppOpenAdManager: NSObject, ObservableObject {
     }
 
     // MARK: - Show Ad
-    func showAdIfAvailable() {
+    func showAdIfAvailable(isPremiumUser: Bool = false) {
+        // Skip ads for premium users
+        guard !isPremiumUser else {
+            print("App Open Ad: Skipping for premium user")
+            return
+        }
+
         guard !isShowingAd else { return }
 
         guard let ad = appOpenAd else {

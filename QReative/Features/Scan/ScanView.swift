@@ -19,6 +19,7 @@ struct ScanView: View {
         .background(Color.black)
         .ignoresSafeArea()
         .onAppear {
+            viewModel.bind(coordinator: appCoordinator)
             withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
                 showUI = true
             }

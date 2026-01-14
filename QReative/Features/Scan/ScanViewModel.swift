@@ -87,6 +87,9 @@ final class ScanViewModel: ObservableObject {
     // MARK: - Camera Service
     let cameraService: CameraService
 
+    // MARK: - Dependencies
+    private weak var coordinator: AppCoordinator?
+
     // MARK: - Private Properties
     private var hasAppeared: Bool = false
 
@@ -99,6 +102,11 @@ final class ScanViewModel: ObservableObject {
 
     convenience init() {
         self.init(cameraService: CameraService())
+    }
+
+    // MARK: - Coordinator Binding
+    func bind(coordinator: AppCoordinator?) {
+        self.coordinator = coordinator
     }
 
     // MARK: - Setup
@@ -129,11 +137,13 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Lifecycle
     func onAppear() {
+        let isPremium = coordinator?.isPremiumUser ?? false
+
         if cameraService.isAuthorized {
             if scanResult == nil {
                 cameraService.startSession()
             }
-            AppOpenAdManager.shared.showAdIfAvailable()
+            AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             return
         }
 
@@ -144,7 +154,7 @@ final class ScanViewModel: ObservableObject {
             let authorized = await cameraService.checkPermission()
             if authorized {
                 cameraService.setupSession()
-                AppOpenAdManager.shared.showAdIfAvailable()
+                AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             } else {
                 showPermissionAlert = true
             }

@@ -14,7 +14,7 @@ struct SettingsView: View {
                     .padding(.top, 60)
                     .padding(.bottom, 24)
 
-                if !viewModel.isPremium {
+                if !appCoordinator.isPremiumUser {
                     proBanner
                         .padding(.bottom, 24)
                 }

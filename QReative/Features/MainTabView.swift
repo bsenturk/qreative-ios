@@ -13,7 +13,7 @@ struct MainTabView: View {
                 .padding(.bottom, 134)
 
             VStack(spacing: 0) {
-                BannerContainerView()
+                BannerContainerView(isPremiumUser: appCoordinator.isPremiumUser)
 
                 CustomTabBar(
                     selectedTab: Binding(
