@@ -13,15 +13,15 @@ final class CreateViewModel: ObservableObject {
     // MARK: - Properties
     let primaryTemplates: [QRTypeTemplate] = [
         QRTypeTemplate(id: "website", type: .website(url: ""), isPremium: false),
-        QRTypeTemplate(id: "wifi", type: .wifi(ssid: "", password: "", security: .wpa), isPremium: false),
-        QRTypeTemplate(id: "instagram", type: .instagram(username: ""), isPremium: false),
-        QRTypeTemplate(id: "text", type: .text(content: ""), isPremium: false),
+        QRTypeTemplate(id: "wifi", type: .wifi(ssid: "", password: "", security: .wpa), isPremium: true),
+        QRTypeTemplate(id: "instagram", type: .instagram(username: ""), isPremium: true),
+        QRTypeTemplate(id: "text", type: .text(content: ""), isPremium: true),
         QRTypeTemplate(id: "vcard", type: .vcard(name: "", phone: nil, email: nil, company: nil), isPremium: true),
     ]
 
     let additionalTemplates: [QRTypeTemplate] = [
-        QRTypeTemplate(id: "email", type: .email(address: "", subject: nil, body: nil), isPremium: false),
-        QRTypeTemplate(id: "phone", type: .phone(number: ""), isPremium: false),
+        QRTypeTemplate(id: "email", type: .email(address: "", subject: nil, body: nil), isPremium: true),
+        QRTypeTemplate(id: "phone", type: .phone(number: ""), isPremium: true),
         QRTypeTemplate(id: "sms", type: .sms(number: "", message: nil), isPremium: true),
     ]
 

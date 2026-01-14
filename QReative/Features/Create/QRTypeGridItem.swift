@@ -3,10 +3,15 @@ import SwiftUI
 // MARK: - QR Type Grid Item
 struct QRTypeGridItem: View {
     let template: QRTypeTemplate
+    let isPremiumUser: Bool
     let onTap: () -> Void
 
     @State private var isPressed: Bool = false
     @State private var isHovered: Bool = false
+
+    private var shouldShowPremiumBadge: Bool {
+        template.isPremium && !isPremiumUser
+    }
 
     var body: some View {
         Button {
@@ -21,7 +26,7 @@ struct QRTypeGridItem: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.white)
 
-                    if template.isPremium {
+                    if shouldShowPremiumBadge {
                         premiumBadge
                     }
                 }
@@ -101,6 +106,7 @@ struct QRTypeGridItem: View {
 // MARK: - QR Type Grid
 struct QRTypeGrid: View {
     let templates: [QRTypeTemplate]
+    let isPremiumUser: Bool
     let onSelect: (QRTypeTemplate) -> Void
 
     private let columns = [
@@ -111,7 +117,7 @@ struct QRTypeGrid: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(templates) { template in
-                QRTypeGridItem(template: template) {
+                QRTypeGridItem(template: template, isPremiumUser: isPremiumUser) {
                     onSelect(template)
                 }
             }
@@ -122,9 +128,14 @@ struct QRTypeGrid: View {
 // MARK: - Large QR Type Card (for featured items)
 struct QRTypeLargeCard: View {
     let template: QRTypeTemplate
+    let isPremiumUser: Bool
     let onTap: () -> Void
 
     @State private var isPressed: Bool = false
+
+    private var shouldShowPremiumBadge: Bool {
+        template.isPremium && !isPremiumUser
+    }
 
     var body: some View {
         Button {
@@ -155,7 +166,7 @@ struct QRTypeLargeCard: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
 
-                        if template.isPremium {
+                        if shouldShowPremiumBadge {
                             HStack(spacing: 3) {
                                 Image(systemName: "crown.fill")
                                     .font(.system(size: 8))
@@ -211,7 +222,7 @@ struct QRTypeLargeCard: View {
             .ignoresSafeArea()
 
         VStack(spacing: 20) {
-            QRTypeGrid(templates: QRTypeTemplate.allTemplates) { template in
+            QRTypeGrid(templates: QRTypeTemplate.allTemplates, isPremiumUser: false) { template in
                 print("Selected: \(template.title)")
             }
             .padding(.horizontal, 20)
@@ -226,7 +237,7 @@ struct QRTypeLargeCard: View {
 
         VStack(spacing: 12) {
             ForEach(QRTypeTemplate.allTemplates.prefix(3)) { template in
-                QRTypeLargeCard(template: template) {
+                QRTypeLargeCard(template: template, isPremiumUser: false) {
                     print("Selected: \(template.title)")
                 }
             }
