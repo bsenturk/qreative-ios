@@ -22,16 +22,20 @@ struct ScanView: View {
             withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
                 showUI = true
             }
-            if !appCoordinator.isPaywallPresented {
-                viewModel.onAppear()
+            Task {
+                if !appCoordinator.isPaywallPresented {
+                    viewModel.onAppear()
+                }
             }
         }
         .onDisappear {
             viewModel.onDisappear()
         }
         .onChange(of: appCoordinator.isPaywallPresented) { _, isPresented in
-            if !isPresented {
-                viewModel.onAppear()
+            Task {
+                if !isPresented {
+                    viewModel.onAppear()
+                }
             }
         }
         .sheet(isPresented: $viewModel.showResult) {
