@@ -1,10 +1,20 @@
 import SwiftUI
 import GoogleMobileAds
+import FirebaseCore
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    FirebaseApp.configure()
+    return true
+  }
+}
 
 @main
 struct QReativeApp: App {
     @StateObject private var appCoordinator = AppCoordinator()
     @StateObject private var tabCoordinator = MainTabCoordinator()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
         MobileAds.shared.start()

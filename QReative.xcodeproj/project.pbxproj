@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9B4FB88B2F144E6500881D52 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 9B4FB88A2F144E6500881D52 /* GoogleMobileAds */; };
+		9B4FB96A2F17B49D00881D52 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 9B4FB9692F17B49D00881D52 /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B4FB96A2F17B49D00881D52 /* FirebaseCore in Frameworks */,
 				9B4FB88B2F144E6500881D52 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,6 +141,7 @@
 			name = QReative;
 			packageProductDependencies = (
 				9B4FB88A2F144E6500881D52 /* GoogleMobileAds */,
+				9B4FB9692F17B49D00881D52 /* FirebaseCore */,
 			);
 			productName = QReative;
 			productReference = 9B4FB7C22F1253BD00881D52 /* QReative.app */;
@@ -224,6 +227,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				9B4FB8862F14495600881D52 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				9B4FB9682F17B41A00881D52 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9B4FB7C32F1253BD00881D52 /* Products */;
@@ -431,6 +435,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QReative/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QReative;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "QReative needs camera access to scan QR codes\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -470,6 +476,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QReative/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QReative;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "QReative needs camera access to scan QR codes\n";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -632,6 +640,14 @@
 				minimumVersion = 12.14.0;
 			};
 		};
+		9B4FB9682F17B41A00881D52 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -639,6 +655,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9B4FB8862F14495600881D52 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		9B4FB9692F17B49D00881D52 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9B4FB9682F17B41A00881D52 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
