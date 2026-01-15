@@ -110,7 +110,8 @@ struct QREditorView: View {
                 backgroundColor: .white,
                 shape: viewModel.selectedShape,
                 logoImage: viewModel.logoImage,
-                isGlowing: false
+                isGlowing: false,
+                gradientColors: viewModel.selectedColor == .gradient ? viewModel.selectedColor.colors : nil
             )
         }
         .padding(24)
@@ -301,7 +302,7 @@ struct QREditorView: View {
             Text("Shape")
                 .typography(.caption1, color: .textTertiary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 ForEach(QRShape.allCases, id: \.self) { shape in
                     ShapeButton(
                         shape: shape,
@@ -310,6 +311,8 @@ struct QREditorView: View {
                         viewModel.selectShape(shape)
                     }
                 }
+
+                Spacer()
             }
         }
     }

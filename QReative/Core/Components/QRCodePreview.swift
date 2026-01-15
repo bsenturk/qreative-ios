@@ -34,6 +34,7 @@ struct QRCodePreview: View {
     let shape: QRShape
     let logoImage: UIImage?
     let isGlowing: Bool
+    let gradientColors: [Color]?
 
     @State private var qrMatrix: [[Bool]] = []
 
@@ -44,7 +45,8 @@ struct QRCodePreview: View {
         backgroundColor: Color = .white,
         shape: QRShape = .squares,
         logoImage: UIImage? = nil,
-        isGlowing: Bool = false
+        isGlowing: Bool = false,
+        gradientColors: [Color]? = nil
     ) {
         self.content = content
         self.size = size
@@ -53,6 +55,7 @@ struct QRCodePreview: View {
         self.shape = shape
         self.logoImage = logoImage
         self.isGlowing = isGlowing
+        self.gradientColors = gradientColors
     }
 
     var body: some View {
@@ -98,6 +101,18 @@ struct QRCodePreview: View {
         Canvas { context, canvasSize in
             let scale = canvasSize.width / (size * 0.8)
 
+            // Create gradient if gradient colors are provided
+            let fillShading: GraphicsContext.Shading
+            if let gradientColors = gradientColors, gradientColors.count > 1 {
+                fillShading = GraphicsContext.Shading.linearGradient(
+                    Gradient(colors: gradientColors),
+                    startPoint: CGPoint(x: 0, y: 0),
+                    endPoint: CGPoint(x: canvasSize.width, y: canvasSize.height)
+                )
+            } else {
+                fillShading = GraphicsContext.Shading.color(foregroundColor)
+            }
+
             for row in 0..<moduleCount {
                 for col in 0..<moduleCount {
                     guard qrMatrix[row][col] else { continue }
@@ -114,7 +129,7 @@ struct QRCodePreview: View {
                     let rect = CGRect(x: x, y: y, width: moduleSize * scale, height: moduleSize * scale)
 
                     let path = modulePath(for: rect)
-                    context.fill(path, with: .color(foregroundColor))
+                    context.fill(path, with: fillShading)
                 }
             }
         }
