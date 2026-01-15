@@ -279,10 +279,14 @@ final class QRCodeService {
     // MARK: - Private Helpers
     private func getInset(for shape: QRShape, moduleSize: CGFloat) -> CGFloat {
         switch shape {
-        case .squares, .rounded:
-            return moduleSize * 0.1
+        case .squares:
+            // Use minimal inset for squares to ensure scanability
+            return moduleSize * 0.03
+        case .rounded:
+            // Use minimal inset for rounded to ensure scanability
+            return moduleSize * 0.03
         case .dots:
-            // Use much smaller inset for dots to ensure scanability
+            // Use minimal inset for dots to ensure scanability
             return moduleSize * 0.02
         }
     }
