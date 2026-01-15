@@ -94,7 +94,11 @@ struct QRCodePreview: View {
     @ViewBuilder
     private var qrCodeView: some View {
         let moduleCount = qrMatrix.count
-        let moduleSize = (size * 0.8) / CGFloat(moduleCount)
+        // Add quiet zone (4 modules padding on each side)
+        let quietZoneModules: CGFloat = 4
+        let totalModules = CGFloat(moduleCount) + (quietZoneModules * 2)
+        let moduleSize = (size * 0.8) / totalModules
+        let offset = quietZoneModules * moduleSize
         let logoRadius = logoImage != nil ? Int(Double(moduleCount) * 0.25) : 0
         let center = moduleCount / 2
 
@@ -124,8 +128,8 @@ struct QRCodePreview: View {
                         }
                     }
 
-                    let x = CGFloat(col) * moduleSize * scale
-                    let y = CGFloat(row) * moduleSize * scale
+                    let x = (offset + CGFloat(col) * moduleSize) * scale
+                    let y = (offset + CGFloat(row) * moduleSize) * scale
                     let rect = CGRect(x: x, y: y, width: moduleSize * scale, height: moduleSize * scale)
 
                     let path = modulePath(for: rect)
