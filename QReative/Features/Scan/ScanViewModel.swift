@@ -192,9 +192,6 @@ final class ScanViewModel: ObservableObject {
     func processGalleryImage(_ image: UIImage) {
         isProcessingImage = true
 
-        // Reset scanResult to allow new gallery scans
-        scanResult = nil
-
         Task {
             defer { isProcessingImage = false }
 
@@ -216,7 +213,10 @@ final class ScanViewModel: ObservableObject {
                 return
             }
 
-            handleDetectedCode(messageString)
+            // Directly set the result for gallery scans to ensure history is saved
+            scanResult = ScanResult(content: messageString)
+            showResult = true
+            saveToHistory()
         }
     }
 
