@@ -1,4 +1,5 @@
 import SwiftUI
+import MessageUI
 
 // MARK: - Settings View
 struct SettingsView: View {
@@ -44,6 +45,16 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $viewModel.showShareSheet) {
             ShareSheet(items: viewModel.shareItems)
+        }
+        .sheet(isPresented: $viewModel.showMailComposer) {
+            if MFMailComposeViewController.canSendMail() {
+                MailComposeView(
+                    recipient: "buraksenturktr@icloud.com",
+                    subject: "QReative Support"
+                )
+            } else {
+                MailUnavailableView(recipient: "buraksenturktr@icloud.com")
+            }
         }
     }
 

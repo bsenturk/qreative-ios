@@ -46,6 +46,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var restoreMessage: String = ""
     @Published var isRestoring: Bool = false
     @Published var showShareSheet: Bool = false
+    @Published var showMailComposer: Bool = false
 
     // MARK: - Dependencies
     private weak var coordinator: AppCoordinator?
@@ -147,13 +148,10 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func openHelp() {
-        let email = "buraksenturktr@icloud.com"
-        let subject = "QReative Support"
-        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
 
-        if let url = URL(string: "mailto:\(email)?subject=\(encodedSubject)") {
-            UIApplication.shared.open(url)
-        }
+        showMailComposer = true
     }
 
     func openPrivacyPolicy() {
