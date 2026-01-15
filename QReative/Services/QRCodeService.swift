@@ -88,11 +88,17 @@ final class QRCodeService {
         let styledImage = renderer.image { ctx in
             let context = ctx.cgContext
 
+            // Fill background
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: .zero, size: size))
 
-            let moduleSize = size.width / CGFloat(qrSize)
-            let inset = moduleSize * 0.1
+            // Calculate module size with quiet zone (at least 4 modules padding)
+            let quietZoneModules: CGFloat = 4
+            let totalModules = CGFloat(qrSize) + (quietZoneModules * 2)
+            let moduleSize = size.width / totalModules
+            let qrOffset = quietZoneModules * moduleSize
+            // Use smaller inset for dots to improve scanability
+            let inset = getInset(for: shape, moduleSize: moduleSize)
 
             context.setFillColor(foregroundColor.cgColor)
 
@@ -109,8 +115,8 @@ final class QRCodeService {
                         }
                     }
 
-                    let x = CGFloat(col) * moduleSize
-                    let y = CGFloat(row) * moduleSize
+                    let x = qrOffset + CGFloat(col) * moduleSize
+                    let y = qrOffset + CGFloat(row) * moduleSize
                     let rect = CGRect(x: x + inset, y: y + inset, width: moduleSize - inset * 2, height: moduleSize - inset * 2)
 
                     drawModule(in: context, rect: rect, shape: shape, moduleSize: moduleSize)
@@ -118,7 +124,7 @@ final class QRCodeService {
             }
 
             if let logo = logo {
-                drawLogo(logo, in: context, canvasSize: size)
+                drawLogo(logo, in: context, canvasSize: size, qrSize: qrSize, moduleSize: moduleSize, offset: qrOffset)
             }
         }
 
@@ -136,22 +142,35 @@ final class QRCodeService {
     ) -> UIImage? {
         guard !content.isEmpty, gradientColors.count >= 2 else { return nil }
 
-        guard let blackQR = generateStyledQRCode(
-            content: content,
-            size: size,
-            foregroundColor: .black,
-            backgroundColor: .clear,
-            shape: shape,
-            logo: nil
-        ) else { return nil }
+        let filter = CIFilter.qrCodeGenerator()
+        filter.message = Data(content.utf8)
+        filter.correctionLevel = logo != nil ? "H" : "M"
+
+        guard let outputImage = filter.outputImage else { return nil }
+
+        let qrSize = Int(outputImage.extent.width)
+        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent),
+              let matrix = extractMatrix(from: cgImage, size: qrSize) else {
+            return nil
+        }
 
         let renderer = UIGraphicsImageRenderer(size: size)
         let gradientImage = renderer.image { ctx in
             let context = ctx.cgContext
 
+            // Draw background
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: .zero, size: size))
 
+            // Calculate module size with quiet zone (at least 4 modules padding)
+            let quietZoneModules: CGFloat = 4
+            let totalModules = CGFloat(qrSize) + (quietZoneModules * 2)
+            let moduleSize = size.width / totalModules
+            let qrOffset = quietZoneModules * moduleSize
+            // Use smaller inset for dots to improve scanability
+            let inset = getInset(for: shape, moduleSize: moduleSize)
+
+            // Create gradient
             let colorSpace = CGColorSpaceCreateDeviceRGB()
             let colors = gradientColors.map { $0.cgColor } as CFArray
             let locations: [CGFloat] = gradientColors.enumerated().map { CGFloat($0.offset) / CGFloat(gradientColors.count - 1) }
@@ -160,15 +179,41 @@ final class QRCodeService {
 
             let startPoint = CGPoint.zero
             let endPoint = CGPoint(x: size.width, y: size.height)
-            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
 
-            guard let qrCGImage = blackQR.cgImage else { return }
-            context.clip(to: CGRect(origin: .zero, size: size), mask: qrCGImage)
-            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
-        }
+            // Draw gradient modules
+            context.saveGState()
 
-        if let logo = logo {
-            return addLogo(logo, to: gradientImage, size: size)
+            for row in 0..<qrSize {
+                for col in 0..<qrSize {
+                    guard matrix[row][col] else { continue }
+
+                    if logo != nil {
+                        let logoRadius = Int(Double(qrSize) * 0.2)
+                        let center = qrSize / 2
+                        let distanceFromCenter = max(abs(row - center), abs(col - center))
+                        if distanceFromCenter < logoRadius {
+                            continue
+                        }
+                    }
+
+                    let x = qrOffset + CGFloat(col) * moduleSize
+                    let y = qrOffset + CGFloat(row) * moduleSize
+                    let rect = CGRect(x: x + inset, y: y + inset, width: moduleSize - inset * 2, height: moduleSize - inset * 2)
+
+                    context.saveGState()
+                    addPathForShape(shape, in: context, rect: rect, moduleSize: moduleSize)
+                    context.clip()
+                    context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+                    context.restoreGState()
+                }
+            }
+
+            context.restoreGState()
+
+            // Draw logo
+            if let logo = logo {
+                drawLogo(logo, in: context, canvasSize: size, qrSize: qrSize, moduleSize: moduleSize, offset: qrOffset)
+            }
         }
 
         return gradientImage
@@ -232,6 +277,20 @@ final class QRCodeService {
     }
 
     // MARK: - Private Helpers
+    private func getInset(for shape: QRShape, moduleSize: CGFloat) -> CGFloat {
+        switch shape {
+        case .squares:
+            // Use minimal inset for squares to ensure scanability
+            return moduleSize * 0.03
+        case .rounded:
+            // Use minimal inset for rounded to ensure scanability
+            return moduleSize * 0.03
+        case .dots:
+            // Use minimal inset for dots to ensure scanability
+            return moduleSize * 0.02
+        }
+    }
+
     private func extractMatrix(from cgImage: CGImage, size: Int) -> [[Bool]]? {
         guard let dataProvider = cgImage.dataProvider,
               let data = dataProvider.data,
@@ -280,6 +339,28 @@ final class QRCodeService {
         }
     }
 
+    private func addPathForShape(_ shape: QRShape, in context: CGContext, rect: CGRect, moduleSize: CGFloat) {
+        switch shape {
+        case .squares:
+            context.addRect(rect)
+
+        case .dots:
+            let diameter = min(rect.width, rect.height)
+            let circleRect = CGRect(
+                x: rect.midX - diameter / 2,
+                y: rect.midY - diameter / 2,
+                width: diameter,
+                height: diameter
+            )
+            context.addEllipse(in: circleRect)
+
+        case .rounded:
+            let cornerRadius = rect.width * 0.3
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+            context.addPath(path.cgPath)
+        }
+    }
+
     private func drawLogo(_ logo: UIImage, in context: CGContext, canvasSize: CGSize) {
         let logoSize = canvasSize.width * 0.22
         let logoRect = CGRect(
@@ -293,6 +374,41 @@ final class QRCodeService {
         let backgroundRect = CGRect(
             x: (canvasSize.width - backgroundSize) / 2,
             y: (canvasSize.height - backgroundSize) / 2,
+            width: backgroundSize,
+            height: backgroundSize
+        )
+        context.setFillColor(UIColor.white.cgColor)
+        context.fillEllipse(in: backgroundRect)
+
+        if let cgImage = logo.cgImage {
+            context.saveGState()
+            context.addEllipse(in: logoRect)
+            context.clip()
+            context.draw(cgImage, in: logoRect)
+            context.restoreGState()
+        }
+    }
+
+    private func drawLogo(_ logo: UIImage, in context: CGContext, canvasSize: CGSize, qrSize: Int, moduleSize: CGFloat, offset: CGFloat) {
+        // Calculate logo size based on QR code area (not canvas)
+        let qrCodeSize = CGFloat(qrSize) * moduleSize
+        let logoSize = qrCodeSize * 0.22
+
+        // Center logo in QR code area
+        let qrCodeCenterX = offset + (qrCodeSize / 2)
+        let qrCodeCenterY = offset + (qrCodeSize / 2)
+
+        let logoRect = CGRect(
+            x: qrCodeCenterX - logoSize / 2,
+            y: qrCodeCenterY - logoSize / 2,
+            width: logoSize,
+            height: logoSize
+        )
+
+        let backgroundSize = logoSize + 8
+        let backgroundRect = CGRect(
+            x: qrCodeCenterX - backgroundSize / 2,
+            y: qrCodeCenterY - backgroundSize / 2,
             width: backgroundSize,
             height: backgroundSize
         )

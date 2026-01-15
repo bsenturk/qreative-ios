@@ -213,7 +213,10 @@ final class ScanViewModel: ObservableObject {
                 return
             }
 
-            handleDetectedCode(messageString)
+            // Directly set the result for gallery scans to ensure history is saved
+            scanResult = ScanResult(content: messageString)
+            showResult = true
+            saveToHistory()
         }
     }
 
@@ -258,7 +261,31 @@ final class ScanViewModel: ObservableObject {
     func saveToHistory() {
         guard let result = scanResult else { return }
 
-        print("Saved to history: \(result.content)")
+        // Convert ScanResultType to HistoryItemType
+        let historyType: HistoryItemType = {
+            switch result.type {
+            case .url:
+                return .website
+            case .email:
+                return .email
+            case .phone:
+                return .phone
+            case .wifi:
+                return .wifi
+            case .text:
+                return .text
+            }
+        }()
+
+        let historyItem = HistoryItem(
+            content: result.content,
+            type: historyType,
+            createdAt: result.timestamp
+        )
+
+        Task {
+            try? await StorageService.shared.saveItem(historyItem)
+        }
     }
 
     // MARK: - Result Management

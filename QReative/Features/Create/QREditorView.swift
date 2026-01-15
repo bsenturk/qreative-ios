@@ -110,7 +110,8 @@ struct QREditorView: View {
                 backgroundColor: .white,
                 shape: viewModel.selectedShape,
                 logoImage: viewModel.logoImage,
-                isGlowing: false
+                isGlowing: false,
+                gradientColors: viewModel.selectedColor == .gradient ? viewModel.selectedColor.colors : nil
             )
         }
         .padding(24)
@@ -135,6 +136,8 @@ struct QREditorView: View {
                 emailInputFields
             case "sms":
                 smsInputFields
+            case "whatsapp":
+                whatsappInputField
             default:
                 defaultInputField
             }
@@ -224,6 +227,37 @@ struct QREditorView: View {
         }
     }
 
+    private var whatsappInputField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("WhatsApp Number")
+                .typography(.caption1, color: .textTertiary)
+
+            HStack {
+                TextField("+1 234 567 8900", text: $viewModel.content)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.phonePad)
+
+                if !viewModel.content.isEmpty {
+                    Button {
+                        viewModel.content = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Color.textTertiary)
+                    }
+                }
+            }
+            .padding(16)
+            .glassCard(cornerRadius: 16, opacity: 0.08)
+
+            Text("Include country code (e.g., +1 for USA)")
+                .typography(.caption2, color: .textTertiary)
+                .padding(.horizontal, 4)
+        }
+    }
+
     @ViewBuilder
     private func inputField(
         label: String,
@@ -301,7 +335,7 @@ struct QREditorView: View {
             Text("Shape")
                 .typography(.caption1, color: .textTertiary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 ForEach(QRShape.allCases, id: \.self) { shape in
                     ShapeButton(
                         shape: shape,
@@ -310,6 +344,8 @@ struct QREditorView: View {
                         viewModel.selectShape(shape)
                     }
                 }
+
+                Spacer()
             }
         }
     }
@@ -360,6 +396,22 @@ struct QREditorView: View {
                 }
                 .padding(12)
                 .glassCard(cornerRadius: 16, opacity: 0.08)
+            } else if viewModel.isLoadingLogo {
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .tint(Color.accentPrimary)
+                        .scaleEffect(0.9)
+
+                    Text("Loading logo...")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.textSecondary)
+
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 16)
+                .glassCard(cornerRadius: 16, opacity: 0.08)
             } else {
                 PhotosPicker(
                     selection: $selectedPhoto,
@@ -395,12 +447,18 @@ struct QREditorView: View {
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
         guard let item else { return }
 
+        viewModel.isLoadingLogo = true
+
         Task {
+            defer {
+                viewModel.isLoadingLogo = false
+                selectedPhoto = nil
+            }
+
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 viewModel.addLogo(image)
             }
-            selectedPhoto = nil
         }
     }
 }

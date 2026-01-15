@@ -43,6 +43,7 @@ enum SettingsRoute: Hashable, Codable {
     case restorePurchases
     case about
     case privacy
+    case termsOfUse
 
     var title: String {
         switch self {
@@ -52,6 +53,7 @@ enum SettingsRoute: Hashable, Codable {
         case .restorePurchases: return "Restore Purchases"
         case .about: return "About"
         case .privacy: return "Privacy Policy"
+        case .termsOfUse: return "Terms of Use"
         }
     }
 
@@ -63,6 +65,7 @@ enum SettingsRoute: Hashable, Codable {
         case .restorePurchases: return "arrow.clockwise"
         case .about: return "info.circle"
         case .privacy: return "hand.raised"
+        case .termsOfUse: return "doc.plaintext"
         }
     }
 }

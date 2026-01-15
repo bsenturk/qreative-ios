@@ -34,6 +34,7 @@ struct QRCodePreview: View {
     let shape: QRShape
     let logoImage: UIImage?
     let isGlowing: Bool
+    let gradientColors: [Color]?
 
     @State private var qrMatrix: [[Bool]] = []
 
@@ -44,7 +45,8 @@ struct QRCodePreview: View {
         backgroundColor: Color = .white,
         shape: QRShape = .squares,
         logoImage: UIImage? = nil,
-        isGlowing: Bool = false
+        isGlowing: Bool = false,
+        gradientColors: [Color]? = nil
     ) {
         self.content = content
         self.size = size
@@ -53,6 +55,7 @@ struct QRCodePreview: View {
         self.shape = shape
         self.logoImage = logoImage
         self.isGlowing = isGlowing
+        self.gradientColors = gradientColors
     }
 
     var body: some View {
@@ -91,12 +94,28 @@ struct QRCodePreview: View {
     @ViewBuilder
     private var qrCodeView: some View {
         let moduleCount = qrMatrix.count
-        let moduleSize = (size * 0.8) / CGFloat(moduleCount)
+        // Add quiet zone (4 modules padding on each side)
+        let quietZoneModules: CGFloat = 4
+        let totalModules = CGFloat(moduleCount) + (quietZoneModules * 2)
+        let moduleSize = (size * 0.8) / totalModules
+        let offset = quietZoneModules * moduleSize
         let logoRadius = logoImage != nil ? Int(Double(moduleCount) * 0.25) : 0
         let center = moduleCount / 2
 
         Canvas { context, canvasSize in
             let scale = canvasSize.width / (size * 0.8)
+
+            // Create gradient if gradient colors are provided
+            let fillShading: GraphicsContext.Shading
+            if let gradientColors = gradientColors, gradientColors.count > 1 {
+                fillShading = GraphicsContext.Shading.linearGradient(
+                    Gradient(colors: gradientColors),
+                    startPoint: CGPoint(x: 0, y: 0),
+                    endPoint: CGPoint(x: canvasSize.width, y: canvasSize.height)
+                )
+            } else {
+                fillShading = GraphicsContext.Shading.color(foregroundColor)
+            }
 
             for row in 0..<moduleCount {
                 for col in 0..<moduleCount {
@@ -109,12 +128,12 @@ struct QRCodePreview: View {
                         }
                     }
 
-                    let x = CGFloat(col) * moduleSize * scale
-                    let y = CGFloat(row) * moduleSize * scale
+                    let x = (offset + CGFloat(col) * moduleSize) * scale
+                    let y = (offset + CGFloat(row) * moduleSize) * scale
                     let rect = CGRect(x: x, y: y, width: moduleSize * scale, height: moduleSize * scale)
 
                     let path = modulePath(for: rect)
-                    context.fill(path, with: .color(foregroundColor))
+                    context.fill(path, with: fillShading)
                 }
             }
         }
@@ -122,7 +141,14 @@ struct QRCodePreview: View {
 
     // MARK: - Module Path
     private func modulePath(for rect: CGRect) -> Path {
-        let inset: CGFloat = rect.width * 0.05
+        // Use minimal inset for all shapes to ensure scanability
+        let inset: CGFloat
+        switch shape {
+        case .squares, .rounded:
+            inset = rect.width * 0.015  // Minimal inset for squares and rounded
+        case .dots:
+            inset = rect.width * 0.01   // Even smaller for dots
+        }
 
         switch shape {
         case .squares:

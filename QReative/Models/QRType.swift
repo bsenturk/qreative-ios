@@ -27,6 +27,7 @@ enum QRType: Identifiable, Equatable {
     case email(address: String, subject: String?, body: String?)
     case phone(number: String)
     case sms(number: String, message: String?)
+    case whatsapp(number: String)
 
     // MARK: - Identifiable
     var id: String {
@@ -39,6 +40,7 @@ enum QRType: Identifiable, Equatable {
         case .email: return "email"
         case .phone: return "phone"
         case .sms: return "sms"
+        case .whatsapp: return "whatsapp"
         }
     }
 
@@ -53,6 +55,7 @@ enum QRType: Identifiable, Equatable {
         case .email: return "envelope.fill"
         case .phone: return "phone.fill"
         case .sms: return "message.fill"
+        case .whatsapp: return "message.circle.fill"
         }
     }
 
@@ -66,6 +69,7 @@ enum QRType: Identifiable, Equatable {
         case .email: return "Email"
         case .phone: return "Phone"
         case .sms: return "SMS"
+        case .whatsapp: return "WhatsApp"
         }
     }
 
@@ -79,6 +83,7 @@ enum QRType: Identifiable, Equatable {
         case .email: return "Compose email"
         case .phone: return "Direct call"
         case .sms: return "Send text message"
+        case .whatsapp: return "Start WhatsApp chat"
         }
     }
 
@@ -100,6 +105,8 @@ enum QRType: Identifiable, Equatable {
             return [Color(hex: "2196F3"), Color(hex: "1565C0")]
         case .sms:
             return [Color(hex: "9C27B0"), Color(hex: "7B1FA2")]
+        case .whatsapp:
+            return [Color(hex: "25D366"), Color(hex: "128C7E")]
         }
     }
 
@@ -121,6 +128,7 @@ enum QRType: Identifiable, Equatable {
         case .email: return "email@example.com"
         case .phone: return "+1 234 567 8900"
         case .sms: return "+1 234 567 8900"
+        case .whatsapp: return "+1 234 567 8900"
         }
     }
 
@@ -187,6 +195,16 @@ enum QRType: Identifiable, Equatable {
                 return "sms:\(cleanNumber)?body=\(encodedMessage)"
             }
             return "sms:\(cleanNumber)"
+
+        case .whatsapp(let number):
+            // Remove all non-numeric characters except +
+            var cleanNumber = number.replacingOccurrences(of: " ", with: "")
+                .replacingOccurrences(of: "-", with: "")
+                .replacingOccurrences(of: "(", with: "")
+                .replacingOccurrences(of: ")", with: "")
+            // Remove + if exists (wa.me doesn't use +)
+            cleanNumber = cleanNumber.replacingOccurrences(of: "+", with: "")
+            return "https://wa.me/\(cleanNumber)"
         }
     }
 
@@ -212,6 +230,7 @@ enum QRType: Identifiable, Equatable {
         case "email": return .email(address: "", subject: nil, body: nil)
         case "phone": return .phone(number: "")
         case "sms": return .sms(number: "", message: nil)
+        case "whatsapp": return .whatsapp(number: "")
         default: return nil
         }
     }
@@ -234,6 +253,8 @@ enum QRType: Identifiable, Equatable {
         case .phone(let number):
             return !number.isEmpty && number.count >= 7
         case .sms(let number, _):
+            return !number.isEmpty && number.count >= 7
+        case .whatsapp(let number):
             return !number.isEmpty && number.count >= 7
         }
     }

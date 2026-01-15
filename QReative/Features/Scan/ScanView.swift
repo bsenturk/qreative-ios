@@ -7,6 +7,7 @@ struct ScanView: View {
     @StateObject private var viewModel = ScanViewModel()
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showUI = false
+    @State private var photoPickerID = UUID()
 
     var body: some View {
         ZStack {
@@ -57,10 +58,18 @@ struct ScanView: View {
         .onChange(of: viewModel.showResult) { _, isShowing in
             if isShowing {
                 HapticManager.shared.success()
+            } else {
+                // Reset photo picker when result sheet is dismissed
+                selectedPhoto = nil
+                photoPickerID = UUID()
             }
         }
         .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) {
+                // Reset photo picker on error as well
+                selectedPhoto = nil
+                photoPickerID = UUID()
+            }
         } message: {
             Text(viewModel.errorMessage ?? "An error occurred")
         }
@@ -177,6 +186,7 @@ struct ScanView: View {
             .glassCard(cornerRadius: 16, opacity: 0.08)
         }
         .disabled(isProcessing)
+        .id(photoPickerID)
     }
 
     // MARK: - Permission Denied View
@@ -211,14 +221,23 @@ struct ScanView: View {
 
     // MARK: - Photo Selection
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
-        guard let item else { return }
+        guard let item else {
+            // Reset picker if no item selected (sheet dismissed without selection)
+            photoPickerID = UUID()
+            return
+        }
 
         Task {
+            defer {
+                // Always reset state after processing
+                selectedPhoto = nil
+                photoPickerID = UUID()
+            }
+
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 viewModel.processGalleryImage(image)
             }
-            selectedPhoto = nil
         }
     }
 }
