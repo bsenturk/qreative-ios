@@ -192,6 +192,9 @@ final class ScanViewModel: ObservableObject {
     func processGalleryImage(_ image: UIImage) {
         isProcessingImage = true
 
+        // Reset scanResult to allow new gallery scans
+        scanResult = nil
+
         Task {
             defer { isProcessingImage = false }
 
