@@ -135,10 +135,17 @@ struct SettingsDetailPlaceholder: View {
     let route: SettingsRoute
 
     var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            Text(route.title)
-                .typography(.title1)
+        switch route {
+        case .privacy:
+            PrivacyPolicyView()
+        case .termsOfUse:
+            TermsOfUseView()
+        default:
+            ZStack {
+                Color.backgroundPrimary.ignoresSafeArea()
+                Text(route.title)
+                    .typography(.title1)
+            }
         }
     }
 }

@@ -157,15 +157,17 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func openPrivacyPolicy() {
-        if let url = URL(string: "https://qreative.app/privacy") {
-            UIApplication.shared.open(url)
-        }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        tabCoordinator?.pushToSettings(.settings(.privacy))
     }
 
     func openTermsOfUse() {
-        if let url = URL(string: "https://qreative.app/terms") {
-            UIApplication.shared.open(url)
-        }
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        tabCoordinator?.pushToSettings(.settings(.termsOfUse))
     }
 
     // MARK: - Restore Purchases
