@@ -65,6 +65,7 @@ final class QREditorViewModel: ObservableObject {
     @Published var showLogoPicker: Bool = false
     @Published var showPaywall: Bool = false
     @Published var isSaving: Bool = false
+    @Published var isLoadingLogo: Bool = false
     @Published var showSaveSuccess: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false

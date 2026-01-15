@@ -363,6 +363,22 @@ struct QREditorView: View {
                 }
                 .padding(12)
                 .glassCard(cornerRadius: 16, opacity: 0.08)
+            } else if viewModel.isLoadingLogo {
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .tint(Color.accentPrimary)
+                        .scaleEffect(0.9)
+
+                    Text("Loading logo...")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.textSecondary)
+
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 16)
+                .glassCard(cornerRadius: 16, opacity: 0.08)
             } else {
                 PhotosPicker(
                     selection: $selectedPhoto,
@@ -398,12 +414,18 @@ struct QREditorView: View {
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
         guard let item else { return }
 
+        viewModel.isLoadingLogo = true
+
         Task {
+            defer {
+                viewModel.isLoadingLogo = false
+                selectedPhoto = nil
+            }
+
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 viewModel.addLogo(image)
             }
-            selectedPhoto = nil
         }
     }
 }

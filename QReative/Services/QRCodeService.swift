@@ -136,22 +136,27 @@ final class QRCodeService {
     ) -> UIImage? {
         guard !content.isEmpty, gradientColors.count >= 2 else { return nil }
 
-        guard let blackQR = generateStyledQRCode(
-            content: content,
-            size: size,
-            foregroundColor: .black,
-            backgroundColor: .clear,
-            shape: shape,
-            logo: nil
-        ) else { return nil }
+        let filter = CIFilter.qrCodeGenerator()
+        filter.message = Data(content.utf8)
+        filter.correctionLevel = logo != nil ? "H" : "M"
+
+        guard let outputImage = filter.outputImage else { return nil }
+
+        let qrSize = Int(outputImage.extent.width)
+        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent),
+              let matrix = extractMatrix(from: cgImage, size: qrSize) else {
+            return nil
+        }
 
         let renderer = UIGraphicsImageRenderer(size: size)
         let gradientImage = renderer.image { ctx in
             let context = ctx.cgContext
 
+            // Draw background
             context.setFillColor(backgroundColor.cgColor)
             context.fill(CGRect(origin: .zero, size: size))
 
+            // Create gradient
             let colorSpace = CGColorSpaceCreateDeviceRGB()
             let colors = gradientColors.map { $0.cgColor } as CFArray
             let locations: [CGFloat] = gradientColors.enumerated().map { CGFloat($0.offset) / CGFloat(gradientColors.count - 1) }
@@ -160,15 +165,44 @@ final class QRCodeService {
 
             let startPoint = CGPoint.zero
             let endPoint = CGPoint(x: size.width, y: size.height)
-            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
 
-            guard let qrCGImage = blackQR.cgImage else { return }
-            context.clip(to: CGRect(origin: .zero, size: size), mask: qrCGImage)
-            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
-        }
+            // Draw gradient modules
+            let moduleSize = size.width / CGFloat(qrSize)
+            let inset = moduleSize * 0.1
 
-        if let logo = logo {
-            return addLogo(logo, to: gradientImage, size: size)
+            context.saveGState()
+
+            for row in 0..<qrSize {
+                for col in 0..<qrSize {
+                    guard matrix[row][col] else { continue }
+
+                    if logo != nil {
+                        let logoRadius = Int(Double(qrSize) * 0.2)
+                        let center = qrSize / 2
+                        let distanceFromCenter = max(abs(row - center), abs(col - center))
+                        if distanceFromCenter < logoRadius {
+                            continue
+                        }
+                    }
+
+                    let x = CGFloat(col) * moduleSize
+                    let y = CGFloat(row) * moduleSize
+                    let rect = CGRect(x: x + inset, y: y + inset, width: moduleSize - inset * 2, height: moduleSize - inset * 2)
+
+                    context.saveGState()
+                    addPathForShape(shape, in: context, rect: rect, moduleSize: moduleSize)
+                    context.clip()
+                    context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+                    context.restoreGState()
+                }
+            }
+
+            context.restoreGState()
+
+            // Draw logo
+            if let logo = logo {
+                drawLogo(logo, in: context, canvasSize: size)
+            }
         }
 
         return gradientImage
@@ -277,6 +311,28 @@ final class QRCodeService {
             let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
             context.addPath(path.cgPath)
             context.fillPath()
+        }
+    }
+
+    private func addPathForShape(_ shape: QRShape, in context: CGContext, rect: CGRect, moduleSize: CGFloat) {
+        switch shape {
+        case .squares:
+            context.addRect(rect)
+
+        case .dots:
+            let diameter = min(rect.width, rect.height)
+            let circleRect = CGRect(
+                x: rect.midX - diameter / 2,
+                y: rect.midY - diameter / 2,
+                width: diameter,
+                height: diameter
+            )
+            context.addEllipse(in: circleRect)
+
+        case .rounded:
+            let cornerRadius = rect.width * 0.3
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+            context.addPath(path.cgPath)
         }
     }
 
