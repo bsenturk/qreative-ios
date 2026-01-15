@@ -97,7 +97,8 @@ final class QRCodeService {
             let totalModules = CGFloat(qrSize) + (quietZoneModules * 2)
             let moduleSize = size.width / totalModules
             let qrOffset = quietZoneModules * moduleSize
-            let inset = moduleSize * 0.1
+            // Use smaller inset for dots to improve scanability
+            let inset = getInset(for: shape, moduleSize: moduleSize)
 
             context.setFillColor(foregroundColor.cgColor)
 
@@ -166,7 +167,8 @@ final class QRCodeService {
             let totalModules = CGFloat(qrSize) + (quietZoneModules * 2)
             let moduleSize = size.width / totalModules
             let qrOffset = quietZoneModules * moduleSize
-            let inset = moduleSize * 0.1
+            // Use smaller inset for dots to improve scanability
+            let inset = getInset(for: shape, moduleSize: moduleSize)
 
             // Create gradient
             let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -275,6 +277,16 @@ final class QRCodeService {
     }
 
     // MARK: - Private Helpers
+    private func getInset(for shape: QRShape, moduleSize: CGFloat) -> CGFloat {
+        switch shape {
+        case .squares, .rounded:
+            return moduleSize * 0.1
+        case .dots:
+            // Use much smaller inset for dots to ensure scanability
+            return moduleSize * 0.02
+        }
+    }
+
     private func extractMatrix(from cgImage: CGImage, size: Int) -> [[Bool]]? {
         guard let dataProvider = cgImage.dataProvider,
               let data = dataProvider.data,

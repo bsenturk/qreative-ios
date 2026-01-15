@@ -141,7 +141,8 @@ struct QRCodePreview: View {
 
     // MARK: - Module Path
     private func modulePath(for rect: CGRect) -> Path {
-        let inset: CGFloat = rect.width * 0.05
+        // Use smaller inset for dots to improve scanability
+        let inset: CGFloat = shape == .dots ? rect.width * 0.01 : rect.width * 0.05
 
         switch shape {
         case .squares:

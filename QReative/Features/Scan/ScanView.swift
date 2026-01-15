@@ -57,6 +57,9 @@ struct ScanView: View {
         .onChange(of: viewModel.showResult) { _, isShowing in
             if isShowing {
                 HapticManager.shared.success()
+            } else {
+                // Reset photo picker when result sheet is dismissed
+                selectedPhoto = nil
             }
         }
         .alert("Error", isPresented: $viewModel.showError) {
