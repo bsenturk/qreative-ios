@@ -136,6 +136,8 @@ struct QREditorView: View {
                 emailInputFields
             case "sms":
                 smsInputFields
+            case "whatsapp":
+                whatsappInputField
             default:
                 defaultInputField
             }
@@ -222,6 +224,37 @@ struct QREditorView: View {
         VStack(spacing: 12) {
             inputField(label: "Phone Number", placeholder: "+1 234 567 8900", text: $viewModel.content)
             inputField(label: "Message", placeholder: "Optional message", text: $viewModel.smsMessage, isMultiline: true)
+        }
+    }
+
+    private var whatsappInputField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("WhatsApp Number")
+                .typography(.caption1, color: .textTertiary)
+
+            HStack {
+                TextField("+1 234 567 8900", text: $viewModel.content)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.phonePad)
+
+                if !viewModel.content.isEmpty {
+                    Button {
+                        viewModel.content = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Color.textTertiary)
+                    }
+                }
+            }
+            .padding(16)
+            .glassCard(cornerRadius: 16, opacity: 0.08)
+
+            Text("Include country code (e.g., +1 for USA)")
+                .typography(.caption2, color: .textTertiary)
+                .padding(.horizontal, 4)
         }
     }
 
