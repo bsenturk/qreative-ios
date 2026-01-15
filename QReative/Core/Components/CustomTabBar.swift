@@ -12,10 +12,6 @@ struct CustomTabBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color.white.opacity(0.06))
-                .frame(height: 1)
-
             HStack(spacing: 0) {
                 ForEach(Tab.allCases, id: \.self) { tab in
                     TabItemView(
