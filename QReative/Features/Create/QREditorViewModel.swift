@@ -3,35 +3,54 @@ import Combine
 
 // MARK: - QR Color
 enum QRColor: String, CaseIterable, Identifiable {
+    // Solids
     case black
+    case cobalt
+    case red
+    case green
     case purple
-    case gradient
+    // Gradients
+    case sunset
+    case ocean
+    case forest
+    case grape
 
     var id: String { rawValue }
+
+    /// Only black is free; every other color requires PRO.
+    var isPremium: Bool { self != .black }
 
     var displayName: String {
         switch self {
         case .black: return "Black"
+        case .cobalt: return "Cobalt"
+        case .red: return "Red"
+        case .green: return "Green"
         case .purple: return "Purple"
-        case .gradient: return "Gradient"
-        }
-    }
-
-    var foregroundColor: Color {
-        switch self {
-        case .black: return .black
-        case .purple: return Color(hex: "6200EA")
-        case .gradient: return Color(hex: "6200EA")
+        case .sunset: return "Sunset"
+        case .ocean: return "Ocean"
+        case .forest: return "Forest"
+        case .grape: return "Grape"
         }
     }
 
     var colors: [Color] {
         switch self {
         case .black: return [.black]
-        case .purple: return [Color(hex: "6200EA"), Color(hex: "9C27B0")]
-        case .gradient: return [Color(hex: "6200EA"), Color(hex: "00E5FF")]
+        case .cobalt: return [Color(hex: "3457C8")]
+        case .red: return [Color(hex: "E03131")]
+        case .green: return [Color(hex: "2F9E44")]
+        case .purple: return [Color(hex: "7048E8")]
+        case .sunset: return [Color(hex: "FF8A00"), Color(hex: "FF2D78")]
+        case .ocean: return [Color(hex: "0091FF"), Color(hex: "00D4FF")]
+        case .forest: return [Color(hex: "0B8043"), Color(hex: "7CB342")]
+        case .grape: return [Color(hex: "7048E8"), Color(hex: "E64980")]
         }
     }
+
+    var isGradient: Bool { colors.count > 1 }
+
+    var foregroundColor: Color { colors.first ?? .black }
 
     var gradient: LinearGradient {
         LinearGradient(
@@ -59,10 +78,12 @@ final class QREditorViewModel: ObservableObject {
     @Published var emailBody: String = ""
     @Published var smsMessage: String = ""
 
-    @Published var selectedColor: QRColor = .purple
+    @Published var selectedColor: QRColor = .black
     @Published var selectedShape: QRShape = .squares
     @Published var logoImage: UIImage?
+    @Published var selectedEmoji: String?
     @Published var showLogoPicker: Bool = false
+    @Published var showEmojiPicker: Bool = false
     @Published var showPaywall: Bool = false
     @Published var isSaving: Bool = false
     @Published var isLoadingLogo: Bool = false
@@ -89,8 +110,23 @@ final class QREditorViewModel: ObservableObject {
         buildQRType().isValid
     }
 
-    var canAddLogo: Bool {
+    var isPremiumUser: Bool {
         coordinator?.isPremiumUser ?? false
+    }
+
+    var canAddLogo: Bool {
+        isPremiumUser
+    }
+
+    var canAddEmoji: Bool {
+        isPremiumUser
+    }
+
+    /// The center overlay drawn on the QR code: a picked logo, or a rendered emoji.
+    var overlayImage: UIImage? {
+        if let logoImage { return logoImage }
+        if let selectedEmoji { return Self.renderEmoji(selectedEmoji) }
+        return nil
     }
 
     var title: String {
@@ -138,6 +174,8 @@ final class QREditorViewModel: ObservableObject {
             content = ""
         case .sms:
             content = ""
+        case .whatsapp:
+            content = ""
         }
     }
 
@@ -183,9 +221,26 @@ final class QREditorViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Paywall Trigger
+    /// Logs which locked feature drove the upgrade prompt, then presents the paywall.
+    private func triggerPaywall(feature: String) {
+        AnalyticsService.premiumGateHit(feature: feature)
+        AnalyticsService.paywallShown(source: "editor_\(feature)")
+        showPaywall = true
+    }
+
+    func logoGateTapped() {
+        triggerPaywall(feature: "logo")
+    }
+
     // MARK: - Color Selection
     func selectColor(_ color: QRColor) {
         guard selectedColor != color else { return }
+
+        if color.isPremium && !isPremiumUser {
+            triggerPaywall(feature: "color")
+            return
+        }
 
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
@@ -199,6 +254,11 @@ final class QREditorViewModel: ObservableObject {
     func selectShape(_ shape: QRShape) {
         guard selectedShape != shape else { return }
 
+        if shape.isPremium && !isPremiumUser {
+            triggerPaywall(feature: "shape")
+            return
+        }
+
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
 
@@ -210,7 +270,7 @@ final class QREditorViewModel: ObservableObject {
     // MARK: - Logo
     func addLogo(_ image: UIImage) {
         guard canAddLogo else {
-            showPaywall = true
+            triggerPaywall(feature: "logo")
             return
         }
 
@@ -219,6 +279,7 @@ final class QREditorViewModel: ObservableObject {
 
         withAnimation(Theme.animation.spring) {
             logoImage = image
+            selectedEmoji = nil   // logo and emoji are mutually exclusive
         }
     }
 
@@ -232,27 +293,77 @@ final class QREditorViewModel: ObservableObject {
         if canAddLogo {
             showLogoPicker = true
         } else {
-            showPaywall = true
+            triggerPaywall(feature: "logo")
+        }
+    }
+
+    // MARK: - Emoji
+    func requestAddEmoji() {
+        if canAddEmoji {
+            showEmojiPicker = true
+        } else {
+            triggerPaywall(feature: "emoji")
+        }
+    }
+
+    func addEmoji(_ emoji: String) {
+        guard canAddEmoji else {
+            triggerPaywall(feature: "emoji")
+            return
+        }
+
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+
+        withAnimation(Theme.animation.spring) {
+            selectedEmoji = emoji
+            logoImage = nil   // emoji and logo are mutually exclusive
+        }
+    }
+
+    func removeEmoji() {
+        withAnimation(Theme.animation.spring) {
+            selectedEmoji = nil
+        }
+    }
+
+    /// Renders an emoji string into a transparent square image so it can be
+    /// drawn as the QR center overlay (reusing the logo rendering pipeline).
+    static func renderEmoji(_ emoji: String, size: CGFloat = 240) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
+        return renderer.image { _ in
+            let font = UIFont.systemFont(ofSize: size * 0.72)
+            let attributes: [NSAttributedString.Key: Any] = [.font: font]
+            let string = emoji as NSString
+            let textSize = string.size(withAttributes: attributes)
+            let rect = CGRect(
+                x: (size - textSize.width) / 2,
+                y: (size - textSize.height) / 2,
+                width: textSize.width,
+                height: textSize.height
+            )
+            string.draw(in: rect, withAttributes: attributes)
         }
     }
 
     // MARK: - Generate QR Image
-    func generateQRImage() -> UIImage? {
+    func generateQRImage(dimension: CGFloat = 512) -> UIImage? {
         let content = qrContent
         guard !content.isEmpty else { return nil }
 
-        let size = CGSize(width: 512, height: 512)
+        let size = CGSize(width: dimension, height: dimension)
         let fgColor = UIColor(selectedColor.foregroundColor)
         let bgColor = UIColor.white
+        let overlay = overlayImage
 
-        if selectedColor == .gradient {
+        if selectedColor.isGradient {
             return qrCodeService.generateGradientQRCode(
                 content: content,
                 size: size,
                 gradientColors: selectedColor.colors.map { UIColor($0) },
                 backgroundColor: bgColor,
                 shape: selectedShape,
-                logo: logoImage
+                logo: overlay
             )
         } else {
             return qrCodeService.generateStyledQRCode(
@@ -261,7 +372,7 @@ final class QREditorViewModel: ObservableObject {
                 foregroundColor: fgColor,
                 backgroundColor: bgColor,
                 shape: selectedShape,
-                logo: logoImage
+                logo: overlay
             )
         }
     }
@@ -273,7 +384,9 @@ final class QREditorViewModel: ObservableObject {
         isSaving = true
 
         do {
-            guard let qrImage = generateQRImage() else {
+            // Free users get a low-resolution export; PRO users get a full-HD render.
+            let dimension: CGFloat = isPremiumUser ? 1080 : 480
+            guard let qrImage = generateQRImage(dimension: dimension) else {
                 throw NSError(domain: "QREditor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate QR code"])
             }
 
@@ -287,18 +400,36 @@ final class QREditorViewModel: ObservableObject {
                 type: historyType,
                 customColor: selectedColor.rawValue,
                 customShape: selectedShape.rawValue,
-                hasLogo: logoImage != nil
+                hasLogo: logoImage != nil || selectedEmoji != nil
             )
             try await storageService.saveItem(historyItem)
+
+            AnalyticsService.qrCreated(
+                type: template.id,
+                color: selectedColor.rawValue,
+                shape: selectedShape.rawValue,
+                hasLogo: logoImage != nil,
+                hasEmoji: selectedEmoji != nil,
+                isPremium: isPremiumUser
+            )
 
             let notification = UINotificationFeedbackGenerator()
             notification.notificationOccurred(.success)
 
-            showSaveSuccess = true
+            isSaving = false
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                self?.tabCoordinator?.pop()
+            if isPremiumUser {
+                showSaveSuccess = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                    self?.tabCoordinator?.pop()
+                }
+            } else {
+                // Free users see an interstitial ad after saving, then return.
+                InterstitialAdManager.shared.showAd(isPremiumUser: false) { [weak self] in
+                    self?.tabCoordinator?.pop()
+                }
             }
+            return
 
         } catch {
             errorMessage = error.localizedDescription

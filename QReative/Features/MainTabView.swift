@@ -2,94 +2,69 @@ import SwiftUI
 
 // MARK: - Main Tab View
 struct MainTabView: View {
-    @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
 
-    @Namespace private var tabAnimation
-
     var body: some View {
-        ZStack(alignment: .bottom) {
-            tabContent
-                .padding(.bottom, appCoordinator.isPremiumUser ? 84 : 134)
-
-            VStack(spacing: 0) {
-                if !appCoordinator.isPremiumUser {
-                    BannerContainerView()
-                }
-
-                CustomTabBar(
-                    selectedTab: Binding(
-                        get: { tabCoordinator.selectedTab },
-                        set: { selectTab($0) }
-                    )
-                )
-            }
-        }
-        .ignoresSafeArea(edges: .bottom)
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $appCoordinator.isPaywallPresented) {
-            PaywallView()
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
-        }
-    }
-
-    // MARK: - Tab Content
-    @ViewBuilder
-    private var tabContent: some View {
-        ZStack {
+        TabView(selection: tabSelection) {
             NavigationStack(path: tabCoordinator.navigationPath(for: .scan)) {
                 ScanView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
+                    .fixedTabBarBackground()
             }
-            .opacity(tabCoordinator.selectedTab == .scan ? 1 : 0)
-            .zIndex(tabCoordinator.selectedTab == .scan ? 1 : 0)
+            .tabItem { Label(Tab.scan.title, systemImage: Tab.scan.icon) }
+            .tag(Tab.scan)
 
             NavigationStack(path: tabCoordinator.navigationPath(for: .create)) {
                 CreateView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
+                    .fixedTabBarBackground()
             }
-            .opacity(tabCoordinator.selectedTab == .create ? 1 : 0)
-            .zIndex(tabCoordinator.selectedTab == .create ? 1 : 0)
+            .tabItem { Label(Tab.create.title, systemImage: Tab.create.icon) }
+            .tag(Tab.create)
 
             NavigationStack(path: tabCoordinator.navigationPath(for: .history)) {
                 HistoryView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
+                    .fixedTabBarBackground()
             }
-            .opacity(tabCoordinator.selectedTab == .history ? 1 : 0)
-            .zIndex(tabCoordinator.selectedTab == .history ? 1 : 0)
+            .tabItem { Label(Tab.history.title, systemImage: Tab.history.icon) }
+            .tag(Tab.history)
 
             NavigationStack(path: tabCoordinator.navigationPath(for: .settings)) {
                 SettingsView()
                     .navigationDestination(for: Route.self) { route in
                         destinationView(for: route)
                     }
+                    .fixedTabBarBackground()
             }
-            .opacity(tabCoordinator.selectedTab == .settings ? 1 : 0)
-            .zIndex(tabCoordinator.selectedTab == .settings ? 1 : 0)
+            .tabItem { Label(Tab.settings.title, systemImage: Tab.settings.icon) }
+            .tag(Tab.settings)
         }
-        .animation(Theme.animation.easeOut, value: tabCoordinator.selectedTab)
+        .tint(Color.accentPrimary)
+        .ignoresSafeArea(.keyboard)
     }
 
     // MARK: - Tab Selection
+    private var tabSelection: Binding<Tab> {
+        Binding(
+            get: { tabCoordinator.selectedTab },
+            set: { selectTab($0) }
+        )
+    }
+
     private func selectTab(_ tab: Tab) {
+        // Re-tapping the active tab pops its stack to root.
         guard tabCoordinator.selectedTab != tab else {
             tabCoordinator.popToRoot(tab: tab)
             return
         }
-
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
-
-        withAnimation(Theme.animation.spring) {
-            tabCoordinator.selectedTab = tab
-        }
+        tabCoordinator.selectedTab = tab
     }
 
     // MARK: - Navigation Destinations
@@ -115,6 +90,17 @@ struct MainTabView: View {
         default:
             EmptyView()
         }
+    }
+}
+
+// MARK: - Fixed Tab Bar Background
+private extension View {
+    /// Forces the tab bar to keep one fixed, always-visible background color so it
+    /// doesn't switch between opaque/translucent appearances as tabs change.
+    func fixedTabBarBackground() -> some View {
+        self
+            .toolbarBackground(Color.backgroundPrimary, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
     }
 }
 

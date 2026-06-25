@@ -44,6 +44,16 @@ enum ScanResultType {
         }
     }
 
+    var analyticsName: String {
+        switch self {
+        case .url: return "url"
+        case .email: return "email"
+        case .phone: return "phone"
+        case .wifi: return "wifi"
+        case .text: return "text"
+        }
+    }
+
     var actionTitle: String {
         switch self {
         case .url: return "Open URL"
@@ -137,13 +147,10 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Lifecycle
     func onAppear() {
-        let isPremium = coordinator?.isPremiumUser ?? false
-
         if cameraService.isAuthorized {
             if scanResult == nil {
                 cameraService.startSession()
             }
-            AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             return
         }
 
@@ -154,7 +161,6 @@ final class ScanViewModel: ObservableObject {
             let authorized = await cameraService.checkPermission()
             if authorized {
                 cameraService.setupSession()
-                AppOpenAdManager.shared.showAdIfAvailable(isPremiumUser: isPremium)
             } else {
                 showPermissionAlert = true
             }
@@ -182,8 +188,12 @@ final class ScanViewModel: ObservableObject {
     private func handleDetectedCode(_ code: String) {
         guard scanResult == nil else { return }
 
-        scanResult = ScanResult(content: code)
+        let result = ScanResult(content: code)
+        scanResult = result
         showResult = true
+
+        AnalyticsService.qrScanned(resultType: result.type.analyticsName, source: "camera")
+        ReviewManager.registerScanAndRequestReviewIfNeeded()
 
         saveToHistory()
     }
@@ -196,6 +206,7 @@ final class ScanViewModel: ObservableObject {
             defer { isProcessingImage = false }
 
             guard let ciImage = CIImage(image: image) else {
+                AnalyticsService.scanFailed(source: "photo", reason: "invalid_image")
                 showError(message: "Failed to process image")
                 return
             }
@@ -209,13 +220,17 @@ final class ScanViewModel: ObservableObject {
             guard let features = detector?.features(in: ciImage) as? [CIQRCodeFeature],
                   let qrFeature = features.first,
                   let messageString = qrFeature.messageString else {
+                AnalyticsService.scanFailed(source: "photo", reason: "no_qr_found")
                 showError(message: "No QR code found in image")
                 return
             }
 
             // Directly set the result for gallery scans to ensure history is saved
-            scanResult = ScanResult(content: messageString)
+            let result = ScanResult(content: messageString)
+            scanResult = result
             showResult = true
+            AnalyticsService.qrScanned(resultType: result.type.analyticsName, source: "photo")
+            ReviewManager.registerScanAndRequestReviewIfNeeded()
             saveToHistory()
         }
     }
@@ -298,6 +313,9 @@ final class ScanViewModel: ObservableObject {
             self?.scanResult = nil
             self?.cameraService.resumeScanning()
         }
+
+        // First successful scan is the "aha" moment — present the deferred paywall once.
+        coordinator?.maybeShowActivationPaywall()
     }
 
     func rescan() {

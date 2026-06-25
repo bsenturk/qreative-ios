@@ -42,6 +42,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var isPremium: Bool = false
     @Published var showPaywall: Bool = false
+    @Published var showMembershipSheet: Bool = false
     @Published var showRestoreAlert: Bool = false
     @Published var restoreMessage: String = ""
     @Published var isRestoring: Bool = false
@@ -61,15 +62,6 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Settings Groups
     var settingsGroups: [SettingsGroup] {
         [
-            SettingsGroup(items: [
-                SettingsItem(
-                    icon: "gearshape.fill",
-                    iconColor: Color(hex: "8E8E93"),
-                    title: "General",
-                    action: { [weak self] in self?.openGeneral() }
-                ),
-            ]),
-
             SettingsGroup(items: [
                 SettingsItem(
                     icon: "questionmark.circle.fill",
@@ -137,7 +129,34 @@ final class SettingsViewModel: ObservableObject {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
-        coordinator?.showPaywall()
+        coordinator?.showPaywall(source: "settings")
+    }
+
+    // MARK: - Membership
+    func openMembership() {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        showMembershipSheet = true
+    }
+
+    func goProFromMembership() {
+        showMembershipSheet = false
+        // Let the sheet dismiss before presenting the paywall.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.coordinator?.showPaywall(source: "membership")
+        }
+    }
+
+    func manageSubscriptions() {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        AnalyticsService.manageSubscriptionsTapped()
+
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+            UIApplication.shared.open(url)
+        }
     }
 
     // MARK: - Navigation
@@ -180,6 +199,7 @@ final class SettingsViewModel: ObservableObject {
             // TODO: Implement actual restore purchases logic with StoreKit
             // For now, always show "no purchases" message
             restoreMessage = "No purchases to restore."
+            AnalyticsService.restorePurchases(success: false)
 
         } catch {
             restoreMessage = "Failed to restore purchases. Please try again."
@@ -194,6 +214,8 @@ final class SettingsViewModel: ObservableObject {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
 
+        AnalyticsService.rateAppTapped()
+
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             SKStoreReviewController.requestReview(in: scene)
         }
@@ -203,6 +225,8 @@ final class SettingsViewModel: ObservableObject {
     func shareApp() {
         let impact = UIImpactFeedbackGenerator(style: .light)
         impact.impactOccurred()
+
+        AnalyticsService.shareAppTapped()
 
         showShareSheet = true
     }

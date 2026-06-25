@@ -4,8 +4,6 @@ import SwiftUI
 struct ViewfinderOverlay: View {
     @State private var scanLineOffset: CGFloat = 0
     @State private var isAnimating: Bool = false
-    @State private var bracketScale: CGFloat = 1.0
-    @State private var bracketOpacity: Double = 1.0
 
     let frameSize: CGFloat
     let bracketLength: CGFloat
@@ -27,18 +25,13 @@ struct ViewfinderOverlay: View {
 
             ZStack {
                 cornerBrackets
-                    .scaleEffect(bracketScale)
-                    .opacity(bracketOpacity)
 
                 scanningLine
-
-                centerFocus
             }
             .frame(width: frameSize, height: frameSize)
         }
         .onAppear {
             startScanAnimation()
-            startBracketPulse()
         }
     }
 
@@ -66,9 +59,9 @@ struct ViewfinderOverlay: View {
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        Color.accentTertiary.opacity(0.3),
-                        Color.accentTertiary,
-                        Color.accentTertiary.opacity(0.3),
+                        Color.accentPrimary.opacity(0.3),
+                        Color.accentPrimary,
+                        Color.accentPrimary.opacity(0.3),
                         Color.clear
                     ],
                     startPoint: .leading,
@@ -76,15 +69,8 @@ struct ViewfinderOverlay: View {
                 )
             )
             .frame(width: frameSize - 20, height: 2)
-            .shadow(color: Color.accentTertiary.opacity(0.8), radius: 15, x: 0, y: 0)
+            .shadow(color: Color.accentPrimary.opacity(0.8), radius: 15, x: 0, y: 0)
             .offset(y: scanLineOffset)
-    }
-
-    // MARK: - Center Focus
-    private var centerFocus: some View {
-        Circle()
-            .stroke(Color.white.opacity(0.5), lineWidth: 2)
-            .frame(width: 8, height: 8)
     }
 
     // MARK: - Animation
@@ -99,16 +85,6 @@ struct ViewfinderOverlay: View {
             .repeatForever(autoreverses: true)
         ) {
             scanLineOffset = frameSize / 2 - 20
-        }
-    }
-
-    private func startBracketPulse() {
-        withAnimation(
-            .easeInOut(duration: 1.5)
-            .repeatForever(autoreverses: true)
-        ) {
-            bracketScale = 1.02
-            bracketOpacity = 0.85
         }
     }
 }
@@ -128,24 +104,15 @@ private struct CornerBracket: View {
             let path = bracketPath(in: size)
 
             context.addFilter(.shadow(
-                color: Color(hex: "6200EA").opacity(0.8),
-                radius: 10,
+                color: Color.black.opacity(0.35),
+                radius: 4,
                 x: 0,
                 y: 0
             ))
 
-            let gradient = Gradient(colors: [
-                Color(hex: "6200EA"),
-                Color(hex: "9C27B0")
-            ])
-
             context.stroke(
                 path,
-                with: .linearGradient(
-                    gradient,
-                    startPoint: gradientStart,
-                    endPoint: gradientEnd
-                ),
+                with: .color(.white),
                 style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
             )
         }
@@ -195,24 +162,6 @@ private struct CornerBracket: View {
         }
 
         return path
-    }
-
-    private var gradientStart: CGPoint {
-        switch corner {
-        case .topLeft: return CGPoint(x: 0, y: length)
-        case .topRight: return CGPoint(x: 0, y: 0)
-        case .bottomLeft: return CGPoint(x: 0, y: 0)
-        case .bottomRight: return CGPoint(x: length, y: 0)
-        }
-    }
-
-    private var gradientEnd: CGPoint {
-        switch corner {
-        case .topLeft: return CGPoint(x: length, y: 0)
-        case .topRight: return CGPoint(x: length, y: length)
-        case .bottomLeft: return CGPoint(x: length, y: length)
-        case .bottomRight: return CGPoint(x: 0, y: length)
-        }
     }
 }
 

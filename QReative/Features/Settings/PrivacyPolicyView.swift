@@ -10,22 +10,22 @@ struct PrivacyPolicyView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Privacy Policy for QReative")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.textPrimary)
 
                     Text("Last updated: January 15, 2026")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.white.opacity(0.6))
+                        .foregroundStyle(Color.ink2)
                 }
                 .padding(.top, 20)
 
                 // Introduction
                 Text("This Privacy Policy explains how **QReative: QR Code Reader** (\"we,\" \"us,\" or \"our\") collects, uses, and discloses information about you when you use our mobile application (the \"App\").")
                     .font(.system(size: 15))
-                    .foregroundStyle(Color.white.opacity(0.9))
+                    .foregroundStyle(Color.textPrimary)
 
                 Text("By using the App, you consent to the processing of your information as set forth in this Privacy Policy.")
                     .font(.system(size: 15))
-                    .foregroundStyle(Color.white.opacity(0.9))
+                    .foregroundStyle(Color.textPrimary)
 
                 // Section 1
                 sectionView(
@@ -117,13 +117,13 @@ struct PrivacyPolicyView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             ForEach(content, id: \.self) { text in
                 if !text.isEmpty {
                     Text(parseMarkdown(text))
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(Color.ink2)
                 }
             }
         }
@@ -134,13 +134,13 @@ struct PrivacyPolicyView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.95))
+                .foregroundStyle(Color.textPrimary)
 
             ForEach(content, id: \.self) { text in
                 if !text.isEmpty {
                     Text(parseMarkdown(text))
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(Color.ink2)
                 }
             }
         }

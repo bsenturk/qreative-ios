@@ -18,39 +18,61 @@ struct QREditorView: View {
 
     var body: some View {
         ZStack {
-            Color.backgroundPrimary
-                .ignoresSafeArea()
+            Color.backgroundPrimary.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 navigationBar
                     .padding(.horizontal, Theme.spacing.screen)
                     .padding(.top, 8)
 
+                previewHero
+                    .padding(.horizontal, Theme.spacing.screen)
+                    .padding(.top, 14)
+                    .padding(.bottom, 22)
+
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        livePreviewSection
-                            .padding(.top, 24)
-
+                    VStack(spacing: 26) {
                         inputSection
-
-                        Spacer(minLength: 200)
+                        colorPicker
+                        shapeSelector
+                        addLogoButton
+                        addEmojiButton
+                        Spacer(minLength: 8)
                     }
                     .padding(.horizontal, Theme.spacing.screen)
+                    .padding(.bottom, 24)
                 }
 
-                customizationPanel
+                saveBar
             }
         }
         .navigationBarHidden(true)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
+            if !appCoordinator.isPremiumUser {
+                InterstitialAdManager.shared.loadAd()
+            }
         }
         .onChange(of: selectedPhoto) { _, newValue in
             handleSelectedPhoto(newValue)
         }
+        .onChange(of: appCoordinator.isPremiumUser) { _, isPremium in
+            // Once the user upgrades, close the paywall opened from this screen.
+            if isPremium {
+                viewModel.showPaywall = false
+            }
+        }
         .sheet(isPresented: $viewModel.showPaywall) {
             PaywallView()
                 .presentationDetents([.large])
+        }
+        .sheet(isPresented: $viewModel.showEmojiPicker) {
+            EmojiPickerSheet { emoji in
+                viewModel.addEmoji(emoji)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .alert("Saved!", isPresented: $viewModel.showSaveSuccess) {
             Button("OK", role: .cancel) {}
@@ -67,60 +89,90 @@ struct QREditorView: View {
     // MARK: - Navigation Bar
     private var navigationBar: some View {
         HStack {
-            Button("Cancel") {
+            Button {
                 viewModel.cancel()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
-            .font(.system(size: 17))
-            .foregroundStyle(Color.accentPrimary)
+            .buttonStyle(PressableStyle(scale: 0.9))
 
             Spacer()
 
             Text(viewModel.title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(.system(size: 16, weight: .semibold))
+                .tracking(-0.2)
+                .foregroundStyle(Color.textPrimary)
 
             Spacer()
 
-            Button {
-                Task {
-                    await viewModel.save()
-                }
-            } label: {
-                if viewModel.isSaving {
-                    ProgressView()
-                        .tint(Color.accentPrimary)
-                } else {
-                    Text("Save")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(viewModel.isValid ? Color.accentPrimary : Color.textTertiary)
-                }
-            }
-            .disabled(!viewModel.isValid || viewModel.isSaving)
+            // Balances the back button so the title stays centered.
+            Color.clear.frame(width: 44, height: 44)
         }
         .frame(height: 44)
     }
 
-    // MARK: - Live Preview Section
-    private var livePreviewSection: some View {
-        VStack(spacing: 0) {
-            QRCodePreview(
-                content: viewModel.qrContent.isEmpty ? "QReative" : viewModel.qrContent,
-                size: 160,
-                foregroundColor: viewModel.foregroundColor,
-                backgroundColor: .white,
-                shape: viewModel.selectedShape,
-                logoImage: viewModel.logoImage,
-                isGlowing: false,
-                gradientColors: viewModel.selectedColor == .gradient ? viewModel.selectedColor.colors : nil
-            )
-        }
+    // MARK: - Preview Hero (pinned, always visible for live edits)
+    private var previewHero: some View {
+        QRCodePreview(
+            content: viewModel.qrContent.isEmpty ? "QReative" : viewModel.qrContent,
+            size: 200,
+            foregroundColor: viewModel.foregroundColor,
+            backgroundColor: .white,
+            shape: viewModel.selectedShape,
+            logoImage: viewModel.overlayImage,
+            isGlowing: false,
+            gradientColors: viewModel.selectedColor.isGradient ? viewModel.selectedColor.colors : nil
+        )
         .padding(24)
-        .background {
-            RoundedRectangle(cornerRadius: 24)
-                .fill(.white)
-                .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 20)
+        .frame(maxWidth: .infinity)
+        .background(Color.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(Color.lineColor, lineWidth: 1)
         }
-        .padding(.horizontal, 20)
+        .shadow(color: Color.ink.opacity(0.05), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.ink.opacity(0.10), radius: 24, x: 0, y: 12)
+    }
+
+    // MARK: - Save Bar (primary CTA, thumb zone)
+    private var saveBar: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(Color.lineColor)
+                .frame(height: 1)
+
+            Button {
+                Task { await viewModel.save() }
+            } label: {
+                HStack(spacing: 8) {
+                    if viewModel.isSaving {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("Save to Photos")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(viewModel.isValid ? Color.ink : Color.ink.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+            .buttonStyle(PressableStyle(scale: 0.98))
+            .disabled(!viewModel.isValid || viewModel.isSaving)
+            .padding(.horizontal, Theme.spacing.screen)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+        }
+        .background(Color.backgroundPrimary)
     }
 
     // MARK: - Input Section
@@ -147,12 +199,15 @@ struct QREditorView: View {
     private var defaultInputField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(viewModel.template.title)
-                .typography(.caption1, color: .textTertiary)
+                .font(.system(size: 11.5, weight: .medium))
+                .tracking(0.3)
+                .foregroundStyle(Color.ink3)
+                .textCase(.uppercase)
 
             HStack {
                 TextField(viewModel.placeholder, text: $viewModel.content)
                     .font(.system(size: 16))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
 
@@ -161,33 +216,31 @@ struct QREditorView: View {
                         viewModel.content = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.ink3)
                     }
                 }
             }
             .padding(16)
-            .glassCard(cornerRadius: 16, opacity: 0.08)
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
         }
     }
 
     private var wifiInputFields: some View {
         VStack(spacing: 12) {
-            inputField(
-                label: "Network Name",
-                placeholder: "WiFi Name",
-                text: $viewModel.wifiSSID
-            )
-
-            inputField(
-                label: "Password",
-                placeholder: "WiFi Password",
-                text: $viewModel.wifiPassword,
-                isSecure: true
-            )
+            inputField(label: "Network Name", placeholder: "WiFi Name", text: $viewModel.wifiSSID)
+            inputField(label: "Password", placeholder: "WiFi Password", text: $viewModel.wifiPassword, isSecure: true)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Security")
-                    .typography(.caption1, color: .textTertiary)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .tracking(0.3)
+                    .foregroundStyle(Color.ink3)
+                    .textCase(.uppercase)
 
                 HStack(spacing: 8) {
                     ForEach(WifiSecurity.allCases) { security in
@@ -230,12 +283,15 @@ struct QREditorView: View {
     private var whatsappInputField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("WhatsApp Number")
-                .typography(.caption1, color: .textTertiary)
+                .font(.system(size: 11.5, weight: .medium))
+                .tracking(0.3)
+                .foregroundStyle(Color.ink3)
+                .textCase(.uppercase)
 
             HStack {
                 TextField("+1 234 567 8900", text: $viewModel.content)
                     .font(.system(size: 16))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.textPrimary)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .keyboardType(.phonePad)
@@ -245,15 +301,21 @@ struct QREditorView: View {
                         viewModel.content = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.ink3)
                     }
                 }
             }
             .padding(16)
-            .glassCard(cornerRadius: 16, opacity: 0.08)
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
 
             Text("Include country code (e.g., +1 for USA)")
-                .typography(.caption2, color: .textTertiary)
+                .font(.system(size: 12))
+                .foregroundStyle(Color.ink3)
                 .padding(.horizontal, 4)
         }
     }
@@ -268,7 +330,10 @@ struct QREditorView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .typography(.caption1, color: .textTertiary)
+                .font(.system(size: 11.5, weight: .medium))
+                .tracking(0.3)
+                .foregroundStyle(Color.ink3)
+                .textCase(.uppercase)
 
             Group {
                 if isMultiline {
@@ -281,98 +346,97 @@ struct QREditorView: View {
                 }
             }
             .font(.system(size: 16))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.textPrimary)
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .padding(16)
-            .glassCard(cornerRadius: 16, opacity: 0.08)
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
         }
-    }
-
-    // MARK: - Customization Panel
-    private var customizationPanel: some View {
-        VStack(spacing: 20) {
-            Rectangle()
-                .fill(Color.white.opacity(0.06))
-                .frame(height: 1)
-
-            colorPicker
-
-            shapeSelector
-
-            addLogoButton
-        }
-        .padding(.horizontal, Theme.spacing.screen)
-        .padding(.top, 16)
-        .padding(.bottom, 100)
-        .background(Color.backgroundSecondary)
     }
 
     // MARK: - Color Picker
     private var colorPicker: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Color")
-                .typography(.caption1, color: .textTertiary)
+            sectionHeader("Color", locked: !appCoordinator.isPremiumUser)
 
-            HStack(spacing: 12) {
-                ForEach(QRColor.allCases) { color in
-                    ColorButton(
-                        color: color,
-                        isSelected: viewModel.selectedColor == color
-                    ) {
-                        viewModel.selectColor(color)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(QRColor.allCases) { color in
+                        ColorButton(
+                            color: color,
+                            isSelected: viewModel.selectedColor == color,
+                            isLocked: color.isPremium && !appCoordinator.isPremiumUser
+                        ) {
+                            viewModel.selectColor(color)
+                        }
                     }
                 }
-
-                Spacer()
+                .padding(.horizontal, Theme.spacing.screen)
+                .padding(.vertical, 6)
             }
+            .padding(.horizontal, -Theme.spacing.screen)
         }
     }
 
     // MARK: - Shape Selector
     private var shapeSelector: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Shape")
-                .typography(.caption1, color: .textTertiary)
+            sectionHeader("Shape", locked: !appCoordinator.isPremiumUser)
 
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 ForEach(QRShape.allCases, id: \.self) { shape in
                     ShapeButton(
                         shape: shape,
-                        isSelected: viewModel.selectedShape == shape
+                        isSelected: viewModel.selectedShape == shape,
+                        isLocked: shape.isPremium && !appCoordinator.isPremiumUser
                     ) {
                         viewModel.selectShape(shape)
                     }
                 }
-
                 Spacer()
             }
         }
     }
 
+    // MARK: - Section Header
+    private func sectionHeader(_ title: String, locked: Bool) -> some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.system(size: 11.5, weight: .medium))
+                .tracking(0.3)
+                .foregroundStyle(Color.ink3)
+                .textCase(.uppercase)
+
+            if locked {
+                proBadge
+            }
+        }
+    }
+
+    // MARK: - PRO Badge
+    private var proBadge: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "crown.fill")
+                .font(.system(size: 8))
+            Text("PRO")
+                .font(.system(size: 9, weight: .bold))
+        }
+        .foregroundStyle(Color.accentPrimary)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(Color.accentPrimary.opacity(0.12))
+        .clipShape(Capsule())
+    }
+
     // MARK: - Add Logo Button
     private var addLogoButton: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Text("Logo")
-                    .typography(.caption1, color: .textTertiary)
-
-                if !viewModel.canAddLogo {
-                    HStack(spacing: 3) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 8))
-                        Text("PRO")
-                            .font(.system(size: 9, weight: .bold))
-                    }
-                    .foregroundStyle(Color.warning)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background {
-                        Capsule()
-                            .fill(Color.warning.opacity(0.15))
-                    }
-                }
-            }
+            sectionHeader("Logo", locked: !appCoordinator.isPremiumUser)
 
             if let logo = viewModel.logoImage {
                 HStack(spacing: 12) {
@@ -384,7 +448,8 @@ struct QREditorView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Logo added")
-                            .typography(.callout)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.textPrimary)
                         Button("Remove") {
                             viewModel.removeLogo()
                         }
@@ -395,23 +460,31 @@ struct QREditorView: View {
                     Spacer()
                 }
                 .padding(12)
-                .glassCard(cornerRadius: 16, opacity: 0.08)
+                .background(Color.backgroundPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.lineColor, lineWidth: 1)
+                }
             } else if viewModel.isLoadingLogo {
                 HStack(spacing: 12) {
                     ProgressView()
                         .tint(Color.accentPrimary)
                         .scaleEffect(0.9)
-
                     Text("Loading logo...")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color.textSecondary)
-
+                        .foregroundStyle(Color.ink2)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .padding(.horizontal, 16)
-                .glassCard(cornerRadius: 16, opacity: 0.08)
+                .background(Color.backgroundPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.lineColor, lineWidth: 1)
+                }
             } else {
                 PhotosPicker(
                     selection: $selectedPhoto,
@@ -424,19 +497,79 @@ struct QREditorView: View {
                         Text("Add Logo")
                             .font(.system(size: 14, weight: .medium))
                     }
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.ink2)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background {
                         RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6]))
-                            .foregroundStyle(Color.white.opacity(0.2))
+                            .strokeBorder(
+                                style: StrokeStyle(lineWidth: 1.5, dash: [6])
+                            )
+                            .foregroundStyle(Color.lineStrong)
                     }
                 }
-                .disabled(!viewModel.canAddLogo)
+                .disabled(!appCoordinator.isPremiumUser)
                 .onTapGesture {
-                    if !viewModel.canAddLogo {
-                        viewModel.showPaywall = true
+                    if !appCoordinator.isPremiumUser {
+                        viewModel.logoGateTapped()
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Add Emoji Button
+    private var addEmojiButton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Emoji", locked: !appCoordinator.isPremiumUser)
+
+            if let emoji = viewModel.selectedEmoji {
+                HStack(spacing: 12) {
+                    Text(emoji)
+                        .font(.system(size: 34))
+                        .frame(width: 56, height: 56)
+                        .background(Color.surface2)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Emoji added")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.textPrimary)
+                        Button("Remove") {
+                            viewModel.removeEmoji()
+                        }
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.danger)
+                    }
+
+                    Spacer()
+                }
+                .padding(12)
+                .background(Color.backgroundPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.lineColor, lineWidth: 1)
+                }
+            } else {
+                Button {
+                    viewModel.requestAddEmoji()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "face.smiling")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("Add Emoji")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(Color.ink2)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background {
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(
+                                style: StrokeStyle(lineWidth: 1.5, dash: [6])
+                            )
+                            .foregroundStyle(Color.lineStrong)
                     }
                 }
             }
@@ -446,15 +579,12 @@ struct QREditorView: View {
     // MARK: - Photo Selection
     private func handleSelectedPhoto(_ item: PhotosPickerItem?) {
         guard let item else { return }
-
         viewModel.isLoadingLogo = true
-
         Task {
             defer {
                 viewModel.isLoadingLogo = false
                 selectedPhoto = nil
             }
-
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 viewModel.addLogo(image)
@@ -467,36 +597,40 @@ struct QREditorView: View {
 private struct ColorButton: View {
     let color: QRColor
     let isSelected: Bool
+    let isLocked: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             ZStack {
                 if color.colors.count > 1 {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(color.gradient)
+                    RoundedRectangle(cornerRadius: 12).fill(color.gradient)
                 } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(color.foregroundColor)
+                    RoundedRectangle(cornerRadius: 12).fill(color.foregroundColor)
                 }
 
                 if color == .black {
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.lineColor, lineWidth: 1)
+                }
+
+                if isLocked {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.35), radius: 2, x: 0, y: 1)
                 }
             }
             .frame(width: 44, height: 44)
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.accentTertiary, lineWidth: 3)
+                        .stroke(Color.ink, lineWidth: 3)
                 }
             }
             .shadow(
-                color: isSelected ? Color.accentTertiary.opacity(0.5) : .clear,
-                radius: 8,
-                x: 0,
-                y: 0
+                color: isSelected ? Color.ink.opacity(0.25) : .clear,
+                radius: 8, x: 0, y: 0
             )
         }
     }
@@ -506,33 +640,174 @@ private struct ColorButton: View {
 private struct ShapeButton: View {
     let shape: QRShape
     let isSelected: Bool
+    let isLocked: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(shape.displayName)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(isSelected ? .white : Color.textSecondary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background {
-                    if isSelected {
-                        Capsule()
-                            .fill(Color.accentPrimary)
-                    } else {
-                        Capsule()
-                            .fill(Color.white.opacity(0.05))
-                    }
+            HStack(spacing: 5) {
+                Text(shape.displayName)
+                    .font(.system(size: 14, weight: .medium))
+                if isLocked {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 9, weight: .bold))
                 }
-                .overlay {
-                    Capsule()
-                        .stroke(
-                            isSelected ? Color.accentPrimary : Color.white.opacity(0.1),
-                            lineWidth: 1
-                        )
+            }
+            .foregroundStyle(isSelected ? .white : Color.ink2)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background {
+                if isSelected {
+                    Capsule().fill(Color.ink)
+                } else {
+                    Capsule().fill(Color.backgroundPrimary)
                 }
+            }
+            .overlay {
+                Capsule()
+                    .stroke(
+                        isSelected ? Color.ink : Color.lineStrong,
+                        lineWidth: 1
+                    )
+            }
         }
     }
+}
+
+// MARK: - Emoji Category
+private struct EmojiCategory: Identifiable {
+    let id = UUID()
+    let symbol: String
+    let emojis: [String]
+}
+
+// MARK: - Emoji Picker Sheet
+struct EmojiPickerSheet: View {
+    let onSelect: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedIndex: Int = 0
+
+    private let categories = EmojiData.categories
+    private let columns = [GridItem(.adaptive(minimum: 52), spacing: 10)]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            categoryChips
+            emojiGrid
+        }
+        .background(Color.backgroundPrimary)
+    }
+
+    // MARK: - Header
+    private var header: some View {
+        HStack {
+            Text("Choose an Emoji")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.textPrimary)
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.ink3)
+                    .frame(width: 30, height: 30)
+                    .background(Color.surface2)
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
+    }
+
+    // MARK: - Category Chips
+    private var categoryChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Array(categories.enumerated()), id: \.offset) { index, category in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            selectedIndex = index
+                        }
+                    } label: {
+                        Image(systemName: category.symbol)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(selectedIndex == index ? .white : Color.ink2)
+                            .frame(width: 44, height: 38)
+                            .background {
+                                if selectedIndex == index {
+                                    RoundedRectangle(cornerRadius: 12).fill(Color.accentPrimary)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 12).fill(Color.surface2)
+                                }
+                            }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 4)
+        }
+    }
+
+    // MARK: - Emoji Grid
+    private var emojiGrid: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(categories[selectedIndex].emojis, id: \.self) { emoji in
+                    Button {
+                        onSelect(emoji)
+                        dismiss()
+                    } label: {
+                        Text(emoji)
+                            .font(.system(size: 28))
+                            .frame(width: 52, height: 52)
+                            .background(Color.surface2)
+                            .clipShape(RoundedRectangle(cornerRadius: 13))
+                    }
+                    .buttonStyle(PressableStyle(scale: 0.9))
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 30)
+        }
+        .id(selectedIndex)
+    }
+}
+
+// MARK: - Emoji Data
+private enum EmojiData {
+    static let categories: [EmojiCategory] = [
+        EmojiCategory(symbol: "face.smiling", emojis: [
+            "😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","🫠","😉","😊","😇","🥰","😍","🤩","😘","😗","☺️","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🫣","🤫","🤔","🫡","🤐","🤨","😐","😑","😶","🫥","😶‍🌫️","😏","😒","🙄","😬","😮‍💨","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","😵‍💫","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","🫤","😟","🙁","☹️","😮","😯","😲","😳","🥺","🥹","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾"
+        ]),
+        EmojiCategory(symbol: "hand.raised", emojis: [
+            "👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","🫵","🫱","🫲","🫳","🫴","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄","🫦","👶","🧒","👦","👧","🧑","👱","👨","🧔","👩","🧓","👴","👵","🙍","🙎","🙅","🙆","💁","🙋","🧏","🙇","🤦","🤷","👮","🕵️","💂","👷","🤴","👸","👳","👲","🧕","🤵","👰","🤰","🤱","👼","🎅","🤶","🦸","🦹","🧙","🧚","🧛","🧜","🧝","🧞","🧟","💆","💇","🚶","🧍","🧎","🏃","💃","🕺","🕴","👯","🧖","🧗","🤺","🏇","🏌️","🏄","🚣","🏊","⛹️","🏋️","🚴","🚵","🤸","🤼","🤽","🤾","🤹","🧘","🛀","🛌"
+        ]),
+        EmojiCategory(symbol: "pawprint", emojis: [
+            "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🪱","🐛","🦋","🐌","🐞","🐜","🪰","🪲","🪳","🦟","🦗","🕷","🕸","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐈","🐈‍⬛","🐓","🦃","🦤","🦚","🦜","🦢","🦩","🕊","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁","🐀","🐿","🦔","🐾","🐉","🐲","🌵","🎄","🌲","🌳","🌴","🪵","🌱","🌿","☘️","🍀","🎍","🪴","🎋","🍃","🍂","🍁","🍄","🐚","🪨","🌾","💐","🌷","🌹","🥀","🌺","🌸","🌼","🌻","🌞","🌝","🌚","🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔","🌙","🌎","🌍","🌏","🪐","💫","⭐️","🌟","✨","⚡️","☄️","💥","🔥","🌪","🌈","☀️","🌤","⛅️","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","☃️","⛄️","🌬","💨","💧","💦","☔️","☂️","🌊","🌫"
+        ]),
+        EmojiCategory(symbol: "fork.knife", emojis: [
+            "🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶","🫑","🌽","🥕","🫒","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🦴","🌭","🍔","🍟","🍕","🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🥛","🍼","🫖","☕️","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽","🥣","🥡","🥢","🧂"
+        ]),
+        EmojiCategory(symbol: "sportscourt", emojis: [
+            "⚽️","🏀","🏈","⚾️","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🪃","🥅","⛳️","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛼","🛷","⛸","🥌","🎿","⛷","🏂","🏋️","🤼","🤸","⛹️","🤺","🤾","🏌️","🏇","🧘","🏄","🏊","🤽","🚣","🧗","🚵","🚴","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎫","🎟","🎪","🤹","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🪘","🎷","🎺","🪗","🎸","🪕","🎻","🎲","♟","🎯","🎳","🎮","🎰","🧩"
+        ]),
+        EmojiCategory(symbol: "airplane", emojis: [
+            "🚗","🚕","🚙","🚌","🚎","🏎","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🦯","🦽","🦼","🛴","🚲","🛵","🏍","🛺","🚨","🚔","🚍","🚘","🚖","🚡","🚠","🚟","🚃","🚋","🚞","🚝","🚄","🚅","🚈","🚂","🚆","🚇","🚊","🚉","✈️","🛫","🛬","🛩","💺","🛰","🚀","🛸","🚁","🛶","⛵️","🚤","🛥","🛳","⛴","🚢","⚓️","⛽️","🚧","🚦","🚥","🚏","🗺","🗿","🗽","🗼","🏰","🏯","🏟","🎡","🎢","🎠","⛲️","⛱","🏖","🏝","🏜","🌋","⛰","🏔","🗻","🏕","⛺️","🛖","🏠","🏡","🏘","🏚","🏗","🏭","🏢","🏬","🏣","🏤","🏥","🏦","🏨","🏪","🏫","🏩","💒","🏛","⛪️","🕌","🕍","🛕","🕋","⛩","🗾","🎑","🏞","🌅","🌄","🌠","🎇","🎆","🌇","🌆","🏙","🌃","🌌","🌉","🌁"
+        ]),
+        EmojiCategory(symbol: "lightbulb", emojis: [
+            "⌚️","📱","📲","💻","⌨️","🖥","🖨","🖱","🖲","🕹","🗜","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽","🎞","📞","☎️","📟","📠","📺","📻","🎙","🎚","🎛","🧭","⏱","⏲","⏰","🕰","⌛️","⏳","📡","🔋","🪫","🔌","💡","🔦","🕯","🪔","🧯","🛢","💸","💵","💴","💶","💷","🪙","💰","💳","💎","⚖️","🪜","🧰","🪛","🔧","🔨","⚒","🛠","⛏","🪚","🔩","⚙️","🪤","🧱","⛓","🧲","🔫","💣","🧨","🪓","🔪","🗡","⚔️","🛡","🚬","⚰️","🪦","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳","🩹","🩺","💊","💉","🩸","🧬","🦠","🧫","🧪","🌡","🧹","🪠","🧺","🧻","🚽","🚰","🚿","🛁","🧼","🪥","🪒","🧽","🪣","🧴","🛎","🔑","🗝","🚪","🪑","🛋","🛏","🧸","🪆","🖼","🪞","🪟","🛍","🛒","🎁","🎈","🎏","🎀","🪄","🪅","🎊","🎉","🎎","🏮","🎐","🧧","✉️","📩","📨","📧","💌","📥","📤","📦","🏷","🪧","📪","📫","📬","📭","📮","📜","📃","📄","📑","🧾","📊","📈","📉","🗒","🗓","📆","📅","🗑","📇","🗃","🗳","🗄","📋","📁","📂","🗂","🗞","📰","📓","📔","📒","📕","📗","📘","📙","📚","📖","🔖","🧷","🔗","📎","🖇","📐","📏","🧮","📌","📍","✂️","🖊","🖋","✒️","🖌","🖍","📝","✏️","🔍","🔎","🔏","🔐","🔒","🔓"
+        ]),
+        EmojiCategory(symbol: "heart.fill", emojis: [
+            "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚️","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕️","🛑","⛔️","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗️","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯️","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿️","🅿️","🛗","🈳","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚼","🚻","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","▶️","⏸","⏯","⏹","⏺","⏭","⏮","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","🟰","♾","💲","💱","™️","©️","®️","🔚","🔙","🔛","🔝","🔜","〰️","➰","➿","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫️","⚪️","🟤","🔺","🔻","🔸","🔹","🔶","🔷","🔳","🔲","▪️","▫️","◾️","◽️","◼️","◻️","🟥","🟧","🟨","🟩","🟦","🟪","⬛️","⬜️","🟫","🔈","🔇","🔉","🔊","🔔","🔕","📣","📢","💬","💭","🗯","♠️","♣️","♥️","♦️","🃏","🎴","🀄️","🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛"
+        ]),
+        EmojiCategory(symbol: "flag.fill", emojis: [
+            "🏁","🚩","🎌","🏴","🏳️","🏳️‍🌈","🏳️‍⚧️","🏴‍☠️","🇹🇷","🇺🇸","🇬🇧","🇩🇪","🇫🇷","🇮🇹","🇪🇸","🇳🇱","🇷🇺","🇨🇳","🇯🇵","🇰🇷","🇮🇳","🇧🇷","🇨🇦","🇦🇺","🇲🇽","🇸🇦","🇦🇪","🇶🇦","🇸🇪","🇳🇴","🇩🇰","🇫🇮","🇵🇱","🇵🇹","🇬🇷","🇨🇭","🇧🇪","🇦🇹","🇮🇪","🇨🇿","🇭🇺","🇺🇦","🇿🇦","🇪🇬","🇮🇩","🇹🇭","🇻🇳","🇵🇭","🇲🇾","🇸🇬","🇵🇰","🇧🇩","🇳🇬","🇰🇪","🇦🇷","🇨🇱","🇨🇴","🇵🇪","🇻🇪"
+        ])
+    ]
 }
 
 // MARK: - Security Button
@@ -545,17 +820,19 @@ private struct SecurityButton: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isSelected ? .white : Color.textSecondary)
+                .foregroundStyle(isSelected ? .white : Color.ink2)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background {
                     if isSelected {
-                        Capsule()
-                            .fill(Color.accentPrimary)
+                        Capsule().fill(Color.ink)
                     } else {
-                        Capsule()
-                            .fill(Color.white.opacity(0.05))
+                        Capsule().fill(Color.backgroundPrimary)
                     }
+                }
+                .overlay {
+                    Capsule()
+                        .stroke(isSelected ? Color.ink : Color.lineStrong, lineWidth: 1)
                 }
         }
     }

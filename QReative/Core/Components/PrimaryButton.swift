@@ -2,9 +2,12 @@ import SwiftUI
 
 // MARK: - Button Style Variant
 enum ButtonVariant {
-    case primary
-    case secondary
-    case outline
+    case primary    // ink dark background
+    case accent     // cobalt accent background
+    case soft       // surface-2 background
+    case ghost      // transparent
+    case secondary  // kept for compatibility
+    case outline    // kept for compatibility
 }
 
 // MARK: - Primary Button
@@ -40,32 +43,33 @@ struct PrimaryButton: View {
             triggerHaptic()
             action()
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 9) {
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: textColor))
                         .scaleEffect(0.9)
                 } else {
+                    Text(title)
+                        .font(.system(size: 17, weight: .semibold))
+                        .tracking(-0.2)
                     if let icon {
                         Image(systemName: icon)
                             .font(.system(size: 17, weight: .semibold))
                     }
-                    Text(title)
-                        .font(.system(size: 17, weight: .semibold))
                 }
             }
             .foregroundStyle(textColor)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
-            .padding(.horizontal, 24)
+            .frame(height: 56)
+            .padding(.horizontal, 22)
             .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay(borderOverlay)
             .shadow(color: shadowColor, radius: 16, x: 0, y: 8)
         }
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .opacity(isDisabled ? 0.5 : 1.0)
-        .animation(Theme.animation.springQuick, value: isPressed)
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .opacity(isDisabled ? 0.4 : 1.0)
+        .animation(.spring(response: 0.14, dampingFraction: 0.7), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }
@@ -78,45 +82,44 @@ struct PrimaryButton: View {
     @ViewBuilder
     private var background: some View {
         switch variant {
-        case .primary:
-            LinearGradient.purpleGradient
-        case .secondary:
-            Color.white.opacity(0.05)
-        case .outline:
+        case .primary, .secondary:
+            Color.ink
+        case .accent:
+            Color.accentPrimary
+        case .soft, .outline:
+            Color.surface2
+        case .ghost:
             Color.clear
         }
     }
 
     private var textColor: Color {
         switch variant {
-        case .primary:
-            return .white
-        case .secondary:
+        case .primary, .secondary, .accent:
+            return Color.backgroundPrimary
+        case .soft, .outline, .ghost:
             return .textPrimary
-        case .outline:
-            return .accentPrimary
         }
     }
 
     @ViewBuilder
     private var borderOverlay: some View {
         switch variant {
-        case .primary:
+        case .soft, .outline:
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color.lineColor, lineWidth: 1)
+        default:
             EmptyView()
-        case .secondary:
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-        case .outline:
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.accentPrimary, lineWidth: 2)
         }
     }
 
     private var shadowColor: Color {
         switch variant {
-        case .primary:
-            return Color(hex: "6200EA").opacity(0.4)
-        case .secondary, .outline:
+        case .primary, .secondary:
+            return Color.ink.opacity(0.18)
+        case .accent:
+            return Color.accentPrimary.opacity(0.30)
+        case .soft, .outline, .ghost:
             return .clear
         }
     }
@@ -145,7 +148,7 @@ extension PrimaryButton {
         isLoading: Bool = false,
         action: @escaping () -> Void
     ) -> PrimaryButton {
-        PrimaryButton(title, icon: icon, variant: .secondary, isLoading: isLoading, action: action)
+        PrimaryButton(title, icon: icon, variant: .soft, isLoading: isLoading, action: action)
     }
 
     static func outline(
@@ -153,33 +156,6 @@ extension PrimaryButton {
         icon: String? = nil,
         action: @escaping () -> Void
     ) -> PrimaryButton {
-        PrimaryButton(title, icon: icon, variant: .outline, action: action)
-    }
-}
-
-// MARK: - Preview
-#Preview {
-    ZStack {
-        Color.backgroundPrimary
-            .ignoresSafeArea()
-
-        VStack(spacing: 20) {
-            PrimaryButton("Get Started", icon: "arrow.right") {
-                print("Primary tapped")
-            }
-
-            PrimaryButton("Processing...", variant: .primary, isLoading: true) {}
-
-            PrimaryButton.secondary("Learn More", icon: "info.circle") {
-                print("Secondary tapped")
-            }
-
-            PrimaryButton.outline("Skip", icon: "xmark") {
-                print("Outline tapped")
-            }
-
-            PrimaryButton("Disabled", isDisabled: true) {}
-        }
-        .padding(20)
+        PrimaryButton(title, icon: icon, variant: .soft, action: action)
     }
 }

@@ -57,6 +57,15 @@ enum SubscriptionPlan: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Per-week equivalent price, used to anchor longer plans as the better deal.
+    var weeklyEquivalent: String? {
+        switch self {
+        case .weekly: return nil
+        case .monthly: return "≈ $1.84/week"
+        case .yearly: return "≈ $0.96/week"
+        }
+    }
+
     var isPopular: Bool {
         self == .yearly
     }

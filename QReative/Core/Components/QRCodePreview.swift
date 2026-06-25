@@ -8,6 +8,9 @@ enum QRShape: String, CaseIterable {
     case dots
     case rounded
 
+    /// Only the plain square style is free; the rest require PRO.
+    var isPremium: Bool { self != .squares }
+
     var displayName: String {
         switch self {
         case .squares: return "Square"

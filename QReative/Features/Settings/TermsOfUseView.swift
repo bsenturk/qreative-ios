@@ -10,18 +10,18 @@ struct TermsOfUseView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Terms of Use (EULA)")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.textPrimary)
 
                     Text("Last updated: January 15, 2026")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.white.opacity(0.6))
+                        .foregroundStyle(Color.ink2)
                 }
                 .padding(.top, 20)
 
                 // Introduction
                 Text("By downloading or using the app **QReative: QR Code Reader**, these terms will automatically apply to you.")
                     .font(.system(size: 15))
-                    .foregroundStyle(Color.white.opacity(0.9))
+                    .foregroundStyle(Color.textPrimary)
 
                 // Section 1
                 sectionView(
@@ -100,13 +100,13 @@ struct TermsOfUseView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.textPrimary)
 
             ForEach(content, id: \.self) { text in
                 if !text.isEmpty {
                     Text(parseMarkdown(text))
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(Color.ink2)
                 }
             }
         }

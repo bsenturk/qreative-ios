@@ -88,6 +88,8 @@ final class HistoryViewModel: ObservableObject {
         do {
             try await storageService.deleteItem(id: item.id)
 
+            AnalyticsService.historyItemDeleted()
+
             let notification = UINotificationFeedbackGenerator()
             notification.notificationOccurred(.success)
 
@@ -119,6 +121,7 @@ final class HistoryViewModel: ObservableObject {
     func shareItem(_ item: HistoryItem) {
         itemToShare = item
         showShareSheet = true
+        AnalyticsService.historyItemShared()
     }
 
     func dismissShare() {

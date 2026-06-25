@@ -63,12 +63,18 @@ final class PaywallViewModel: ObservableObject {
         if isLoading {
             return "Processing..."
         }
-        return "Start Free Trial"
+        if selectedPlan.trialDays > 0 {
+            return "Start \(selectedPlan.trialDays)-day free trial"
+        }
+        return "Continue"
     }
 
     var footerText: String {
         let plan = selectedPlan
-        return "\(plan.trialDays)-day free trial, then \(plan.price)/\(plan.period). Cancel anytime."
+        if plan.trialDays > 0 {
+            return "\(plan.trialDays)-day free trial, then \(plan.price)/\(plan.period). Auto-renews until canceled — cancel anytime in Settings."
+        }
+        return "\(plan.price)/\(plan.period). Auto-renews until canceled — cancel anytime in Settings."
     }
 
     // MARK: - Init
@@ -120,6 +126,7 @@ final class PaywallViewModel: ObservableObject {
             if let service = purchaseService {
                 try await service.restorePurchases()
                 let isPremium = await service.checkSubscriptionStatus()
+                AnalyticsService.restorePurchases(success: isPremium)
                 if isPremium {
                     handlePurchaseResult(true)
                 } else {
@@ -129,6 +136,7 @@ final class PaywallViewModel: ObservableObject {
                 }
             } else {
                 try await Task.sleep(nanoseconds: 1_000_000_000)
+                AnalyticsService.restorePurchases(success: false)
                 showError = true
                 errorMessage = "No purchases to restore"
                 isLoading = false
@@ -150,6 +158,7 @@ final class PaywallViewModel: ObservableObject {
 
         if success {
             isPurchaseSuccessful = true
+            AnalyticsService.purchaseCompleted(plan: selectedPlan.period)
             let notification = UINotificationFeedbackGenerator()
             notification.notificationOccurred(.success)
 
