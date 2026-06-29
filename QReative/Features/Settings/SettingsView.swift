@@ -198,6 +198,13 @@ struct SettingsView: View {
 
     // MARK: - Account Section (General + Membership Status)
     private var accountSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("Account")
+            accountCard
+        }
+    }
+
+    private var accountCard: some View {
         VStack(spacing: 0) {
             Button {
                 viewModel.openGeneral()
@@ -316,7 +323,19 @@ struct SettingsView: View {
     }
 
     private func sectionLabel(_ title: LocalizedStringKey) -> some View {
-        Text(title)
+        sectionLabel(Text(title))
+    }
+
+    /// For titles that are already-resolved strings (e.g. settings group titles
+    /// built in the view model via `appLocalized`). The `verbatim` label keeps
+    /// string *literals* on the `LocalizedStringKey` overload above so they stay
+    /// localized.
+    private func sectionLabel(verbatim title: String) -> some View {
+        sectionLabel(Text(verbatim: title))
+    }
+
+    private func sectionLabel(_ text: Text) -> some View {
+        text
             .font(.system(size: 11, weight: .semibold))
             .tracking(1.2)
             .textCase(.uppercase)
@@ -385,19 +404,22 @@ struct SettingsView: View {
 
     // MARK: - Settings Group
     private func settingsGroup(_ group: SettingsGroup) -> some View {
-        VStack(spacing: 0) {
-            ForEach(Array(group.items.enumerated()), id: \.offset) { index, item in
-                settingsRow(item, isLast: index == group.items.count - 1)
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel(verbatim: group.title)
+            VStack(spacing: 0) {
+                ForEach(Array(group.items.enumerated()), id: \.offset) { index, item in
+                    settingsRow(item, isLast: index == group.items.count - 1)
+                }
             }
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
+            .shadow(color: Color.ink.opacity(0.04), radius: 2, x: 0, y: 1)
+            .shadow(color: Color.ink.opacity(0.06), radius: 12, x: 0, y: 6)
         }
-        .background(Color.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.lineColor, lineWidth: 1)
-        }
-        .shadow(color: Color.ink.opacity(0.04), radius: 2, x: 0, y: 1)
-        .shadow(color: Color.ink.opacity(0.06), radius: 12, x: 0, y: 6)
     }
 
     // MARK: - Settings Row

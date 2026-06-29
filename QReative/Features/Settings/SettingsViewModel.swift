@@ -35,6 +35,7 @@ struct SettingsItem: Identifiable {
 // MARK: - Settings Group
 struct SettingsGroup: Identifiable {
     let id = UUID()
+    let title: String
     let items: [SettingsItem]
 }
 
@@ -65,7 +66,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Settings Groups
     var settingsGroups: [SettingsGroup] {
         [
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Support"), items: [
                 SettingsItem(
                     icon: "questionmark.circle.fill",
                     iconColor: Color(hex: "34C759"),
@@ -84,7 +85,7 @@ final class SettingsViewModel: ObservableObject {
                 ),
             ]),
 
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Feedback"), items: [
                 SettingsItem(
                     icon: "star.fill",
                     iconColor: Color(hex: "FFCC00"),
@@ -101,7 +102,7 @@ final class SettingsViewModel: ObservableObject {
                 ),
             ]),
 
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Legal"), items: [
                 SettingsItem(
                     icon: "doc.text.fill",
                     iconColor: Color(hex: "8E8E93"),

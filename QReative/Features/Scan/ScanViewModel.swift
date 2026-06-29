@@ -14,7 +14,10 @@ struct ScanResult: Identifiable, Equatable {
 
     init(content: String, symbology: CodeSymbology = .qr) {
         self.content = content
-        self.type = ScanResultType.detect(from: content)
+        // 1D barcodes carry product/inventory data, not phone/URL/email
+        // semantics — skip content detection so a numeric barcode isn't mistaken
+        // for a phone number. 2D codes (QR, PDF417, …) keep semantic detection.
+        self.type = symbology.isBarcode ? .text : ScanResultType.detect(from: content)
         self.symbology = symbology
         self.timestamp = Date()
     }
