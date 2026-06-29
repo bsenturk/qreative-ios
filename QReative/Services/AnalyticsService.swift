@@ -31,6 +31,15 @@ enum AnalyticsService {
         ])
     }
 
+    /// What the user did with a scan result. `action` is "open_url" or "copy";
+    /// reveals whether scans are actionable and which result types get acted on.
+    static func scanResultAction(_ action: String, resultType: String) {
+        Analytics.logEvent("scan_result_action", parameters: [
+            "action": action,
+            "result_type": resultType
+        ])
+    }
+
     // MARK: - Create
     static func qrTypeSelected(_ type: String) {
         Analytics.logEvent("qr_type_selected", parameters: ["qr_type": type])
@@ -111,6 +120,15 @@ enum AnalyticsService {
 
     static func manageSubscriptionsTapped() {
         Analytics.logEvent("manage_subscriptions_tapped", parameters: nil)
+    }
+
+    /// A preference toggle was flipped. `setting` is a stable key like
+    /// "haptic_feedback", "auto_open_links", "scan_sound". Tracks feature adoption.
+    static func settingToggled(_ setting: String, enabled: Bool) {
+        Analytics.logEvent("setting_toggled", parameters: [
+            "setting": setting,
+            "enabled": enabled
+        ])
     }
 
     // MARK: - User Properties

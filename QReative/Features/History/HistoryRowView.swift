@@ -44,7 +44,7 @@ struct HistoryRowView: View {
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(1)
 
-                Text("\(item.type.title) · \(item.shortFormattedDate)")
+                Text("\(item.displayTypeName) · \(item.shortFormattedDate)")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.ink3)
             }
@@ -74,7 +74,12 @@ struct HistoryRowView: View {
                 .fill(Color.surface2)
                 .frame(width: 38, height: 38)
 
-            if let thumbnailImage = item.thumbnailImage {
+            if item.isBarcode {
+                // A 1D barcode is unreadable at 28pt, so show a clear glyph.
+                Image(systemName: "barcode")
+                    .font(.system(size: 19, weight: .regular))
+                    .foregroundStyle(Color.textPrimary)
+            } else if let thumbnailImage = item.thumbnailImage {
                 Image(uiImage: thumbnailImage)
                     .resizable()
                     .scaledToFit()

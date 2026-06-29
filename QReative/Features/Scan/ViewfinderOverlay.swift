@@ -5,33 +5,41 @@ struct ViewfinderOverlay: View {
     @State private var scanLineOffset: CGFloat = 0
     @State private var isAnimating: Bool = false
 
-    let frameSize: CGFloat
+    let frameWidth: CGFloat
+    let frameHeight: CGFloat
     let bracketLength: CGFloat
     let bracketWidth: CGFloat
 
     init(
-        frameSize: CGFloat = 260,
+        frameWidth: CGFloat = 260,
+        frameHeight: CGFloat = 260,
         bracketLength: CGFloat = 40,
         bracketWidth: CGFloat = 4
     ) {
-        self.frameSize = frameSize
+        self.frameWidth = frameWidth
+        self.frameHeight = frameHeight
         self.bracketLength = bracketLength
         self.bracketWidth = bracketWidth
     }
 
     var body: some View {
         ZStack {
-            DimmedBackground(frameSize: frameSize)
+            DimmedBackground(frameWidth: frameWidth, frameHeight: frameHeight)
 
             ZStack {
                 cornerBrackets
 
                 scanningLine
             }
-            .frame(width: frameSize, height: frameSize)
+            .frame(width: frameWidth, height: frameHeight)
         }
         .onAppear {
             startScanAnimation()
+        }
+        .onChange(of: frameHeight) { _, _ in
+            // Reset the travel so the line keeps sweeping the full (new) height
+            // after a QR ⇄ Barcode switch.
+            restartScanAnimation()
         }
     }
 
@@ -42,13 +50,13 @@ struct ViewfinderOverlay: View {
                 .position(x: bracketWidth / 2, y: bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .topRight)
-                .position(x: frameSize - bracketWidth / 2, y: bracketWidth / 2)
+                .position(x: frameWidth - bracketWidth / 2, y: bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .bottomLeft)
-                .position(x: bracketWidth / 2, y: frameSize - bracketWidth / 2)
+                .position(x: bracketWidth / 2, y: frameHeight - bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .bottomRight)
-                .position(x: frameSize - bracketWidth / 2, y: frameSize - bracketWidth / 2)
+                .position(x: frameWidth - bracketWidth / 2, y: frameHeight - bracketWidth / 2)
         }
     }
 
@@ -68,7 +76,7 @@ struct ViewfinderOverlay: View {
                     endPoint: .trailing
                 )
             )
-            .frame(width: frameSize - 20, height: 2)
+            .frame(width: frameWidth - 20, height: 2)
             .shadow(color: Color.accentPrimary.opacity(0.8), radius: 15, x: 0, y: 0)
             .offset(y: scanLineOffset)
     }
@@ -77,14 +85,23 @@ struct ViewfinderOverlay: View {
     private func startScanAnimation() {
         guard !isAnimating else { return }
         isAnimating = true
+        runScanAnimation()
+    }
 
-        scanLineOffset = -frameSize / 2 + 20
+    private func restartScanAnimation() {
+        runScanAnimation()
+    }
 
+    private func runScanAnimation() {
+        // Snap to the top edge without animation, then sweep to the bottom.
+        withAnimation(.linear(duration: 0)) {
+            scanLineOffset = -frameHeight / 2 + 20
+        }
         withAnimation(
             .easeInOut(duration: 2.0)
             .repeatForever(autoreverses: true)
         ) {
-            scanLineOffset = frameSize / 2 - 20
+            scanLineOffset = frameHeight / 2 - 20
         }
     }
 }
@@ -167,7 +184,8 @@ private struct CornerBracket: View {
 
 // MARK: - Dimmed Background
 private struct DimmedBackground: View {
-    let frameSize: CGFloat
+    let frameWidth: CGFloat
+    let frameHeight: CGFloat
 
     var body: some View {
         GeometryReader { geometry in
@@ -175,7 +193,7 @@ private struct DimmedBackground: View {
                 .fill(Color.black.opacity(0.6))
                 .reverseMask {
                     RoundedRectangle(cornerRadius: 4)
-                        .frame(width: frameSize, height: frameSize)
+                        .frame(width: frameWidth, height: frameHeight)
                         .position(
                             x: geometry.size.width / 2,
                             y: geometry.size.height / 2

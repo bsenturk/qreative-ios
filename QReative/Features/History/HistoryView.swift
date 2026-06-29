@@ -17,6 +17,7 @@ struct HistoryView: View {
             }
         }
         .onAppear {
+            AnalyticsService.logScreen("history")
             viewModel.bind(tabCoordinator: tabCoordinator)
             Task { await viewModel.loadHistory() }
             withAnimation(.easeOut(duration: 0.4)) { showContent = true }

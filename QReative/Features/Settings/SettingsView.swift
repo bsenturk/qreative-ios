@@ -54,6 +54,7 @@ struct SettingsView: View {
         .background(Color.backgroundPrimary)
         .ignoresSafeArea(edges: .top)
         .onAppear {
+            AnalyticsService.logScreen("settings")
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
         }
         .alert("Restore Purchases", isPresented: $viewModel.showRestoreAlert) {
@@ -284,6 +285,7 @@ struct SettingsView: View {
                     icon: "bolt.fill",
                     title: "Haptic feedback",
                     isOn: $settings.hapticFeedbackEnabled,
+                    analyticsKey: "haptic_feedback",
                     isLast: true
                 )
             }
@@ -299,12 +301,14 @@ struct SettingsView: View {
                     icon: "link",
                     title: "Auto-open links",
                     isOn: $settings.autoOpenLinks,
+                    analyticsKey: "auto_open_links",
                     isLast: false
                 )
                 settingsToggleRow(
                     icon: "bell.fill",
                     title: "Scan sound",
                     isOn: $settings.scanSoundEnabled,
+                    analyticsKey: "scan_sound",
                     isLast: true
                 )
             }
@@ -336,9 +340,18 @@ struct SettingsView: View {
         icon: String,
         title: LocalizedStringKey,
         isOn: Binding<Bool>,
+        analyticsKey: String,
         isLast: Bool
     ) -> some View {
-        HStack(spacing: 13) {
+        // Wrap the binding so flipping the toggle also logs the change.
+        let trackedBinding = Binding<Bool>(
+            get: { isOn.wrappedValue },
+            set: { newValue in
+                isOn.wrappedValue = newValue
+                AnalyticsService.settingToggled(analyticsKey, enabled: newValue)
+            }
+        )
+        return HStack(spacing: 13) {
             RoundedRectangle(cornerRadius: 9)
                 .fill(Color.surface2)
                 .frame(width: 34, height: 34)
@@ -354,9 +367,9 @@ struct SettingsView: View {
 
             Spacer()
 
-            Toggle("", isOn: isOn)
+            Toggle("", isOn: trackedBinding)
                 .labelsHidden()
-                .tint(Color.accentPrimary)
+                .toggleStyle(SettingsToggleStyle())
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -462,6 +475,36 @@ struct SettingsView: View {
                 .foregroundStyle(Color.ink3.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Settings Toggle Style
+/// Custom toggle style so the OFF state reads clearly against the white card surface.
+/// SwiftUI's default off-track is a very light system gray that looks washed out here.
+private struct SettingsToggleStyle: ToggleStyle {
+    private let width: CGFloat = 51
+    private let height: CGFloat = 31
+
+    func makeBody(configuration: Configuration) -> some View {
+        let isOn = configuration.isOn
+        return Capsule()
+            .fill(isOn ? Color.accentPrimary : Color.lineStrong)
+            .frame(width: width, height: height)
+            .overlay(alignment: isOn ? .trailing : .leading) {
+                Circle()
+                    .fill(.white)
+                    .padding(2)
+                    .shadow(color: Color.ink.opacity(0.18), radius: 1.5, x: 0, y: 1)
+            }
+            .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isOn)
+            .contentShape(Capsule())
+            .onTapGesture {
+                HapticManager.shared.lightTap()
+                configuration.isOn.toggle()
+            }
+            .accessibilityRepresentation {
+                Toggle(isOn: configuration.$isOn) { configuration.label }
+            }
     }
 }
 

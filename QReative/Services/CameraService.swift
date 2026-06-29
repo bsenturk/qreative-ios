@@ -9,7 +9,7 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Published Properties
     @Published var isAuthorized: Bool = false
     @Published var isSessionRunning: Bool = false
-    @Published var detectedQRCode: String?
+    @Published var detectedCode: DetectedCode?
     @Published var torchMode: AVCaptureDevice.TorchMode = .off
     @Published var zoomFactor: CGFloat = 1.0
     @Published var error: CameraError?
@@ -25,6 +25,8 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Configuration
     private var shouldStopOnDetection: Bool = true
+    /// Active scan mode (QR vs Barcode). Mutated only on `sessionQueue`.
+    nonisolated(unsafe) private var scanMode: ScanMode = .qr
     private var lastDetectedCode: String?
     private var lastDetectionTime: Date?
     private let detectionCooldown: TimeInterval = 1.0
@@ -154,9 +156,7 @@ final class CameraService: NSObject, ObservableObject {
 
             metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
 
-            if metadataOutput.availableMetadataObjectTypes.contains(.qr) {
-                metadataOutput.metadataObjectTypes = [.qr, .ean8, .ean13, .pdf417, .aztec, .dataMatrix]
-            }
+            applyMetadataTypes()
         } else {
             Task { @MainActor [weak self] in
                 self?.error = .configurationFailed
@@ -180,7 +180,7 @@ final class CameraService: NSObject, ObservableObject {
 
         Task { @MainActor [weak self] in
             self?.isSessionRunning = true
-            self?.detectedQRCode = nil
+            self?.detectedCode = nil
             self?.lastDetectedCode = nil
         }
     }
@@ -218,7 +218,7 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     func resumeScanning() {
-        detectedQRCode = nil
+        detectedCode = nil
         lastDetectedCode = nil
         startSession()
     }
@@ -295,6 +295,25 @@ final class CameraService: NSObject, ObservableObject {
         shouldStopOnDetection = stop
     }
 
+    /// Switches between QR and Barcode scanning. Updates which symbologies the
+    /// metadata output reports so each mode only reacts to relevant codes.
+    func setScanMode(_ mode: ScanMode) {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.scanMode = mode
+            guard self.isConfigured else { return }
+            self.applyMetadataTypes()
+        }
+    }
+
+    /// Applies the current `scanMode`'s symbologies to the metadata output,
+    /// keeping only the types the device actually supports. Must be called on
+    /// `sessionQueue` after the output is added to the session.
+    private nonisolated func applyMetadataTypes() {
+        let available = metadataOutput.availableMetadataObjectTypes
+        metadataOutput.metadataObjectTypes = scanMode.metadataTypes.filter { available.contains($0) }
+    }
+
     // MARK: - Cleanup
     func cleanup() {
         stopSession()
@@ -319,13 +338,14 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
             return
         }
 
+        let symbology = CodeSymbology.detect(metadataType: readableObject.type, value: stringValue)
         Task { @MainActor in
-            handleDetectedCode(stringValue)
+            handleDetectedCode(stringValue, symbology: symbology)
         }
     }
 
     @MainActor
-    private func handleDetectedCode(_ code: String) {
+    private func handleDetectedCode(_ code: String, symbology: CodeSymbology) {
         if let lastTime = lastDetectionTime,
            let lastCode = lastDetectedCode,
            lastCode == code,
@@ -335,7 +355,7 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
 
         lastDetectedCode = code
         lastDetectionTime = Date()
-        detectedQRCode = code
+        detectedCode = DetectedCode(value: code, symbology: symbology)
 
         HapticManager.shared.success()
 

@@ -26,12 +26,13 @@ struct QRDetailView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { AnalyticsService.logScreen("qr_detail") }
     }
 
     // MARK: - Content
     private func content(for item: HistoryItem) -> some View {
         VStack(spacing: 0) {
-            navigationBar(title: item.type.title)
+            navigationBar(title: item.displayTypeName)
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
@@ -81,21 +82,12 @@ struct QRDetailView: View {
     // MARK: - QR Card
     private func qrCard(for item: HistoryItem) -> some View {
         VStack(spacing: 16) {
-            QRCodePreview(
-                content: item.content,
-                size: 230,
-                foregroundColor: qrColor(for: item),
-                backgroundColor: .white,
-                shape: qrShape(for: item),
-                logoImage: nil,
-                isGlowing: false
-            )
-            .frame(width: 230, height: 230)
+            codePreview(for: item)
 
             HStack(spacing: 8) {
-                Image(systemName: item.type.icon)
+                Image(systemName: item.displayTypeIcon)
                     .font(.system(size: 13, weight: .semibold))
-                Text(item.type.title)
+                Text(item.displayTypeName)
                     .font(.system(size: 13, weight: .semibold))
                     .tracking(0.2)
             }
@@ -110,6 +102,33 @@ struct QRDetailView: View {
                 .stroke(Color.lineColor, lineWidth: 1)
         }
         .shadow(color: Color.ink.opacity(0.06), radius: 16, x: 0, y: 8)
+    }
+
+    /// Renders the scanned/created code: a real barcode image for barcode and
+    /// 2D non-QR symbologies, otherwise the styled QR preview.
+    @ViewBuilder
+    private func codePreview(for item: HistoryItem) -> some View {
+        if let symbology = item.symbology, symbology != .qr,
+           let barcode = BarcodeGenerator.image(for: item.content, symbology: symbology) {
+            let isWide = BarcodeGenerator.isWide(symbology)
+            Image(uiImage: barcode)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: 250, height: isWide ? 130 : 230)
+                .padding(.horizontal, isWide ? 8 : 0)
+        } else {
+            QRCodePreview(
+                content: item.content,
+                size: 230,
+                foregroundColor: qrColor(for: item),
+                backgroundColor: .white,
+                shape: qrShape(for: item),
+                logoImage: nil,
+                isGlowing: false
+            )
+            .frame(width: 230, height: 230)
+        }
     }
 
     // MARK: - Content Card

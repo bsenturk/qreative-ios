@@ -30,6 +30,7 @@ struct CreateView: View {
         .background(Color.backgroundPrimary)
         .ignoresSafeArea(edges: .top)
         .onAppear {
+            AnalyticsService.logScreen("create")
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
             withAnimation(.easeOut(duration: 0.4)) {
                 showContent = true

@@ -53,6 +53,7 @@ struct QREditorView: View {
         .navigationBarHidden(true)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
+            AnalyticsService.logScreen("qr_editor")
             viewModel.bind(appCoordinator: appCoordinator, tabCoordinator: tabCoordinator)
             if !appCoordinator.isPremiumUser {
                 InterstitialAdManager.shared.loadAd()

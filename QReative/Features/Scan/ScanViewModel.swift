@@ -9,11 +9,13 @@ struct ScanResult: Identifiable, Equatable {
     let id = UUID()
     let content: String
     let type: ScanResultType
+    let symbology: CodeSymbology
     let timestamp: Date
 
-    init(content: String) {
+    init(content: String, symbology: CodeSymbology = .qr) {
         self.content = content
         self.type = ScanResultType.detect(from: content)
+        self.symbology = symbology
         self.timestamp = Date()
     }
 }
@@ -182,11 +184,11 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Setup
     private func setupBindings() {
-        cameraService.$detectedQRCode
+        cameraService.$detectedCode
             .compactMap { $0 }
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] code in
-                self?.handleDetectedCode(code)
+            .sink { [weak self] detected in
+                self?.handleDetectedCode(detected.value, symbology: detected.symbology)
             }
             .store(in: &cancellables)
 
@@ -206,8 +208,14 @@ final class ScanViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
+    /// Whether the Scan screen is the active surface. When false, late camera
+    /// detections are ignored so a result sheet can't pop over another tab.
+    private var isActive: Bool = false
+
     // MARK: - Lifecycle
     func onAppear() {
+        isActive = true
+
         if cameraService.isAuthorized {
             if scanResult == nil {
                 cameraService.startSession()
@@ -229,8 +237,14 @@ final class ScanViewModel: ObservableObject {
     }
 
     func onDisappear() {
+        isActive = false
         cameraService.stopSession()
         cameraService.setTorch(.off)
+    }
+
+    // MARK: - Scan Mode
+    func setScanMode(_ mode: ScanMode) {
+        cameraService.setScanMode(mode)
     }
 
     // MARK: - Camera Controls
@@ -245,10 +259,10 @@ final class ScanViewModel: ObservableObject {
     }
 
     // MARK: - Detection Handling
-    private func handleDetectedCode(_ code: String) {
-        guard scanResult == nil else { return }
+    private func handleDetectedCode(_ code: String, symbology: CodeSymbology) {
+        guard isActive, scanResult == nil else { return }
 
-        let result = ScanResult(content: code)
+        let result = ScanResult(content: code, symbology: symbology)
         scanResult = result
         showResult = true
 
@@ -333,9 +347,10 @@ final class ScanViewModel: ObservableObject {
 
     // MARK: - Result Actions
     func copyToClipboard() {
-        guard let content = scanResult?.content else { return }
+        guard let result = scanResult else { return }
 
-        UIPasteboard.general.string = content
+        UIPasteboard.general.string = result.content
+        AnalyticsService.scanResultAction("copy", resultType: result.type.analyticsName)
 
         HapticManager.shared.success()
     }
@@ -376,6 +391,9 @@ final class ScanViewModel: ObservableObject {
 
         guard let url = URL(string: urlString) else { return }
 
+        if let result = scanResult {
+            AnalyticsService.scanResultAction("open_url", resultType: result.type.analyticsName)
+        }
         UIApplication.shared.open(url)
     }
 
@@ -410,7 +428,8 @@ final class ScanViewModel: ObservableObject {
             content: result.content,
             type: historyType,
             createdAt: result.timestamp,
-            source: .scanned
+            source: .scanned,
+            symbology: result.symbology
         )
 
         Task {

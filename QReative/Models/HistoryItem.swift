@@ -141,6 +141,9 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     var customColor: String?
     var customShape: String?
     var hasLogo: Bool
+    /// The code's actual encoding. Optional for backward compatibility: items
+    /// saved before this field existed decode as `nil` and are treated as QR.
+    var symbology: CodeSymbology?
 
     // MARK: - Init
     init(
@@ -152,7 +155,8 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         thumbnailData: Data? = nil,
         customColor: String? = nil,
         customShape: String? = nil,
-        hasLogo: Bool = false
+        hasLogo: Bool = false,
+        symbology: CodeSymbology? = nil
     ) {
         self.id = id
         self.content = content
@@ -163,6 +167,24 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         self.customColor = customColor
         self.customShape = customShape
         self.hasLogo = hasLogo
+        self.symbology = symbology
+    }
+
+    // MARK: - Symbology Helpers
+    /// True for 1D linear barcodes (renders as a wide rectangle, not a QR).
+    var isBarcode: Bool { symbology?.isBarcode ?? false }
+
+    /// Label for the type chip / header: the symbology name for non-QR codes,
+    /// otherwise the content-based type title (Website, WiFi, …).
+    var displayTypeName: String {
+        if let symbology, symbology != .qr { return symbology.displayName }
+        return type.title
+    }
+
+    /// Icon matching `displayTypeName`.
+    var displayTypeIcon: String {
+        guard let symbology, symbology != .qr else { return type.icon }
+        return symbology.icon
     }
 
     // MARK: - Computed Properties

@@ -5,6 +5,7 @@ import ContactsUI
 // MARK: - Scan View
 struct ScanView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
+    @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = ScanViewModel()
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedPhoto: PhotosPickerItem?
@@ -12,6 +13,8 @@ struct ScanView: View {
     @State private var photoPickerID = UUID()
     @State private var showHint = false
     @State private var resultSheetHeight: CGFloat = 0
+    @State private var scanMode: ScanMode = .qr
+    @Namespace private var modeNamespace
     @AppStorage("qreative.hasSeenScanHint") private var hasSeenScanHint = false
 
     var body: some View {
@@ -25,6 +28,7 @@ struct ScanView: View {
         .background(Color.black)
         .ignoresSafeArea()
         .onAppear {
+            AnalyticsService.logScreen("scan")
             viewModel.bind(coordinator: appCoordinator)
             withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
                 showUI = true
@@ -67,6 +71,17 @@ struct ScanView: View {
                 if !isPresented {
                     viewModel.onAppear()
                 }
+            }
+        }
+        .onChange(of: tabCoordinator.selectedTab) { _, tab in
+            // TabView doesn't reliably fire onDisappear on tab switches, so drive
+            // the camera explicitly: only the Scan tab may run the session.
+            if tab == .scan {
+                if !appCoordinator.isPaywallPresented {
+                    viewModel.onAppear()
+                }
+            } else {
+                viewModel.onDisappear()
             }
         }
         .sheet(isPresented: $viewModel.showResult, onDismiss: {
@@ -114,7 +129,11 @@ struct ScanView: View {
             CameraPreview(cameraService: viewModel.cameraService)
                 .ignoresSafeArea()
 
-            ViewfinderOverlay()
+            ViewfinderOverlay(
+                frameWidth: scanMode.frameWidth,
+                frameHeight: scanMode.frameHeight
+            )
+            .animation(.spring(response: 0.42, dampingFraction: 0.82), value: scanMode)
 
             // First-time guidance hint, just below the viewfinder.
             if showHint {
@@ -139,6 +158,9 @@ struct ScanView: View {
                     .offset(y: showUI ? 0 : 20)
             }
         }
+        .onChange(of: scanMode) { _, mode in
+            viewModel.setScanMode(mode)
+        }
     }
 
     // MARK: - First-time Hint
@@ -147,7 +169,7 @@ struct ScanView: View {
             Circle()
                 .fill(Color.accentPrimary)
                 .frame(width: 7, height: 7)
-            Text("Point at a QR code to scan")
+            Text(scanMode.hint)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.white)
         }
@@ -174,10 +196,51 @@ struct ScanView: View {
 
     // MARK: - Top Bar
     private var topBar: some View {
-        HStack(spacing: 16) {
-            flashButton
+        ZStack {
+            // Flash stays pinned to the leading edge.
+            HStack {
+                flashButton
+                Spacer()
+            }
 
-            Spacer()
+            // Mode picker centered regardless of the flash button's width.
+            modePicker
+        }
+    }
+
+    // MARK: - Mode Picker (QR / Barcode)
+    private var modePicker: some View {
+        HStack(spacing: 4) {
+            ForEach(ScanMode.allCases) { mode in
+                let isSelected = scanMode == mode
+                Button {
+                    guard scanMode != mode else { return }
+                    HapticManager.shared.lightTap()
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                        scanMode = mode
+                    }
+                } label: {
+                    Text(mode.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isSelected ? .white : Color.white.opacity(0.6))
+                        .frame(height: 34)
+                        .padding(.horizontal, 18)
+                        .background {
+                            if isSelected {
+                                Capsule()
+                                    .fill(Color.accentPrimary)
+                                    .matchedGeometryEffect(id: "modeSelection", in: modeNamespace)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay {
+            Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1)
         }
     }
 
