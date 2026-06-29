@@ -1,18 +1,10 @@
 import SwiftUI
 
-// MARK: - History Filter
-enum HistoryFilter: String, CaseIterable {
-    case all = "All"
-    case scanned = "Scanned"
-    case created = "Created"
-}
-
 // MARK: - History View
 struct HistoryView: View {
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = HistoryViewModel()
     @State private var showContent = false
-    @State private var filter: HistoryFilter = .all
 
     var body: some View {
         ZStack {
@@ -119,30 +111,23 @@ struct HistoryView: View {
                                         RoundedRectangle(cornerRadius: 13)
                                             .stroke(Color.lineColor, lineWidth: 1)
                                     }
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 17, weight: .medium))
+                                Image(systemName: "ellipsis")
+                                    .font(.system(size: 17, weight: .semibold))
                                     .foregroundStyle(Color.textPrimary)
                             }
                         }
                     }
                 }
                 .padding(.top, 60)
-                .padding(.bottom, 16)
+                .padding(.bottom, 20)
                 .opacity(showContent ? 1 : 0)
                 .offset(y: showContent ? 0 : 20)
-
-                // Filter tabs
-                filterTabs
-                    .padding(.bottom, 20)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 12)
-                    .animation(.easeOut(duration: 0.4).delay(0.05), value: showContent)
 
                 // Grouped items
                 ForEach(Array(viewModel.sortedGroupKeys.enumerated()), id: \.element) { gi, key in
                     if let items = viewModel.groupedItems[key] {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(key.uppercased())
+                            Text(viewModel.sectionTitle(for: key).uppercased())
                                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                                 .tracking(0.5)
                                 .foregroundStyle(Color.ink3)
@@ -182,44 +167,9 @@ struct HistoryView: View {
             }
             .padding(.horizontal, 22)
         }
+        .ignoresSafeArea(edges: .top)
     }
 
-    // MARK: - Filter Tabs
-    private var filterTabs: some View {
-        HStack(spacing: 4) {
-            ForEach(HistoryFilter.allCases, id: \.self) { f in
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        filter = f
-                    }
-                } label: {
-                    Text(f.rawValue)
-                        .font(.system(size: 13.5, weight: .semibold))
-                        .tracking(-0.1)
-                        .foregroundStyle(filter == f ? Color.textPrimary : Color.ink3)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(
-                            filter == f
-                                ? Color.surface
-                                : Color.clear
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .shadow(
-                            color: filter == f ? Color.ink.opacity(0.10) : .clear,
-                            radius: 3, x: 0, y: 1
-                        )
-                }
-            }
-        }
-        .padding(4)
-        .background(Color.surface2)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.lineColor, lineWidth: 1)
-        }
-    }
 }
 
 // MARK: - Share Sheet

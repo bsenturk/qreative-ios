@@ -79,7 +79,7 @@ struct MainTabView: View {
             }
 
         case .qrDetail(let historyItemId):
-            QRDetailPlaceholder(historyItemId: historyItemId)
+            QRDetailView(historyItemId: historyItemId)
 
         case .settings(let settingsRoute):
             SettingsDetailPlaceholder(route: settingsRoute)
@@ -105,18 +105,6 @@ private extension View {
 }
 
 // MARK: - Placeholder Views (for routes not yet implemented)
-struct QRDetailPlaceholder: View {
-    let historyItemId: String
-
-    var body: some View {
-        ZStack {
-            Color.backgroundPrimary.ignoresSafeArea()
-            Text("QR Detail: \(historyItemId)")
-                .typography(.title1)
-        }
-    }
-}
-
 struct SettingsDetailPlaceholder: View {
     let route: SettingsRoute
 

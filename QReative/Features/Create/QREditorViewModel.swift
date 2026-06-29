@@ -22,15 +22,15 @@ enum QRColor: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .black: return "Black"
-        case .cobalt: return "Cobalt"
-        case .red: return "Red"
-        case .green: return "Green"
-        case .purple: return "Purple"
-        case .sunset: return "Sunset"
-        case .ocean: return "Ocean"
-        case .forest: return "Forest"
-        case .grape: return "Grape"
+        case .black: return appLocalized("Black")
+        case .cobalt: return appLocalized("Cobalt")
+        case .red: return appLocalized("Red")
+        case .green: return appLocalized("Green")
+        case .purple: return appLocalized("Purple")
+        case .sunset: return appLocalized("Sunset")
+        case .ocean: return appLocalized("Ocean")
+        case .forest: return appLocalized("Forest")
+        case .grape: return appLocalized("Grape")
         }
     }
 
@@ -97,7 +97,7 @@ final class QREditorViewModel: ObservableObject {
 
     // MARK: - Dependencies
     private let qrCodeService = QRCodeService.shared
-    private let storageService = StorageService()
+    private let storageService = StorageService.shared
     private weak var coordinator: AppCoordinator?
     private weak var tabCoordinator: MainTabCoordinator?
 
@@ -216,6 +216,8 @@ final class QREditorViewModel: ObservableObject {
                 number: content,
                 message: smsMessage.isEmpty ? nil : smsMessage
             )
+        case "whatsapp":
+            return .whatsapp(number: content)
         default:
             return .text(content: content)
         }
@@ -242,8 +244,7 @@ final class QREditorViewModel: ObservableObject {
             return
         }
 
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         withAnimation(Theme.animation.spring) {
             selectedColor = color
@@ -259,8 +260,7 @@ final class QREditorViewModel: ObservableObject {
             return
         }
 
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         withAnimation(Theme.animation.spring) {
             selectedShape = shape
@@ -274,8 +274,7 @@ final class QREditorViewModel: ObservableObject {
             return
         }
 
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.medium)
 
         withAnimation(Theme.animation.spring) {
             logoImage = image
@@ -312,8 +311,7 @@ final class QREditorViewModel: ObservableObject {
             return
         }
 
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.medium)
 
         withAnimation(Theme.animation.spring) {
             selectedEmoji = emoji
@@ -387,7 +385,7 @@ final class QREditorViewModel: ObservableObject {
             // Free users get a low-resolution export; PRO users get a full-HD render.
             let dimension: CGFloat = isPremiumUser ? 1080 : 480
             guard let qrImage = generateQRImage(dimension: dimension) else {
-                throw NSError(domain: "QREditor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate QR code"])
+                throw NSError(domain: "QREditor", code: 1, userInfo: [NSLocalizedDescriptionKey: appLocalized("Failed to generate QR code")])
             }
 
             generatedImage = qrImage
@@ -398,6 +396,7 @@ final class QREditorViewModel: ObservableObject {
             let historyItem = HistoryItem(
                 content: qrContent,
                 type: historyType,
+                source: .created,
                 customColor: selectedColor.rawValue,
                 customShape: selectedShape.rawValue,
                 hasLogo: logoImage != nil || selectedEmoji != nil
@@ -413,8 +412,7 @@ final class QREditorViewModel: ObservableObject {
                 isPremium: isPremiumUser
             )
 
-            let notification = UINotificationFeedbackGenerator()
-            notification.notificationOccurred(.success)
+            HapticManager.shared.success()
 
             isSaving = false
 

@@ -1,14 +1,17 @@
 import SwiftUI
 import PhotosUI
+import ContactsUI
 
 // MARK: - Scan View
 struct ScanView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @StateObject private var viewModel = ScanViewModel()
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showUI = false
     @State private var photoPickerID = UUID()
     @State private var showHint = false
+    @State private var resultSheetHeight: CGFloat = 0
     @AppStorage("qreative.hasSeenScanHint") private var hasSeenScanHint = false
 
     var body: some View {
@@ -43,6 +46,22 @@ struct ScanView: View {
         .onDisappear {
             viewModel.onDisappear()
         }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active:
+                // Returning to foreground — restart the session unless a result
+                // sheet or the paywall is showing.
+                if viewModel.isCameraAuthorized, !appCoordinator.isPaywallPresented {
+                    viewModel.onAppear()
+                }
+            case .background:
+                // Leaving the foreground — stop the session (onDisappear does not
+                // fire on backgrounding) and turn the torch off.
+                viewModel.onDisappear()
+            default:
+                break
+            }
+        }
         .onChange(of: appCoordinator.isPaywallPresented) { _, isPresented in
             Task {
                 if !isPresented {
@@ -50,7 +69,9 @@ struct ScanView: View {
                 }
             }
         }
-        .sheet(isPresented: $viewModel.showResult) {
+        .sheet(isPresented: $viewModel.showResult, onDismiss: {
+            viewModel.handleResultDismissed()
+        }) {
             if let result = viewModel.scanResult {
                 ScanResultSheet(
                     result: result,
@@ -58,7 +79,10 @@ struct ScanView: View {
                     onOpen: { viewModel.openURL() },
                     onDismiss: { viewModel.dismissResult() }
                 )
-                .presentationDetents([.medium])
+                .onPreferenceChange(ScanSheetHeightKey.self) { height in
+                    if height > 0 { resultSheetHeight = height }
+                }
+                .presentationDetents([.height(resultSheetHeight > 0 ? resultSheetHeight : 440)])
                 .presentationDragIndicator(.hidden)
                 .presentationBackground(Color.backgroundPrimary)
             }
@@ -232,7 +256,7 @@ struct ScanView: View {
                     .padding(.horizontal, 40)
             }
 
-            PrimaryButton("Enable in Settings", icon: "gear") {
+            PrimaryButton(appLocalized("Enable in Settings"), icon: "gear") {
                 viewModel.openSettings()
             }
             .frame(maxWidth: 280)
@@ -273,6 +297,7 @@ struct ScanResultSheet: View {
 
     @State private var isCopied: Bool = false
     @State private var showContent = false
+    @State private var showContactPreview = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -280,8 +305,8 @@ struct ScanResultSheet: View {
             Capsule()
                 .fill(Color.lineStrong)
                 .frame(width: 38, height: 5)
-                .padding(.top, 10)
-                .padding(.bottom, 4)
+                .padding(.top, 8)
+                .padding(.bottom, 2)
 
             VStack(spacing: 0) {
                 // Type icon + label
@@ -333,7 +358,13 @@ struct ScanResultSheet: View {
                 .padding(.top, 16)
 
                 // Primary action
-                if result.type == .url || result.type == .email || result.type == .phone {
+                if result.type == .contact {
+                    PrimaryButton(result.type.actionTitle, icon: "person.crop.circle.badge.plus") {
+                        showContactPreview = true
+                    }
+                    .padding(.top, 14)
+                } else if result.type == .url || result.type == .email || result.type == .phone
+                    || result.type == .sms || result.type == .instagram || result.type == .whatsapp {
                     PrimaryButton(result.type.actionTitle, icon: "arrow.up.right") {
                         onOpen()
                     }
@@ -402,11 +433,71 @@ struct ScanResultSheet: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color.backgroundPrimary)
+        .background {
+            // Reports the intrinsic content height so the sheet can size itself
+            // exactly to its content (no empty space below).
+            GeometryReader { proxy in
+                Color.clear.preference(key: ScanSheetHeightKey.self, value: proxy.size.height)
+            }
+        }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1)) {
                 showContent = true
             }
         }
+        .sheet(isPresented: $showContactPreview) {
+            ContactPreviewSheet(vcard: result.content) {
+                showContactPreview = false
+            }
+            .ignoresSafeArea()
+        }
+    }
+}
+
+// MARK: - Contact Preview Sheet
+/// Presents a scanned vCard as a system contact card so the user can add it to
+/// their contacts ("Create New Contact" / "Add to Existing Contact").
+struct ContactPreviewSheet: UIViewControllerRepresentable {
+    let vcard: String
+    let onDone: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(onDone: onDone) }
+
+    func makeUIViewController(context: Context) -> UINavigationController {
+        let rootVC: UIViewController
+        if let data = vcard.data(using: .utf8),
+           let contact = try? CNContactVCardSerialization.contacts(with: data).first {
+            let contactVC = CNContactViewController(forUnknownContact: contact)
+            contactVC.allowsActions = true
+            contactVC.allowsEditing = false
+            contactVC.contactStore = CNContactStore()
+            rootVC = contactVC
+        } else {
+            rootVC = UIViewController()
+        }
+        rootVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: context.coordinator,
+            action: #selector(Coordinator.doneTapped)
+        )
+        return UINavigationController(rootViewController: rootVC)
+    }
+
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
+
+    final class Coordinator: NSObject {
+        let onDone: () -> Void
+        init(onDone: @escaping () -> Void) { self.onDone = onDone }
+        @objc func doneTapped() { onDone() }
+    }
+}
+
+// MARK: - Sheet Height Preference
+/// Carries the scan-result sheet's measured content height up to `ScanView`.
+private struct ScanSheetHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 

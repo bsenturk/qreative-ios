@@ -126,8 +126,7 @@ struct PrimaryButton: View {
 
     // MARK: - Haptic
     private func triggerHaptic() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.medium)
     }
 }
 

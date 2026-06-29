@@ -13,9 +13,9 @@ enum QRShape: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .squares: return "Square"
-        case .dots: return "Dots"
-        case .rounded: return "Rounded"
+        case .squares: return appLocalized("Square")
+        case .dots: return appLocalized("Dots")
+        case .rounded: return appLocalized("Rounded")
         }
     }
 

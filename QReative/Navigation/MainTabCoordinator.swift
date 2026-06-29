@@ -172,8 +172,7 @@ final class MainTabCoordinator: ObservableObject {
     }
 
     private func triggerHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        let generator = UIImpactFeedbackGenerator(style: style)
-        generator.impactOccurred()
+        HapticManager.shared.impact(style)
     }
 }
 

@@ -90,8 +90,7 @@ final class HistoryViewModel: ObservableObject {
 
             AnalyticsService.historyItemDeleted()
 
-            let notification = UINotificationFeedbackGenerator()
-            notification.notificationOccurred(.success)
+            HapticManager.shared.success()
 
         } catch {
             errorMessage = error.localizedDescription
@@ -111,8 +110,7 @@ final class HistoryViewModel: ObservableObject {
     func selectItem(_ item: HistoryItem) {
         selectedItem = item
 
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         tabCoordinator?.pushToHistory(.qrDetail(historyItemId: item.id.uuidString))
     }
@@ -133,8 +131,7 @@ final class HistoryViewModel: ObservableObject {
     func copyContent(_ item: HistoryItem) {
         UIPasteboard.general.string = item.content
 
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        HapticManager.shared.success()
     }
 
     // MARK: - Clear All
@@ -142,8 +139,7 @@ final class HistoryViewModel: ObservableObject {
         do {
             try await storageService.clearHistory()
 
-            let notification = UINotificationFeedbackGenerator()
-            notification.notificationOccurred(.success)
+            HapticManager.shared.success()
 
         } catch {
             errorMessage = error.localizedDescription
@@ -152,6 +148,17 @@ final class HistoryViewModel: ObservableObject {
     }
 
     // MARK: - Helpers
+    /// Localized display label for a (stable, English) group key.
+    func sectionTitle(for key: String) -> String {
+        switch key {
+        case "Today": return appLocalized("Today")
+        case "Yesterday": return appLocalized("Yesterday")
+        case "This Week": return appLocalized("This Week")
+        case "This Month": return appLocalized("This Month")
+        default: return appLocalized("Older")
+        }
+    }
+
     private func groupKey(for date: Date) -> String {
         let calendar = Calendar.current
         let now = Date()

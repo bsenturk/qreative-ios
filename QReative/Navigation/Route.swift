@@ -9,10 +9,10 @@ enum Tab: Int, Hashable, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .scan: return "Scan"
-        case .create: return "Create"
-        case .history: return "History"
-        case .settings: return "Settings"
+        case .scan: return appLocalized("Scan")
+        case .create: return appLocalized("Create")
+        case .history: return appLocalized("History")
+        case .settings: return appLocalized("Settings")
         }
     }
 
@@ -47,13 +47,13 @@ enum SettingsRoute: Hashable, Codable {
 
     var title: String {
         switch self {
-        case .general: return "General"
-        case .appIcon: return "App Icon"
-        case .helpSupport: return "Help & Support"
-        case .restorePurchases: return "Restore Purchases"
-        case .about: return "About"
-        case .privacy: return "Privacy Policy"
-        case .termsOfUse: return "Terms of Use"
+        case .general: return appLocalized("General")
+        case .appIcon: return appLocalized("App Icon")
+        case .helpSupport: return appLocalized("Help & Support")
+        case .restorePurchases: return appLocalized("Restore Purchases")
+        case .about: return appLocalized("About")
+        case .privacy: return appLocalized("Privacy Policy")
+        case .termsOfUse: return appLocalized("Terms of Use")
         }
     }
 

@@ -41,6 +41,7 @@ struct PaywallView: View {
             viewModel.bind(to: appCoordinator)
             AnalyticsService.logScreen("paywall")
             startAnimations()
+            Task { await viewModel.loadPlans() }
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
@@ -122,21 +123,17 @@ struct PaywallView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color.textPrimary)
 
-            ratingRow
+            trustRow
         }
         .padding(.top, 4)
     }
 
-    private var ratingRow: some View {
+    private var trustRow: some View {
         HStack(spacing: 6) {
-            HStack(spacing: 1) {
-                ForEach(0..<5, id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.warning)
-                }
-            }
-            Text("4.9 · loved by 50k+ creators")
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.success)
+            Text("Cancel anytime — no commitment")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(Color.ink2)
         }
@@ -198,16 +195,28 @@ struct PaywallView: View {
     }
 
     // MARK: - Pricing
-    private let orderedPlans: [SubscriptionPlan] = [.yearly, .monthly, .weekly]
-
+    @ViewBuilder
     private var pricingSection: some View {
-        VStack(spacing: 10) {
-            ForEach(orderedPlans) { plan in
-                PlanRow(
-                    plan: plan,
-                    isSelected: viewModel.selectedPlan == plan
-                ) {
-                    viewModel.selectPlan(plan)
+        if viewModel.isLoadingPlans {
+            ProgressView()
+                .tint(Color.accentPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+        } else if viewModel.plans.isEmpty {
+            Text("Plans are currently unavailable. Please try again later.")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.ink3)
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 24)
+        } else {
+            VStack(spacing: 10) {
+                ForEach(viewModel.plans) { plan in
+                    PlanRow(
+                        plan: plan,
+                        isSelected: viewModel.selectedPlanID == plan.id
+                    ) {
+                        viewModel.selectPlan(plan)
+                    }
                 }
             }
         }
@@ -243,7 +252,8 @@ struct PaywallView: View {
                 .shadow(color: Color.accentPrimary.opacity(0.35), radius: 16, x: 0, y: 8)
             }
             .buttonStyle(PressableStyle(scale: 0.98))
-            .disabled(viewModel.isLoading)
+            .disabled(viewModel.isLoading || viewModel.selectedPlan == nil)
+            .opacity(viewModel.selectedPlan == nil ? 0.5 : 1)
 
             Text(viewModel.footerText)
                 .font(.system(size: 11.5))
@@ -285,7 +295,7 @@ struct PaywallView: View {
 
 // MARK: - Plan Row
 private struct PlanRow: View {
-    let plan: SubscriptionPlan
+    let plan: PaywallPlan
     let isSelected: Bool
     let action: () -> Void
 
@@ -299,7 +309,7 @@ private struct PlanRow: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
-                        Text(plan.period.capitalized)
+                        Text(plan.title)
                             .font(.system(size: 15.5, weight: .semibold))
                             .foregroundStyle(Color.textPrimary)
 
@@ -315,14 +325,14 @@ private struct PlanRow: View {
                         }
                     }
 
-                    if let savings = plan.savings {
+                    if let trial = plan.trialDays, trial > 0 {
+                        Text("\(trial)-day free trial")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.accentPrimary)
+                    } else if let savings = plan.savings {
                         Text(savings)
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(Color.accentPrimary)
-                    } else {
-                        Text("Billed \(plan.periodShort)")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.ink3)
                     }
                 }
 
@@ -338,7 +348,7 @@ private struct PlanRow: View {
                             .font(.system(size: 12))
                             .foregroundStyle(Color.ink2)
                     }
-                    if let weekly = plan.weeklyEquivalent {
+                    if let weekly = plan.perWeek {
                         Text(weekly)
                             .font(.system(size: 11))
                             .foregroundStyle(Color.ink3)

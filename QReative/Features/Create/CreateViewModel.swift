@@ -46,8 +46,7 @@ final class CreateViewModel: ObservableObject {
         AnalyticsService.qrTypeSelected(template.id)
         selectedType = template
 
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.medium)
 
         tabCoordinator?.pushToCreate(.qrEditor(qrTypeId: template.id))
     }

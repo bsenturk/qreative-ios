@@ -74,8 +74,7 @@ struct QRTypeGridItem: View {
     }
 
     private func triggerHaptic() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
     }
 }
 
@@ -113,8 +112,7 @@ struct QRTypeLargeCard: View {
 
     var body: some View {
         Button {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            HapticManager.shared.impact(.light)
             onTap()
         } label: {
             HStack(spacing: 16) {

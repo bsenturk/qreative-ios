@@ -305,10 +305,15 @@ final class QRCodeService {
 
         let bytesPerPixel = cgImage.bitsPerPixel / 8
         let bytesPerRow = cgImage.bytesPerRow
+        let length = CFDataGetLength(data)
 
         for row in 0..<size {
             for col in 0..<size {
                 let offset = row * bytesPerRow + col * bytesPerPixel
+                // Guard against an unexpected pixel layout (stride/format change
+                // across iOS versions) so we degrade gracefully instead of
+                // reading out of bounds.
+                guard offset >= 0, offset < length else { return nil }
                 matrix[row][col] = bytes[offset] == 0
             }
         }
@@ -380,13 +385,14 @@ final class QRCodeService {
         context.setFillColor(UIColor.white.cgColor)
         context.fillEllipse(in: backgroundRect)
 
-        if let cgImage = logo.cgImage {
-            context.saveGState()
-            context.addEllipse(in: logoRect)
-            context.clip()
-            context.draw(cgImage, in: logoRect)
-            context.restoreGState()
-        }
+        // Use UIImage.draw so the overlay (logo/emoji) keeps the correct
+        // orientation; CGContext.draw(_:in:) would render it upside-down in a
+        // UIKit (top-left origin) renderer context.
+        context.saveGState()
+        context.addEllipse(in: logoRect)
+        context.clip()
+        logo.draw(in: logoRect)
+        context.restoreGState()
     }
 
     private func drawLogo(_ logo: UIImage, in context: CGContext, canvasSize: CGSize, qrSize: Int, moduleSize: CGFloat, offset: CGFloat) {
@@ -415,13 +421,12 @@ final class QRCodeService {
         context.setFillColor(UIColor.white.cgColor)
         context.fillEllipse(in: backgroundRect)
 
-        if let cgImage = logo.cgImage {
-            context.saveGState()
-            context.addEllipse(in: logoRect)
-            context.clip()
-            context.draw(cgImage, in: logoRect)
-            context.restoreGState()
-        }
+        // Use UIImage.draw so the overlay keeps the correct orientation (see note above).
+        context.saveGState()
+        context.addEllipse(in: logoRect)
+        context.clip()
+        logo.draw(in: logoRect)
+        context.restoreGState()
     }
 
     private func addLogo(_ logo: UIImage, to image: UIImage, size: CGSize) -> UIImage {

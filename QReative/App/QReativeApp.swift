@@ -63,7 +63,7 @@ struct QReativeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            rootView
                 .environmentObject(appCoordinator)
                 .environmentObject(tabCoordinator)
                 .environment(\.appCoordinator, appCoordinator)
@@ -71,7 +71,33 @@ struct QReativeApp: App {
                 .preferredColorScheme(.dark)
         }
     }
+
+    @ViewBuilder
+    private var rootView: some View {
+        #if DEBUG
+        // Live language switching for testing localization (DEBUG only).
+        // Re-keying on the selected language rebuilds the whole tree so every
+        // localized string re-resolves immediately.
+        DebugLanguageRoot()
+        #else
+        RootView()
+        #endif
+    }
 }
+
+#if DEBUG
+/// Injects the runtime language and forces a full rebuild when it changes.
+private struct DebugLanguageRoot: View {
+    @StateObject private var languageManager = LanguageManager.shared
+
+    var body: some View {
+        RootView()
+            .environmentObject(languageManager)
+            .environment(\.locale, languageManager.locale)
+            .id(languageManager.current)
+    }
+}
+#endif
 
 // MARK: - Root View
 struct RootView: View {

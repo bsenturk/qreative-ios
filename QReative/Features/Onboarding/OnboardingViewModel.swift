@@ -24,22 +24,22 @@ final class OnboardingViewModel: ObservableObject {
     let pages: [OnboardingPage] = [
         OnboardingPage(
             id: 0,
-            headline: "Create Unique QR Codes",
-            subheadline: "Customize colors, shapes, and logos.",
+            headline: appLocalized("Create Unique QR Codes"),
+            subheadline: appLocalized("Customize colors, shapes, and logos."),
             icon: "qrcode.viewfinder",
             qrShape: .rounded
         ),
         OnboardingPage(
             id: 1,
-            headline: "Scan Anything Instantly",
-            subheadline: "Fast and accurate QR code scanning.",
+            headline: appLocalized("Scan Anything Instantly"),
+            subheadline: appLocalized("Fast and accurate QR code scanning."),
             icon: "viewfinder",
             qrShape: .dots
         ),
         OnboardingPage(
             id: 2,
-            headline: "Share with Style",
-            subheadline: "Export in high quality formats.",
+            headline: appLocalized("Share with Style"),
+            subheadline: appLocalized("Export in high quality formats."),
             icon: "square.and.arrow.up",
             qrShape: .squares
         )

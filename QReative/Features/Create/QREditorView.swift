@@ -41,11 +41,15 @@ struct QREditorView: View {
                     }
                     .padding(.horizontal, Theme.spacing.screen)
                     .padding(.bottom, 24)
+                    .contentShape(Rectangle())
+                    .onTapHideKeyboard()
                 }
+                .scrollDismissesKeyboard(.interactively)
 
                 saveBar
             }
         }
+        .onTapHideKeyboard()
         .navigationBarHidden(true)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
@@ -205,7 +209,7 @@ struct QREditorView: View {
                 .textCase(.uppercase)
 
             HStack {
-                TextField(viewModel.placeholder, text: $viewModel.content)
+                TextField("", text: $viewModel.content, prompt: Text(viewModel.placeholder).foregroundColor(Color.ink3))
                     .font(.system(size: 16))
                     .foregroundStyle(Color.textPrimary)
                     .autocorrectionDisabled()
@@ -289,7 +293,7 @@ struct QREditorView: View {
                 .textCase(.uppercase)
 
             HStack {
-                TextField("+1 234 567 8900", text: $viewModel.content)
+                TextField("", text: $viewModel.content, prompt: Text("+1 234 567 8900").foregroundColor(Color.ink3))
                     .font(.system(size: 16))
                     .foregroundStyle(Color.textPrimary)
                     .autocorrectionDisabled()
@@ -322,8 +326,8 @@ struct QREditorView: View {
 
     @ViewBuilder
     private func inputField(
-        label: String,
-        placeholder: String,
+        label: LocalizedStringKey,
+        placeholder: LocalizedStringKey,
         text: Binding<String>,
         isSecure: Bool = false,
         isMultiline: Bool = false
@@ -337,12 +341,12 @@ struct QREditorView: View {
 
             Group {
                 if isMultiline {
-                    TextField(placeholder, text: text, axis: .vertical)
+                    TextField("", text: text, prompt: Text(placeholder).foregroundColor(Color.ink3), axis: .vertical)
                         .lineLimit(3...6)
                 } else if isSecure {
-                    SecureField(placeholder, text: text)
+                    SecureField("", text: text, prompt: Text(placeholder).foregroundColor(Color.ink3))
                 } else {
-                    TextField(placeholder, text: text)
+                    TextField("", text: text, prompt: Text(placeholder).foregroundColor(Color.ink3))
                 }
             }
             .font(.system(size: 16))
@@ -404,7 +408,7 @@ struct QREditorView: View {
     }
 
     // MARK: - Section Header
-    private func sectionHeader(_ title: String, locked: Bool) -> some View {
+    private func sectionHeader(_ title: LocalizedStringKey, locked: Bool) -> some View {
         HStack(spacing: 8) {
             Text(title)
                 .font(.system(size: 11.5, weight: .medium))

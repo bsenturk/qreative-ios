@@ -6,6 +6,12 @@ struct SettingsView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
     @EnvironmentObject var tabCoordinator: MainTabCoordinator
     @StateObject private var viewModel = SettingsViewModel()
+    @ObservedObject private var settings = AppSettings.shared
+
+    #if DEBUG
+    @EnvironmentObject private var languageManager: LanguageManager
+    @State private var showLanguagePicker = false
+    #endif
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -22,10 +28,21 @@ struct SettingsView: View {
                 accountSection
                     .padding(.bottom, 20)
 
+                preferencesSection
+                    .padding(.bottom, 20)
+
+                scanningSection
+                    .padding(.bottom, 20)
+
                 ForEach(Array(viewModel.settingsGroups.enumerated()), id: \.offset) { index, group in
                     settingsGroup(group)
                         .padding(.bottom, 20)
                 }
+
+                #if DEBUG
+                debugSection
+                    .padding(.bottom, 20)
+                #endif
 
                 footerSection
                     .padding(.top, 20)
@@ -67,7 +84,69 @@ struct SettingsView: View {
                 MailUnavailableView(recipient: "buraksenturktr@icloud.com")
             }
         }
+        #if DEBUG
+        .sheet(isPresented: $showLanguagePicker) {
+            DebugLanguagePickerView(languageManager: languageManager)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        #endif
     }
+
+    #if DEBUG
+    // MARK: - Debug Section (language testing — DEBUG builds only)
+    private var debugSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("DEBUG")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.2)
+                .foregroundStyle(Color.ink3)
+                .padding(.leading, 4)
+
+            Button {
+                HapticManager.shared.lightTap()
+                showLanguagePicker = true
+            } label: {
+                HStack(spacing: 13) {
+                    RoundedRectangle(cornerRadius: 9)
+                        .fill(Color(hex: "AF52DE"))
+                        .frame(width: 34, height: 34)
+                        .overlay {
+                            Image(systemName: "globe")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.white)
+                        }
+
+                    Text("Language")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Color.textPrimary)
+
+                    Spacer()
+
+                    Text("\(languageManager.current.flag) \(languageManager.current.displayName)")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.ink3)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.ink3)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(SettingsRowButtonStyle())
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
+            .shadow(color: Color.ink.opacity(0.04), radius: 2, x: 0, y: 1)
+            .shadow(color: Color.ink.opacity(0.06), radius: 12, x: 0, y: 6)
+        }
+    }
+    #endif
 
     // MARK: - Header
     private var headerSection: some View {
@@ -170,7 +249,7 @@ struct SettingsView: View {
     @ViewBuilder
     private func accountRowContent<Trailing: View>(
         icon: String,
-        title: String,
+        title: LocalizedStringKey,
         @ViewBuilder trailing: () -> Trailing
     ) -> some View {
         HStack(spacing: 13) {
@@ -194,6 +273,101 @@ struct SettingsView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .contentShape(Rectangle())
+    }
+
+    // MARK: - Preferences (toggles)
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("Preferences")
+            toggleCard {
+                settingsToggleRow(
+                    icon: "bolt.fill",
+                    title: "Haptic feedback",
+                    isOn: $settings.hapticFeedbackEnabled,
+                    isLast: true
+                )
+            }
+        }
+    }
+
+    // MARK: - Scanning (toggles)
+    private var scanningSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("Scanning")
+            toggleCard {
+                settingsToggleRow(
+                    icon: "link",
+                    title: "Auto-open links",
+                    isOn: $settings.autoOpenLinks,
+                    isLast: false
+                )
+                settingsToggleRow(
+                    icon: "bell.fill",
+                    title: "Scan sound",
+                    isOn: $settings.scanSoundEnabled,
+                    isLast: true
+                )
+            }
+        }
+    }
+
+    private func sectionLabel(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(.system(size: 11, weight: .semibold))
+            .tracking(1.2)
+            .textCase(.uppercase)
+            .foregroundStyle(Color.ink3)
+            .padding(.leading, 4)
+    }
+
+    private func toggleCard<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
+            .shadow(color: Color.ink.opacity(0.04), radius: 2, x: 0, y: 1)
+            .shadow(color: Color.ink.opacity(0.06), radius: 12, x: 0, y: 6)
+    }
+
+    private func settingsToggleRow(
+        icon: String,
+        title: LocalizedStringKey,
+        isOn: Binding<Bool>,
+        isLast: Bool
+    ) -> some View {
+        HStack(spacing: 13) {
+            RoundedRectangle(cornerRadius: 9)
+                .fill(Color.surface2)
+                .frame(width: 34, height: 34)
+                .overlay {
+                    Image(systemName: icon)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.textPrimary)
+                }
+
+            Text(title)
+                .font(.system(size: 15))
+                .foregroundStyle(Color.textPrimary)
+
+            Spacer()
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(Color.accentPrimary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .overlay(alignment: .bottom) {
+            if !isLast {
+                Rectangle()
+                    .fill(Color.lineColor)
+                    .frame(height: 1)
+                    .padding(.leading, 62)
+            }
+        }
     }
 
     // MARK: - Settings Group
@@ -249,7 +423,7 @@ struct SettingsView: View {
                     .clipShape(Capsule())
                 }
 
-                if item.title == "Restore Purchases" && viewModel.isRestoring {
+                if item.isRestore && viewModel.isRestoring {
                     ProgressView()
                         .tint(Color.ink2)
                         .scaleEffect(0.8)
@@ -404,7 +578,7 @@ struct MembershipSheet: View {
     private func actionRow(
         icon: String,
         iconColor: Color,
-        title: String,
+        title: LocalizedStringKey,
         showChevron: Bool,
         action: @escaping () -> Void
     ) -> some View {
@@ -511,9 +685,81 @@ struct HelpSupportView: View {
     }
 }
 
+#if DEBUG
+// MARK: - Debug Language Picker (DEBUG builds only)
+struct DebugLanguagePickerView: View {
+    @ObservedObject var languageManager: LanguageManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { index, language in
+                        Button {
+                            HapticManager.shared.lightTap()
+                            languageManager.current = language
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 13) {
+                                Text(language.flag)
+                                    .font(.system(size: 22))
+
+                                Text(language.displayName)
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Color.textPrimary)
+
+                                Spacer()
+
+                                if languageManager.current == language {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(Color.accentPrimary)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 15)
+                            .contentShape(Rectangle())
+                            .overlay(alignment: .bottom) {
+                                if index != AppLanguage.allCases.count - 1 {
+                                    Rectangle()
+                                        .fill(Color.lineColor)
+                                        .frame(height: 1)
+                                        .padding(.leading, 51)
+                                }
+                            }
+                        }
+                        .buttonStyle(SettingsRowButtonStyle())
+                    }
+                }
+                .background(Color.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.lineColor, lineWidth: 1)
+                }
+                .padding(.horizontal, Theme.spacing.screen)
+                .padding(.top, 12)
+            }
+            .background(Color.backgroundPrimary)
+            .navigationTitle("Language")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+#endif
+
 // MARK: - Preview
+#if DEBUG
 #Preview {
     SettingsView()
         .environmentObject(AppCoordinator())
         .environmentObject(MainTabCoordinator())
+        .environmentObject(LanguageManager.shared)
 }
+#endif

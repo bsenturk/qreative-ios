@@ -57,15 +57,33 @@ final class PurchasesManager: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Intro / Trial Eligibility
+    /// Free-trial / intro-offer eligibility per product identifier. Used to avoid
+    /// promising a free trial to users who already consumed it.
+    func introEligibility(for packages: [Package]) async -> [String: IntroEligibilityStatus] {
+        let result = await Purchases.shared.checkTrialOrIntroDiscountEligibility(packages: packages)
+        var map: [String: IntroEligibilityStatus] = [:]
+        for (pkg, eligibility) in result {
+            map[pkg.storeProduct.productIdentifier] = eligibility.status
+        }
+        return map
+    }
+
     // MARK: - Purchase
-    /// Returns `true` if the purchase completed and the `premium` entitlement is
-    /// now active, `false` if the user cancelled. Throws on real failures.
-    @discardableResult
-    func purchase(_ package: Package) async throws -> Bool {
+    enum PurchaseOutcome {
+        case purchased      // completed and `premium` entitlement is active
+        case cancelled      // user dismissed the sheet
+        case notEntitled    // transaction completed but entitlement did NOT activate
+    }
+
+    /// Throws on real StoreKit/network failures. Distinguishes a user cancel
+    /// from a completed-but-not-entitled purchase so the UI can warn instead of
+    /// silently doing nothing after the user was charged.
+    func purchase(_ package: Package) async throws -> PurchaseOutcome {
         let result = try await Purchases.shared.purchase(package: package)
-        if result.userCancelled { return false }
+        if result.userCancelled { return .cancelled }
         apply(result.customerInfo)
-        return isPro
+        return isPro ? .purchased : .notEntitled
     }
 
     // MARK: - Restore

@@ -12,7 +12,7 @@ enum WifiSecurity: String, CaseIterable, Identifiable {
         switch self {
         case .wpa: return "WPA/WPA2"
         case .wep: return "WEP"
-        case .none: return "None"
+        case .none: return appLocalized("None")
         }
     }
 }
@@ -61,13 +61,13 @@ enum QRType: Identifiable, Equatable {
 
     var title: String {
         switch self {
-        case .website: return "Website"
+        case .website: return appLocalized("Website")
         case .wifi: return "WiFi"
         case .instagram: return "Instagram"
-        case .text: return "Text"
-        case .vcard: return "Contact"
-        case .email: return "Email"
-        case .phone: return "Phone"
+        case .text: return appLocalized("Text")
+        case .vcard: return appLocalized("Contact")
+        case .email: return appLocalized("Email")
+        case .phone: return appLocalized("Phone")
         case .sms: return "SMS"
         case .whatsapp: return "WhatsApp"
         }
@@ -75,15 +75,15 @@ enum QRType: Identifiable, Equatable {
 
     var subtitle: String {
         switch self {
-        case .website: return "Link to any URL"
-        case .wifi: return "Share WiFi credentials"
-        case .instagram: return "Link to profile"
-        case .text: return "Plain text message"
-        case .vcard: return "Share contact info"
-        case .email: return "Compose email"
-        case .phone: return "Direct call"
-        case .sms: return "Send text message"
-        case .whatsapp: return "Start WhatsApp chat"
+        case .website: return appLocalized("Link to any URL")
+        case .wifi: return appLocalized("Share WiFi credentials")
+        case .instagram: return appLocalized("Link to profile")
+        case .text: return appLocalized("Plain text message")
+        case .vcard: return appLocalized("Share contact info")
+        case .email: return appLocalized("Compose email")
+        case .phone: return appLocalized("Direct call")
+        case .sms: return appLocalized("Send text message")
+        case .whatsapp: return appLocalized("Start WhatsApp chat")
         }
     }
 
