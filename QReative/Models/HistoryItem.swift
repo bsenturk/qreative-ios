@@ -423,28 +423,3 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 }
 
-// MARK: - Sample Data
-extension HistoryItem {
-    static let samples: [HistoryItem] = [
-        HistoryItem(
-            content: "https://www.apple.com",
-            createdAt: Date()
-        ),
-        HistoryItem(
-            content: "WIFI:T:WPA;S:HomeNetwork;P:password123;;",
-            createdAt: Date().addingTimeInterval(-3600)
-        ),
-        HistoryItem(
-            content: "https://instagram.com/apple",
-            createdAt: Date().addingTimeInterval(-86400)
-        ),
-        HistoryItem(
-            content: "BEGIN:VCARD\nVERSION:3.0\nFN:John Doe\nTEL:+1234567890\nEND:VCARD",
-            createdAt: Date().addingTimeInterval(-172800)
-        ),
-        HistoryItem(
-            content: "Hello, this is a sample text QR code content.",
-            createdAt: Date().addingTimeInterval(-604800)
-        ),
-    ]
-}

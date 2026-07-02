@@ -25,31 +25,15 @@ enum StorageError: LocalizedError {
     }
 }
 
-// MARK: - Storage Service Protocol
-protocol StorageServiceProtocol {
-    var historyItems: [HistoryItem] { get }
-    var historyItemsPublisher: Published<[HistoryItem]>.Publisher { get }
-
-    func saveItem(_ item: HistoryItem) async throws
-    func loadHistory() async -> [HistoryItem]
-    func deleteItem(id: UUID) async throws
-    func clearHistory() async throws
-    func updateItem(_ item: HistoryItem) async throws
-}
-
 // MARK: - Storage Service
 @MainActor
-final class StorageService: ObservableObject, StorageServiceProtocol {
+final class StorageService: ObservableObject {
 
     // MARK: - Singleton
     static let shared = StorageService()
 
     // MARK: - Published Properties
     @Published var historyItems: [HistoryItem] = []
-
-    var historyItemsPublisher: Published<[HistoryItem]>.Publisher {
-        $historyItems
-    }
 
     // MARK: - Private Properties
     private let userDefaults = UserDefaults.standard
@@ -111,12 +95,6 @@ final class StorageService: ObservableObject, StorageServiceProtocol {
         try await saveHistoryToDisk()
     }
 
-    // MARK: - Delete Multiple Items
-    func deleteItems(ids: Set<UUID>) async throws {
-        historyItems.removeAll { ids.contains($0.id) }
-        try await saveHistoryToDisk()
-    }
-
     // MARK: - Clear History
     func clearHistory() async throws {
         historyItems.removeAll()
@@ -132,29 +110,6 @@ final class StorageService: ObservableObject, StorageServiceProtocol {
         historyItems[index] = item
 
         try await saveHistoryToDisk()
-    }
-
-    // MARK: - Search
-    func searchHistory(query: String) -> [HistoryItem] {
-        guard !query.isEmpty else { return historyItems }
-
-        let lowercasedQuery = query.lowercased()
-
-        return historyItems.filter { item in
-            item.content.lowercased().contains(lowercasedQuery) ||
-            item.displayTitle.lowercased().contains(lowercasedQuery) ||
-            item.type.title.lowercased().contains(lowercasedQuery)
-        }
-    }
-
-    // MARK: - Filter by Type
-    func filterHistory(by type: HistoryItemType) -> [HistoryItem] {
-        historyItems.filter { $0.type == type }
-    }
-
-    // MARK: - Recent Items
-    func recentItems(limit: Int = 5) -> [HistoryItem] {
-        Array(historyItems.prefix(limit))
     }
 
     // MARK: - Private - Disk Operations
@@ -227,69 +182,4 @@ final class StorageService: ObservableObject, StorageServiceProtocol {
         return try? decoder.decode([HistoryItem].self, from: data)
     }
 
-    // MARK: - Thumbnail Management
-    func saveThumbnail(for itemId: UUID, imageData: Data) async throws {
-        guard var item = historyItems.first(where: { $0.id == itemId }) else {
-            throw StorageError.itemNotFound
-        }
-
-        item.thumbnailData = imageData
-        try await updateItem(item)
-    }
-
-    // MARK: - Export
-    func exportHistory() -> Data? {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = .prettyPrinted
-        return try? encoder.encode(historyItems)
-    }
-
-    // MARK: - Import
-    func importHistory(from data: Data) async throws {
-        guard let items = decodeHistory(from: data) else {
-            throw StorageError.decodingFailed
-        }
-
-        for item in items {
-            if !historyItems.contains(where: { $0.id == item.id }) {
-                historyItems.append(item)
-            }
-        }
-
-        historyItems.sort { $0.createdAt > $1.createdAt }
-
-        if historyItems.count > maxHistoryItems {
-            historyItems = Array(historyItems.prefix(maxHistoryItems))
-        }
-
-        try await saveHistoryToDisk()
-    }
-
-    // MARK: - Statistics
-    var totalScans: Int {
-        historyItems.count
-    }
-
-    var scansToday: Int {
-        let calendar = Calendar.current
-        return historyItems.filter { calendar.isDateInToday($0.createdAt) }.count
-    }
-
-    var mostUsedType: HistoryItemType? {
-        let grouped = Dictionary(grouping: historyItems, by: { $0.type })
-        return grouped.max(by: { $0.value.count < $1.value.count })?.key
-    }
-}
-
-// MARK: - Environment Key
-private struct StorageServiceKey: EnvironmentKey {
-    static let defaultValue = StorageService.shared
-}
-
-extension EnvironmentValues {
-    var storageService: StorageService {
-        get { self[StorageServiceKey.self] }
-        set { self[StorageServiceKey.self] = newValue }
-    }
 }

@@ -316,7 +316,4 @@ extension QRTypeTemplate {
         QRTypeTemplate(id: "phone", type: .phone(number: ""), isPremium: false),
         QRTypeTemplate(id: "sms", type: .sms(number: "", message: nil), isPremium: true),
     ]
-
-    static let freeTemplates: [QRTypeTemplate] = allTemplates.filter { !$0.isPremium }
-    static let premiumTemplates: [QRTypeTemplate] = allTemplates.filter { $0.isPremium }
 }
