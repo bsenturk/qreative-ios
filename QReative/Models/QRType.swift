@@ -22,6 +22,8 @@ enum QRType: Identifiable, Equatable {
     case website(url: String)
     case wifi(ssid: String, password: String, security: WifiSecurity)
     case instagram(username: String)
+    case x(username: String)
+    case tiktok(username: String)
     case text(content: String)
     case vcard(name: String, phone: String?, email: String?, company: String?)
     case email(address: String, subject: String?, body: String?)
@@ -35,6 +37,8 @@ enum QRType: Identifiable, Equatable {
         case .website: return "website"
         case .wifi: return "wifi"
         case .instagram: return "instagram"
+        case .x: return "x"
+        case .tiktok: return "tiktok"
         case .text: return "text"
         case .vcard: return "vcard"
         case .email: return "email"
@@ -50,6 +54,8 @@ enum QRType: Identifiable, Equatable {
         case .website: return "globe"
         case .wifi: return "wifi"
         case .instagram: return "camera.circle.fill"
+        case .x: return "x.circle.fill"
+        case .tiktok: return "music.note"
         case .text: return "doc.text.fill"
         case .vcard: return "person.crop.rectangle.fill"
         case .email: return "envelope.fill"
@@ -64,6 +70,8 @@ enum QRType: Identifiable, Equatable {
         case .website: return appLocalized("Website")
         case .wifi: return "WiFi"
         case .instagram: return "Instagram"
+        case .x: return "X"
+        case .tiktok: return "TikTok"
         case .text: return appLocalized("Text")
         case .vcard: return appLocalized("Contact")
         case .email: return appLocalized("Email")
@@ -78,6 +86,8 @@ enum QRType: Identifiable, Equatable {
         case .website: return appLocalized("Link to any URL")
         case .wifi: return appLocalized("Share WiFi credentials")
         case .instagram: return appLocalized("Link to profile")
+        case .x: return appLocalized("Link to profile")
+        case .tiktok: return appLocalized("Link to profile")
         case .text: return appLocalized("Plain text message")
         case .vcard: return appLocalized("Share contact info")
         case .email: return appLocalized("Compose email")
@@ -95,6 +105,10 @@ enum QRType: Identifiable, Equatable {
             return [Color(hex: "00B8D4"), Color(hex: "00E5FF")]
         case .instagram:
             return [Color(hex: "F58529"), Color(hex: "DD2A7B"), Color(hex: "8134AF")]
+        case .x:
+            return [Color(hex: "000000"), Color(hex: "333639")]
+        case .tiktok:
+            return [Color(hex: "25F4EE"), Color(hex: "FE2C55")]
         case .text:
             return [Color(hex: "607D8B"), Color(hex: "455A64")]
         case .vcard:
@@ -123,6 +137,8 @@ enum QRType: Identifiable, Equatable {
         case .website: return "https://example.com"
         case .wifi: return "Network Name"
         case .instagram: return "username"
+        case .x: return "username"
+        case .tiktok: return "username"
         case .text: return "Enter your text here..."
         case .vcard: return "John Doe"
         case .email: return "email@example.com"
@@ -151,6 +167,14 @@ enum QRType: Identifiable, Equatable {
         case .instagram(let username):
             let cleanUsername = username.replacingOccurrences(of: "@", with: "")
             return "https://instagram.com/\(cleanUsername)"
+
+        case .x(let username):
+            let cleanUsername = username.replacingOccurrences(of: "@", with: "")
+            return "https://x.com/\(cleanUsername)"
+
+        case .tiktok(let username):
+            let cleanUsername = username.replacingOccurrences(of: "@", with: "")
+            return "https://www.tiktok.com/@\(cleanUsername)"
 
         case .text(let content):
             return content
@@ -225,6 +249,8 @@ enum QRType: Identifiable, Equatable {
         case "website": return .website(url: "")
         case "wifi": return .wifi(ssid: "", password: "", security: .wpa)
         case "instagram": return .instagram(username: "")
+        case "x": return .x(username: "")
+        case "tiktok": return .tiktok(username: "")
         case "text": return .text(content: "")
         case "vcard": return .vcard(name: "", phone: nil, email: nil, company: nil)
         case "email": return .email(address: "", subject: nil, body: nil)
@@ -243,6 +269,10 @@ enum QRType: Identifiable, Equatable {
         case .wifi(let ssid, let password, let security):
             return !ssid.isEmpty && (security == .none || !password.isEmpty)
         case .instagram(let username):
+            return !username.isEmpty
+        case .x(let username):
+            return !username.isEmpty
+        case .tiktok(let username):
             return !username.isEmpty
         case .text(let content):
             return !content.isEmpty
@@ -278,6 +308,8 @@ extension QRTypeTemplate {
         QRTypeTemplate(id: "website", type: .website(url: ""), isPremium: false),
         QRTypeTemplate(id: "wifi", type: .wifi(ssid: "", password: "", security: .wpa), isPremium: false),
         QRTypeTemplate(id: "instagram", type: .instagram(username: ""), isPremium: false),
+        QRTypeTemplate(id: "x", type: .x(username: ""), isPremium: false),
+        QRTypeTemplate(id: "tiktok", type: .tiktok(username: ""), isPremium: false),
         QRTypeTemplate(id: "text", type: .text(content: ""), isPremium: false),
         QRTypeTemplate(id: "vcard", type: .vcard(name: "", phone: nil, email: nil, company: nil), isPremium: true),
         QRTypeTemplate(id: "email", type: .email(address: "", subject: nil, body: nil), isPremium: false),

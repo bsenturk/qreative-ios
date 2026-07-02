@@ -15,6 +15,8 @@ final class CreateViewModel: ObservableObject {
         QRTypeTemplate(id: "wifi", type: .wifi(ssid: "", password: "", security: .wpa), isPremium: true),
         QRTypeTemplate(id: "instagram", type: .instagram(username: ""), isPremium: true),
         QRTypeTemplate(id: "whatsapp", type: .whatsapp(number: ""), isPremium: true),
+        QRTypeTemplate(id: "x", type: .x(username: ""), isPremium: true),
+        QRTypeTemplate(id: "tiktok", type: .tiktok(username: ""), isPremium: true),
         QRTypeTemplate(id: "text", type: .text(content: ""), isPremium: true),
         QRTypeTemplate(id: "vcard", type: .vcard(name: "", phone: nil, email: nil, company: nil), isPremium: true),
         QRTypeTemplate(id: "email", type: .email(address: "", subject: nil, body: nil), isPremium: true),

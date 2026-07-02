@@ -2,6 +2,7 @@ import SwiftUI
 import GoogleMobileAds
 import FirebaseCore
 import RevenueCat
+import AppTrackingTransparency
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(_ application: UIApplication,
@@ -16,6 +17,7 @@ struct QReativeApp: App {
     @StateObject private var appCoordinator = AppCoordinator()
     @StateObject private var tabCoordinator = MainTabCoordinator()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         MobileAds.shared.start()
@@ -66,9 +68,24 @@ struct QReativeApp: App {
             rootView
                 .environmentObject(appCoordinator)
                 .environmentObject(tabCoordinator)
-                .environment(\.appCoordinator, appCoordinator)
                 .environment(\.tabCoordinator, tabCoordinator)
                 .preferredColorScheme(.dark)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { requestTrackingIfNeeded() }
+        }
+    }
+
+    /// Shows the App Tracking Transparency prompt once. Required before AdMob may
+    /// use the advertising identifier for personalized ads. Safe to call on every
+    /// foreground — iOS only prompts while the status is `.notDetermined`, and the
+    /// prompt only appears while the app is active (hence the scenePhase trigger).
+    private func requestTrackingIfNeeded() {
+        guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
+        // Small delay so the window is key/active on cold launch, otherwise the
+        // system silently drops the prompt.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            ATTrackingManager.requestTrackingAuthorization { _ in }
         }
     }
 

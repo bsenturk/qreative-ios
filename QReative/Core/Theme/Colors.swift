@@ -59,33 +59,9 @@ extension Color {
     static let ink2 = Color(hex: "6B655B")
     static let ink3 = Color(hex: "A8A192")
 
-    // MARK: - Camera / Dark screens
-    static let cameraBg = Color(hex: "100E0A")
-
     // MARK: - Semantic Colors
     static let success = Color(hex: "2F6B4F")             // forest green
     static let danger = Color(hex: "C0392B")              // warm red
     static let warning = Color(hex: "F0A500")             // amber
 }
 
-// MARK: - QReative Gradients
-extension LinearGradient {
-
-    static let purpleGradient = LinearGradient(
-        colors: [Color.accentPrimary, Color.accentSecondary],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let cyanGradient = LinearGradient(
-        colors: [Color(hex: "3457C8"), Color(hex: "5B7AE0")],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let goldGradient = LinearGradient(
-        colors: [Color(hex: "F0A500"), Color(hex: "D4881A")],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-}

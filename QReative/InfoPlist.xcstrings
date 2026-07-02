@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QReative"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QReative"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription" : {
       "comment" : "Permission prompt shown when the app requests camera access to scan codes.",
       "localizations" : {
@@ -281,6 +305,77 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "QReative cần quyền truy cập thư viện ảnh để thêm logo tùy chỉnh vào mã QR và lưu mã QR đã tạo vào ảnh của bạn."
+          }
+        }
+      }
+    },
+    "NSUserTrackingUsageDescription" : {
+      "comment" : "Permission prompt (App Tracking Transparency) shown before using the advertising identifier for personalized ads.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم QReative نشاطك لعرض إعلانات أكثر صلة والحفاظ على دعم النسخة المجانية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative verwendet Ihre Aktivität, um Ihnen relevantere Werbung anzuzeigen und die kostenlose Version zu unterstützen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative uses your activity to show more relevant ads and keep the free version supported."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative usa tu actividad para mostrarte anuncios más relevantes y mantener la versión gratuita."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative utilise votre activité pour afficher des publicités plus pertinentes et financer la version gratuite."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative menggunakan aktivitas Anda untuk menampilkan iklan yang lebih relevan dan mendukung versi gratis."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeはあなたのアクティビティを利用して、より関連性の高い広告を表示し、無料版を維持します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative usa sua atividade para mostrar anúncios mais relevantes e manter a versão gratuita."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ใช้กิจกรรมของคุณเพื่อแสดงโฆษณาที่เกี่ยวข้องมากขึ้นและสนับสนุนเวอร์ชันฟรี"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, size daha alakalı reklamlar göstermek ve ücretsiz sürümü desteklemek için etkinliğinizi kullanır."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative sử dụng hoạt động của bạn để hiển thị quảng cáo phù hợp hơn và duy trì phiên bản miễn phí."
           }
         }
       }

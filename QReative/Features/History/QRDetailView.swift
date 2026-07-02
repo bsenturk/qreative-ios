@@ -264,7 +264,7 @@ struct QRDetailView: View {
     private func openableURL(for item: HistoryItem) -> URL? {
         let content = item.content.trimmingCharacters(in: .whitespacesAndNewlines)
         switch item.type {
-        case .website, .instagram, .whatsapp:
+        case .website, .instagram, .x, .tiktok, .whatsapp:
             if content.lowercased().hasPrefix("http://") || content.lowercased().hasPrefix("https://") {
                 return URL(string: content)
             }

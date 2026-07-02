@@ -146,19 +146,6 @@ final class AppCoordinator: ObservableObject {
         AnalyticsService.setMembership(isPremium: isPro)
     }
 
-    func restorePurchases() async -> Bool {
-        return false
-    }
-
-    // MARK: - Premium Features
-    func requirePremium(for feature: String, action: @escaping () -> Void) {
-        if isPremiumUser {
-            action()
-        } else {
-            showPaywall()
-        }
-    }
-
     // MARK: - Sheet Presentation
     func presentSheet(_ route: Route) {
         presentedSheet = route
@@ -166,44 +153,5 @@ final class AppCoordinator: ObservableObject {
 
     func dismissSheet() {
         presentedSheet = nil
-    }
-
-    // MARK: - Deep Link Handling
-    func handleDeepLink(_ url: URL) {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              let host = components.host else {
-            return
-        }
-
-        switch host {
-        case "scan":
-            navigate(to: .mainTab(.scan))
-        case "create":
-            navigate(to: .mainTab(.create))
-        case "premium":
-            showPaywall()
-        default:
-            break
-        }
-    }
-}
-
-// MARK: - Environment Key
-private struct AppCoordinatorKey: EnvironmentKey {
-    static let defaultValue: AppCoordinator = AppCoordinator()
-}
-
-extension EnvironmentValues {
-    var appCoordinator: AppCoordinator {
-        get { self[AppCoordinatorKey.self] }
-        set { self[AppCoordinatorKey.self] = newValue }
-    }
-}
-
-// MARK: - View Extension
-extension View {
-    func withAppCoordinator(_ coordinator: AppCoordinator) -> some View {
-        environment(\.appCoordinator, coordinator)
-            .environmentObject(coordinator)
     }
 }

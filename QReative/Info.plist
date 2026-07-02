@@ -8,6 +8,8 @@
 	<string>QReative needs permission to save your generated QR codes to your photo library.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>QReative needs access to your contacts to save contact details from a scanned QR code.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>QReative uses your activity to show more relevant ads and keep the free version supported.</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-2545255000258244~6499911773</string>
 	<key>SKAdNetworkItems</key>

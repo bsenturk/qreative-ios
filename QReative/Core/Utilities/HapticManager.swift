@@ -57,24 +57,6 @@ final class HapticManager {
         }
     }
 
-    func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle, intensity: CGFloat) {
-        guard isEnabled else { return }
-        switch style {
-        case .light:
-            impactLight.impactOccurred(intensity: intensity)
-        case .medium:
-            impactMedium.impactOccurred(intensity: intensity)
-        case .heavy:
-            impactHeavy.impactOccurred(intensity: intensity)
-        case .soft:
-            impactSoft.impactOccurred(intensity: intensity)
-        case .rigid:
-            impactRigid.impactOccurred(intensity: intensity)
-        @unknown default:
-            impactMedium.impactOccurred(intensity: intensity)
-        }
-    }
-
     // MARK: - Notification Feedback
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         guard isEnabled else { return }
@@ -100,21 +82,3 @@ final class HapticManager {
     func error() { notification(.error) }
 }
 
-// MARK: - SwiftUI Extension
-import SwiftUI
-
-extension View {
-    func hapticOnTap(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) -> some View {
-        self.simultaneousGesture(
-            TapGesture().onEnded { _ in
-                HapticManager.shared.impact(style)
-            }
-        )
-    }
-
-    func hapticOnChange<Value: Equatable>(of value: Value, _ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) -> some View {
-        self.onChange(of: value) { _, _ in
-            HapticManager.shared.impact(style)
-        }
-    }
-}

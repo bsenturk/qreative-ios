@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Paywall View
 struct PaywallView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = PaywallViewModel()
     @State private var showHero = false
     @State private var showContent = false
@@ -61,7 +62,6 @@ struct PaywallView: View {
     private func legalSheet<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         NavigationStack {
             content()
-                .padding(.horizontal, 24)
                 .background(Color.backgroundPrimary)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -84,7 +84,7 @@ struct PaywallView: View {
         HStack {
             Spacer()
             Button {
-                viewModel.dismiss()
+                dismiss()
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))

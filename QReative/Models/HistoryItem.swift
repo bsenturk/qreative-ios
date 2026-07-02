@@ -5,6 +5,8 @@ enum HistoryItemType: String, Codable, CaseIterable {
     case website
     case wifi
     case instagram
+    case x
+    case tiktok
     case whatsapp
     case text
     case vcard
@@ -18,6 +20,8 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return "globe"
         case .wifi: return "wifi"
         case .instagram: return "camera.circle.fill"
+        case .x: return "x.circle.fill"
+        case .tiktok: return "music.note"
         case .whatsapp: return "message.circle.fill"
         case .text: return "doc.text.fill"
         case .vcard: return "person.crop.rectangle.fill"
@@ -33,6 +37,8 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return "Website"
         case .wifi: return "WiFi"
         case .instagram: return "Instagram"
+        case .x: return "X"
+        case .tiktok: return "TikTok"
         case .whatsapp: return "WhatsApp"
         case .text: return "Text"
         case .vcard: return "Contact"
@@ -48,6 +54,8 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return Color(hex: "6200EA")
         case .wifi: return Color(hex: "00E5FF")
         case .instagram: return Color(hex: "E1306C")
+        case .x: return Color(hex: "000000")
+        case .tiktok: return Color(hex: "FE2C55")
         case .whatsapp: return Color(hex: "25D366")
         case .text: return Color(hex: "607D8B")
         case .vcard: return Color(hex: "4CAF50")
@@ -63,6 +71,8 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return [Color(hex: "6200EA"), Color(hex: "9C27B0")]
         case .wifi: return [Color(hex: "00B8D4"), Color(hex: "00E5FF")]
         case .instagram: return [Color(hex: "F58529"), Color(hex: "DD2A7B")]
+        case .x: return [Color(hex: "000000"), Color(hex: "333639")]
+        case .tiktok: return [Color(hex: "25F4EE"), Color(hex: "FE2C55")]
         case .whatsapp: return [Color(hex: "25D366"), Color(hex: "128C7E")]
         case .text: return [Color(hex: "607D8B"), Color(hex: "455A64")]
         case .vcard: return [Color(hex: "4CAF50"), Color(hex: "2E7D32")]
@@ -101,6 +111,12 @@ enum HistoryItemType: String, Codable, CaseIterable {
         if lowercased.hasPrefix("http://") || lowercased.hasPrefix("https://") {
             if lowercased.contains("instagram.com") {
                 return .instagram
+            }
+            if lowercased.contains("x.com/") || lowercased.contains("twitter.com/") {
+                return .x
+            }
+            if lowercased.contains("tiktok.com") {
+                return .tiktok
             }
             return .website
         } else if lowercased.hasPrefix("wifi:") {
@@ -196,6 +212,10 @@ struct HistoryItem: Identifiable, Codable, Equatable {
             return extractWiFiSSID(content) ?? "WiFi Network"
         case .instagram:
             return extractInstagramUsername(content) ?? "Instagram"
+        case .x:
+            return extractHandle(content, hosts: ["x.com", "twitter.com"]) ?? "X"
+        case .tiktok:
+            return extractHandle(content, hosts: ["tiktok.com"]) ?? "TikTok"
         case .whatsapp:
             return extractWhatsAppNumber(content) ?? "WhatsApp"
         case .vcard:
@@ -346,6 +366,24 @@ struct HistoryItem: Identifiable, Codable, Equatable {
             .components(separatedBy: "/")
 
         return components.first.map { "@\($0)" }
+    }
+
+    /// Extracts a "@handle" from a profile URL for the given hosts (e.g. x.com,
+    /// tiktok.com). Returns nil when the URL doesn't match or has no username.
+    private func extractHandle(_ url: String, hosts: [String]) -> String? {
+        let lower = url.lowercased()
+        guard hosts.contains(where: { lower.contains($0) }) else { return nil }
+
+        var path = url
+            .replacingOccurrences(of: "https://", with: "")
+            .replacingOccurrences(of: "http://", with: "")
+            .replacingOccurrences(of: "www.", with: "")
+        for host in hosts {
+            path = path.replacingOccurrences(of: "\(host)/", with: "")
+        }
+        let handle = path.components(separatedBy: "/").first?
+            .replacingOccurrences(of: "@", with: "") ?? ""
+        return handle.isEmpty ? nil : "@\(handle)"
     }
 
     private func extractWhatsAppNumber(_ content: String) -> String? {

@@ -193,10 +193,6 @@ final class PaywallViewModel: ObservableObject {
         }
     }
 
-    func dismiss() {
-        coordinator?.dismissPaywall()
-    }
-
     // MARK: - Private
     private func completeAndDismiss() {
         isPurchaseSuccessful = true

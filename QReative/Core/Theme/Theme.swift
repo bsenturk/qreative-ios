@@ -38,19 +38,7 @@ struct CornerRadius {
 struct AnimationPresets {
     let spring = Animation.spring(response: 0.4, dampingFraction: 0.8)
 
-    let springQuick = Animation.spring(response: 0.3, dampingFraction: 0.7)
-
-    let springBouncy = Animation.spring(response: 0.5, dampingFraction: 0.6)
-
-    let easeOut = Animation.easeOut(duration: 0.25)
-
     let easeInOut = Animation.easeInOut(duration: 0.3)
-
-    let fade = Animation.easeOut(duration: 0.15)
-
-    let reveal = Animation.easeOut(duration: 0.4)
-
-    let page = Animation.spring(response: 0.45, dampingFraction: 0.85)
 }
 
 // MARK: - Theme
@@ -64,30 +52,9 @@ struct Theme {
     private init() {}
 }
 
-// MARK: - Environment Key
-private struct ThemeKey: EnvironmentKey {
-    static let defaultValue = Theme.shared
-}
-
-extension EnvironmentValues {
-    var theme: Theme {
-        get { self[ThemeKey.self] }
-        set { self[ThemeKey.self] = newValue }
-    }
-}
-
-// MARK: - View Extension
-extension View {
-    func themed() -> some View {
-        environment(\.theme, Theme.shared)
-    }
-}
-
 // MARK: - Convenience Accessors
 extension Theme {
     static var spacing: Spacing { shared.spacing }
-
-    static var radius: CornerRadius { shared.radius }
 
     static var animation: AnimationPresets { shared.animation }
 }

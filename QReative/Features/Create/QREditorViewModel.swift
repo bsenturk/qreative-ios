@@ -164,6 +164,10 @@ final class QREditorViewModel: ObservableObject {
             wifiSecurity = .wpa
         case .instagram:
             content = ""
+        case .x:
+            content = ""
+        case .tiktok:
+            content = ""
         case .text:
             content = ""
         case .vcard:
@@ -194,6 +198,10 @@ final class QREditorViewModel: ObservableObject {
             return .wifi(ssid: wifiSSID, password: wifiPassword, security: wifiSecurity)
         case "instagram":
             return .instagram(username: content)
+        case "x":
+            return .x(username: content)
+        case "tiktok":
+            return .tiktok(username: content)
         case "text":
             return .text(content: content)
         case "vcard":
