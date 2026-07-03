@@ -74,13 +74,18 @@ struct QReativeApp: App {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { requestTrackingIfNeeded() }
         }
+        .onChange(of: appCoordinator.isOnboardingCompleted) { _, completed in
+            if completed { requestTrackingIfNeeded() }
+        }
     }
 
-    /// Shows the App Tracking Transparency prompt once. Required before AdMob may
-    /// use the advertising identifier for personalized ads. Safe to call on every
-    /// foreground — iOS only prompts while the status is `.notDetermined`, and the
-    /// prompt only appears while the app is active (hence the scenePhase trigger).
+    /// Shows the App Tracking Transparency prompt once onboarding is done, so the
+    /// user has app context before deciding. Required before AdMob may use the
+    /// advertising identifier for personalized ads. Safe to call repeatedly — iOS
+    /// only prompts while the status is `.notDetermined`, and the prompt only
+    /// appears while the app is active (hence the scenePhase trigger too).
     private func requestTrackingIfNeeded() {
+        guard appCoordinator.isOnboardingCompleted else { return }
         guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
         // Small delay so the window is key/active on cold launch, otherwise the
         // system silently drops the prompt.
