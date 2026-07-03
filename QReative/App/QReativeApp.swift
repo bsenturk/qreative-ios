@@ -24,16 +24,16 @@ struct QReativeApp: App {
         Self.configureTabBarAppearance()
 
         // MARK: - RevenueCat
-        // Public SDK keys (safe to embed). DEBUG uses the RevenueCat Test Store
-        // key so purchases can be tested without App Store Connect; Release uses
-        // the App Store (appl_) key.
+        // Public SDK key (safe to embed). Always the real App Store project —
+        // no RevenueCat Test Store key, so every build (simulator, TestFlight,
+        // App Store) reads real StoreKit/App Store Connect pricing via sandbox
+        // or production purchases.
         #if DEBUG
         Purchases.logLevel = .debug
-        Purchases.configure(withAPIKey: "test_FpeeZZkJZtfskpTzlDDhWjDaZAp")
         #else
         Purchases.logLevel = .warn
-        Purchases.configure(withAPIKey: "appl_xoGOJgGlZjFfqvmxrUxUECxPPms")
         #endif
+        Purchases.configure(withAPIKey: "appl_xoGOJgGlZjFfqvmxrUxUECxPPms")
     }
 
     // MARK: - Tab Bar Appearance
