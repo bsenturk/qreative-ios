@@ -37,7 +37,7 @@ Passez à la vitesse supérieure pour tout débloquer :
 
 Les abonnements se renouvellent automatiquement jusqu'à résiliation ; gérez-les ou résiliez à tout moment dans les Réglages. Le paiement est débité sur votre compte Apple.
 
-Conditions d'utilisation (CLUF) : https://VOTRE-LIEN
-Politique de confidentialité : https://VOTRE-LIEN
+Conditions d'utilisation (CLUF) : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Politique de confidentialité : https://bsenturk.github.io/qreative-ios/privacy.html
 
 Une question ou une idée ? Écrivez-nous via Réglages → Aide et assistance.

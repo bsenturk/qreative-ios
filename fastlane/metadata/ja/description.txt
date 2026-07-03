@@ -37,7 +37,7 @@ QReative PRO
 
 サブスクリプションは解約するまで自動更新されます。設定からいつでも管理・解約できます。お支払いはApple IDに請求されます。
 
-利用規約（EULA）：https://SEU-LINK
-プライバシーポリシー：https://SEU-LINK
+利用規約（EULA）：https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+プライバシーポリシー：https://bsenturk.github.io/qreative-ios/privacy.html
 
 ご質問・ご要望は、設定 → ヘルプとサポート からお寄せください。

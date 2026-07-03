@@ -37,7 +37,7 @@ Upgrade to unlock everything:
 
 Subscriptions auto-renew until canceled; manage or cancel anytime in Settings. Payment is charged to your Apple ID.
 
-Terms of Use (EULA): https://… 
-Privacy Policy: https://…
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/ 
+Privacy Policy: https://bsenturk.github.io/qreative-ios/privacy.html
 
 Got feedback or an idea? Reach us in Settings → Help & Support.

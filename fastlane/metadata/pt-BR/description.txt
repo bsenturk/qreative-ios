@@ -38,7 +38,7 @@ Assine para desbloquear tudo:
 
 As assinaturas são renovadas automaticamente até você cancelar; gerencie ou cancele quando quiser em Ajustes. A cobrança é feita na sua conta Apple.
 
-Termos de Uso (EULA): https://SEU-LINK-AQUI
-Política de Privacidade: https://SEU-LINK-AQUI
+Termos de Uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de Privacidade: https://bsenturk.github.io/qreative-ios/privacy.html
 
 Dúvidas ou ideias? Fale com a gente em Ajustes → Ajuda e suporte.

@@ -37,7 +37,7 @@ QReative PRO
 
 تتجدد الاشتراكات تلقائيًا حتى الإلغاء؛ يمكنك إدارتها أو إلغاؤها في أي وقت من الإعدادات. يتم خصم الدفع من حساب Apple الخاص بك.
 
-شروط الاستخدام (EULA): https://الرابط-الخاص-بك
-سياسة الخصوصية: https://الرابط-الخاص-بك
+شروط الاستخدام (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+سياسة الخصوصية: https://bsenturk.github.io/qreative-ios/privacy.html
 
 هل لديك سؤال أو فكرة؟ تواصل معنا من الإعدادات ← المساعدة والدعم.

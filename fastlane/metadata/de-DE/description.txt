@@ -37,7 +37,7 @@ Schalte alles frei:
 
 Abos verlängern sich automatisch, bis du kündigst; verwalte oder kündige sie jederzeit in den Einstellungen. Die Zahlung erfolgt über dein Apple-Konto.
 
-Nutzungsbedingungen (EULA): https://DEIN-LINK
-Datenschutzrichtlinie: https://DEIN-LINK
+Nutzungsbedingungen (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Datenschutzrichtlinie: https://bsenturk.github.io/qreative-ios/privacy.html
 
 Fragen oder Ideen? Schreib uns über Einstellungen → Hilfe & Support.

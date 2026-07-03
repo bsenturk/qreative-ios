@@ -37,7 +37,7 @@ Mejora para desbloquear todo:
 
 Las suscripciones se renuevan automáticamente hasta que las canceles; gestiónalas o cancélalas cuando quieras en Ajustes. El pago se carga a tu cuenta de Apple.
 
-Términos de uso (EULA): https://…
-Política de privacidad: https://…
+Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de privacidad: https://bsenturk.github.io/qreative-ios/privacy.html
 
 ¿Tienes dudas o ideas? Escríbenos en Ajustes → Ayuda y soporte.

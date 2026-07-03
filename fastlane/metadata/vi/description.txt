@@ -37,7 +37,7 @@ Nâng cấp để mở khóa tất cả:
 
 Gói đăng ký tự động gia hạn cho đến khi bạn hủy; quản lý hoặc hủy bất cứ lúc nào trong Cài đặt. Thanh toán được tính vào tài khoản Apple của bạn.
 
-Điều khoản sử dụng (EULA): https://LIEN-KET-CUA-BAN
-Chính sách quyền riêng tư: https://LIEN-KET-CUA-BAN
+Điều khoản sử dụng (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Chính sách quyền riêng tư: https://bsenturk.github.io/qreative-ios/privacy.html
 
 Có câu hỏi hoặc ý tưởng? Liên hệ với chúng tôi tại Cài đặt → Trợ giúp & Hỗ trợ.

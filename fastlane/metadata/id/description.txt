@@ -37,7 +37,7 @@ Tingkatkan untuk membuka semuanya:
 
 Langganan diperpanjang otomatis hingga dibatalkan; kelola atau batalkan kapan saja di Pengaturan. Pembayaran ditagih ke akun Apple-mu.
 
-Ketentuan Penggunaan (EULA): https://TAUTAN-ANDA
-Kebijakan Privasi: https://TAUTAN-ANDA
+Ketentuan Penggunaan (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Kebijakan Privasi: https://bsenturk.github.io/qreative-ios/privacy.html
 
 Ada pertanyaan atau ide? Hubungi kami di Pengaturan → Bantuan & Dukungan.
