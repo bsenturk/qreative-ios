@@ -1,0 +1,50 @@
+# Uncomment the lines below you want to change by removing the # in the beginning
+
+devices([
+  "iPhone 17 Pro Max" # 6.9" — currently the only display size App Store Connect requires
+])
+
+languages([
+  "tr",
+  "de-DE",
+  "es-ES",
+  "fr-FR",
+  "ja",
+  "ar-SA",
+  "id",
+  "th",
+  "vi",
+  "pt-BR"
+])
+
+# The name of the scheme which contains the UI Tests
+scheme("QReative")
+
+# Skip testLaunchPerformance (it relaunches the app repeatedly for timing
+# metrics), which would otherwise run pointlessly on every locale.
+only_testing(["QReativeUITests/QReativeUITests/testTakeScreenshots"])
+
+# Reuse the already-resolved SPM packages/build instead of a fresh derived
+# data dir per invocation — this project's dependencies (Firebase, gRPC,
+# GoogleMobileAds) are heavy enough that a from-scratch resolve is very slow.
+derived_data_path("~/Library/Developer/Xcode/DerivedData/QReative-chkfmrqsexkoydailpyxcqwkuxvl")
+
+# The bundled xcpretty gem crashes on non-ASCII build/test output (e.g. the
+# "Café Mocha" mock history string) with "invalid byte sequence in US-ASCII".
+# Raw xcodebuild output is less pretty but doesn't choke on Unicode.
+xcodebuild_formatter("")
+
+# Where should the resulting screenshots be stored?
+output_directory("./fastlane/screenshots")
+
+# false — en-US screenshots were placed here manually and clearing would wipe them too.
+clear_previous_screenshots(false)
+
+# Remove the '#' to set the status bar to 9:41 AM, and show full battery and reception. See also override_status_bar_arguments for custom options.
+override_status_bar(true)
+
+# Arguments to pass to the app on launch. See https://docs.fastlane.tools/actions/snapshot/#launch-arguments
+# launch_arguments(["-favColor red"])
+
+# For more information about all available options run
+# fastlane action snapshot

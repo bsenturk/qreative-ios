@@ -60,6 +60,10 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Permission
     private func checkInitialPermission() {
+        if ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode") {
+            isAuthorized = true
+            return
+        }
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         isAuthorized = status == .authorized
     }

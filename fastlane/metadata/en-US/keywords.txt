@@ -1,0 +1,1 @@
+maker,creator,wifi,vcard,contact,card,url,link,sticker,color,design,menu,generate,custom,logo,scan

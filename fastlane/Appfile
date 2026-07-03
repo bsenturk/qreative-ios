@@ -1,0 +1,13 @@
+app_identifier("com.xptlabs.qreative") # The bundle identifier of your app
+apple_id("buraksenturktr@icloud.com") # Your Apple Developer Portal username
+
+itc_team_id("126973887") # App Store Connect Team ID
+team_id("ADPP457ME6") # Developer Portal Team ID
+
+app_store_connect_api_key(
+  key_id: "7F46KGG9JW",
+  issuer_id: "258d24e3-297e-4411-beeb-6760b8545728"
+)
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

@@ -104,6 +104,7 @@ struct QREditorView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle(scale: 0.9))
+            .accessibilityIdentifier("editorBackButton")
 
             Spacer()
 
@@ -577,6 +578,7 @@ struct QREditorView: View {
                             .foregroundStyle(Color.lineStrong)
                     }
                 }
+                .accessibilityIdentifier("addEmojiButton")
             }
         }
     }
@@ -638,6 +640,7 @@ private struct ColorButton: View {
                 radius: 8, x: 0, y: 0
             )
         }
+        .accessibilityIdentifier("qrColor.\(color.rawValue)")
     }
 }
 
@@ -676,6 +679,7 @@ private struct ShapeButton: View {
                     )
             }
         }
+        .accessibilityIdentifier("qrShape.\(shape.rawValue)")
     }
 }
 
@@ -749,6 +753,7 @@ struct EmojiPickerSheet: View {
                                 }
                             }
                     }
+                    .accessibilityIdentifier("emojiCategory.\(category.symbol)")
                 }
             }
             .padding(.horizontal, 20)

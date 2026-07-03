@@ -235,6 +235,7 @@ struct ScanView: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("scanMode.\(mode.rawValue)")
             }
         }
         .padding(4)

@@ -55,10 +55,31 @@ final class StorageService: ObservableObject {
 
     // MARK: - Init
     init() {
+        if ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode") {
+            historyItems = Self.screenshotModeMockItems
+            hasLoaded = true
+            return
+        }
         Task {
             await loadHistoryFromDisk()
         }
     }
+
+    /// Dummy history shown only when launched with `-UITestScreenshotMode`, so
+    /// App Store screenshot captures don't need a real usage history.
+    private static let screenshotModeMockItems: [HistoryItem] = {
+        let now = Date()
+        return [
+            HistoryItem(content: "https://x.com/qreative", createdAt: now),
+            HistoryItem(content: "https://tiktok.com/@qreative.app", createdAt: now.addingTimeInterval(-30 * 60)),
+            HistoryItem(content: "https://instagram.com/qreative.app", createdAt: now.addingTimeInterval(-3600)),
+            HistoryItem(content: "https://apple.com", createdAt: now.addingTimeInterval(-2 * 3600)),
+            HistoryItem(content: "https://wa.me/15551234567", createdAt: now.addingTimeInterval(-86400)),
+            HistoryItem(content: "WIFI:S:Café Mocha;;", createdAt: now.addingTimeInterval(-86400 - 3600)),
+            HistoryItem(content: "mailto:hello@qreative.app", createdAt: now.addingTimeInterval(-3 * 86400)),
+            HistoryItem(content: "BEGIN:VCARD\nFN:Jane Appleseed\nEND:VCARD", createdAt: now.addingTimeInterval(-10 * 86400))
+        ]
+    }()
 
     // MARK: - Save Item
     func saveItem(_ item: HistoryItem) async throws {

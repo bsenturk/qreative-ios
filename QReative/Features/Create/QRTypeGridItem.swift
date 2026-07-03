@@ -56,6 +56,7 @@ struct QRTypeGridItem: View {
             .shadow(color: Color.ink.opacity(0.08), radius: 16, x: 0, y: 6)
         }
         .buttonStyle(PressableStyle(scale: 0.97))
+        .accessibilityIdentifier("qrType.\(template.id)")
     }
 
     // MARK: - Pro Badge
