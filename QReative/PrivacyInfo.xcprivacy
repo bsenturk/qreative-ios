@@ -6,13 +6,17 @@
 	<key>NSPrivacyTracking</key>
 	<true/>
 
-	<!-- Left empty on purpose: the app itself connects to no tracking domain
-	     directly, and the Google Mobile Ads / Firebase SDKs declare their own
-	     tracking domains in their bundled privacy manifests. Listing ad domains
-	     here would also block non-personalized ad serving when the user denies
-	     ATT, which is not the intended behavior. -->
+	<!-- GoogleMobileAds.framework's own PrivacyInfo.xcprivacy does not declare
+	     NSPrivacyTrackingDomains itself, so Apple's validator requires this app's
+	     manifest to list them directly: NSPrivacyTracking = true with an empty
+	     domains array fails submission with ITMS-91064. These are AdMob's known
+	     ad-serving/tracking domains used for personalized ads. -->
 	<key>NSPrivacyTrackingDomains</key>
-	<array/>
+	<array>
+		<string>googlesyndication.com</string>
+		<string>googleadservices.com</string>
+		<string>doubleclick.net</string>
+	</array>
 
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
