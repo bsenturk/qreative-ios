@@ -8,11 +8,14 @@ enum QRShape: String, CaseIterable {
     case dots
     case rounded
 
+    /// Only the plain square style is free; the rest require PRO.
+    var isPremium: Bool { self != .squares }
+
     var displayName: String {
         switch self {
-        case .squares: return "Square"
-        case .dots: return "Dots"
-        case .rounded: return "Rounded"
+        case .squares: return appLocalized("Square")
+        case .dots: return appLocalized("Dots")
+        case .rounded: return appLocalized("Rounded")
         }
     }
 

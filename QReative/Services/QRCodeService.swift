@@ -40,27 +40,6 @@ final class QRCodeService {
     // MARK: - Init
     private init() {}
 
-    // MARK: - Generate Basic QR Code
-    func generateQRCode(from string: String, size: CGSize = CGSize(width: 512, height: 512)) -> UIImage? {
-        guard !string.isEmpty else { return nil }
-
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(string.utf8)
-        filter.correctionLevel = "M"
-
-        guard let outputImage = filter.outputImage else { return nil }
-
-        let scaleX = size.width / outputImage.extent.width
-        let scaleY = size.height / outputImage.extent.height
-        let scaledImage = outputImage.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
-
-        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
-            return nil
-        }
-
-        return UIImage(cgImage: cgImage)
-    }
-
     // MARK: - Generate Styled QR Code
     func generateStyledQRCode(
         content: String,
@@ -219,40 +198,6 @@ final class QRCodeService {
         return gradientImage
     }
 
-    // MARK: - Read QR Code
-    func readQRCode(from image: UIImage) -> String? {
-        guard let ciImage = CIImage(image: image) else { return nil }
-
-        let detector = CIDetector(
-            ofType: CIDetectorTypeQRCode,
-            context: context,
-            options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]
-        )
-
-        guard let features = detector?.features(in: ciImage) as? [CIQRCodeFeature],
-              let qrFeature = features.first else {
-            return nil
-        }
-
-        return qrFeature.messageString
-    }
-
-    func readAllQRCodes(from image: UIImage) -> [String] {
-        guard let ciImage = CIImage(image: image) else { return [] }
-
-        let detector = CIDetector(
-            ofType: CIDetectorTypeQRCode,
-            context: context,
-            options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]
-        )
-
-        guard let features = detector?.features(in: ciImage) as? [CIQRCodeFeature] else {
-            return []
-        }
-
-        return features.compactMap { $0.messageString }
-    }
-
     // MARK: - Save to Photos
     func saveToPhotos(_ image: UIImage) async throws {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
@@ -305,10 +250,15 @@ final class QRCodeService {
 
         let bytesPerPixel = cgImage.bitsPerPixel / 8
         let bytesPerRow = cgImage.bytesPerRow
+        let length = CFDataGetLength(data)
 
         for row in 0..<size {
             for col in 0..<size {
                 let offset = row * bytesPerRow + col * bytesPerPixel
+                // Guard against an unexpected pixel layout (stride/format change
+                // across iOS versions) so we degrade gracefully instead of
+                // reading out of bounds.
+                guard offset >= 0, offset < length else { return nil }
                 matrix[row][col] = bytes[offset] == 0
             }
         }
@@ -380,13 +330,14 @@ final class QRCodeService {
         context.setFillColor(UIColor.white.cgColor)
         context.fillEllipse(in: backgroundRect)
 
-        if let cgImage = logo.cgImage {
-            context.saveGState()
-            context.addEllipse(in: logoRect)
-            context.clip()
-            context.draw(cgImage, in: logoRect)
-            context.restoreGState()
-        }
+        // Use UIImage.draw so the overlay (logo/emoji) keeps the correct
+        // orientation; CGContext.draw(_:in:) would render it upside-down in a
+        // UIKit (top-left origin) renderer context.
+        context.saveGState()
+        context.addEllipse(in: logoRect)
+        context.clip()
+        logo.draw(in: logoRect)
+        context.restoreGState()
     }
 
     private func drawLogo(_ logo: UIImage, in context: CGContext, canvasSize: CGSize, qrSize: Int, moduleSize: CGFloat, offset: CGFloat) {
@@ -415,13 +366,12 @@ final class QRCodeService {
         context.setFillColor(UIColor.white.cgColor)
         context.fillEllipse(in: backgroundRect)
 
-        if let cgImage = logo.cgImage {
-            context.saveGState()
-            context.addEllipse(in: logoRect)
-            context.clip()
-            context.draw(cgImage, in: logoRect)
-            context.restoreGState()
-        }
+        // Use UIImage.draw so the overlay keeps the correct orientation (see note above).
+        context.saveGState()
+        context.addEllipse(in: logoRect)
+        context.clip()
+        logo.draw(in: logoRect)
+        context.restoreGState()
     }
 
     private func addLogo(_ logo: UIImage, to image: UIImage, size: CGSize) -> UIImage {
@@ -432,54 +382,4 @@ final class QRCodeService {
         }
     }
 
-    // MARK: - Get PNG Data
-    func getPNGData(from image: UIImage) -> Data? {
-        image.pngData()
-    }
-
-    func getJPEGData(from image: UIImage, quality: CGFloat = 0.9) -> Data? {
-        image.jpegData(compressionQuality: quality)
-    }
-}
-
-// MARK: - Convenience Extensions
-extension QRCodeService {
-
-    func quickGenerate(content: String, style: QuickStyle = .default) -> UIImage? {
-        switch style {
-        case .default:
-            return generateQRCode(from: content)
-
-        case .purple:
-            return generateStyledQRCode(
-                content: content,
-                foregroundColor: UIColor(Color.accentPrimary),
-                backgroundColor: .white,
-                shape: .squares
-            )
-
-        case .rounded:
-            return generateStyledQRCode(
-                content: content,
-                foregroundColor: .black,
-                backgroundColor: .white,
-                shape: .rounded
-            )
-
-        case .dots:
-            return generateStyledQRCode(
-                content: content,
-                foregroundColor: .black,
-                backgroundColor: .white,
-                shape: .dots
-            )
-        }
-    }
-
-    enum QuickStyle {
-        case `default`
-        case purple
-        case rounded
-        case dots
-    }
 }

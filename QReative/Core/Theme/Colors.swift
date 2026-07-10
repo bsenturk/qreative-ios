@@ -29,60 +29,39 @@ extension Color {
     }
 }
 
-// MARK: - QReative Color Palette
+// MARK: - QReative Color Palette (Warm Light Theme)
 extension Color {
 
-    // MARK: - Backgrounds
-    static let backgroundPrimary = Color(hex: "0F0F0F")
+    // MARK: - Backgrounds & Surfaces
+    static let backgroundPrimary = Color(hex: "FFFFFF")   // white paper
+    static let backgroundSecondary = Color(hex: "FFFFFF") // white
+    static let backgroundTertiary = Color(hex: "ECE7DD")  // line/divider
+    static let surface = Color(hex: "FFFFFF")             // white card surface
+    static let surface2 = Color(hex: "F2F2F4")           // neutral light gray fill
 
-    static let backgroundSecondary = Color(hex: "1C1C1E")
-
-    static let backgroundTertiary = Color(hex: "2C2C2E")
-
-    static let glassBg = Color.white.opacity(0.05)
-
-    static let glassBorder = Color.white.opacity(0.1)
+    // MARK: - Card & Border
+    static let glassBg = Color(hex: "FFFFFF")
+    static let glassBorder = Color(hex: "ECE7DD")
+    static let lineColor = Color(hex: "ECE7DD")
+    static let lineStrong = Color(hex: "DAD3C6")
 
     // MARK: - Accents
-    static let accentPrimary = Color(hex: "6200EA")
+    static let accentPrimary = Color(hex: "3457C8")       // cobalt blue (brand)
+    static let accentSecondary = Color(hex: "2742A6")     // deeper cobalt
+    static let accentTertiary = Color(hex: "5B7AE0")      // light cobalt
+    static let accentSoft = Color(hex: "3457C8").opacity(0.13)
 
-    static let accentSecondary = Color(hex: "9C27B0")
-
-    static let accentTertiary = Color(hex: "00E5FF")
-
-    // MARK: - Text
-    static let textPrimary = Color.white
-
-    static let textSecondary = Color.white.opacity(0.6)
-
-    static let textTertiary = Color.white.opacity(0.4)
+    // MARK: - Text / Ink
+    static let textPrimary = Color(hex: "1A1814")         // warm near-black
+    static let textSecondary = Color(hex: "6B655B")       // warm mid-grey
+    static let textTertiary = Color(hex: "A8A192")        // warm muted
+    static let ink = Color(hex: "1A1814")
+    static let ink2 = Color(hex: "6B655B")
+    static let ink3 = Color(hex: "A8A192")
 
     // MARK: - Semantic Colors
-    static let success = Color(hex: "00E676")
-
-    static let danger = Color(hex: "FF3B30")
-
-    static let warning = Color(hex: "FFD700")
+    static let success = Color(hex: "2F6B4F")             // forest green
+    static let danger = Color(hex: "C0392B")              // warm red
+    static let warning = Color(hex: "F0A500")             // amber
 }
 
-// MARK: - QReative Gradients
-extension LinearGradient {
-
-    static let purpleGradient = LinearGradient(
-        colors: [Color(hex: "6200EA"), Color(hex: "9C27B0")],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let cyanGradient = LinearGradient(
-        colors: [Color(hex: "00B8D4"), Color(hex: "00E5FF")],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let goldGradient = LinearGradient(
-        colors: [Color(hex: "FFD700"), Color(hex: "FFA000")],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-}

@@ -8,8 +8,7 @@ struct HistoryView: View {
 
     var body: some View {
         ZStack {
-            Color.backgroundPrimary
-                .ignoresSafeArea()
+            Color.backgroundPrimary.ignoresSafeArea()
 
             if viewModel.isEmpty {
                 emptyState
@@ -18,30 +17,21 @@ struct HistoryView: View {
             }
         }
         .onAppear {
+            AnalyticsService.logScreen("history")
             viewModel.bind(tabCoordinator: tabCoordinator)
-            Task {
-                await viewModel.loadHistory()
-            }
-            withAnimation(.easeOut(duration: 0.4)) {
-                showContent = true
-            }
+            Task { await viewModel.loadHistory() }
+            withAnimation(.easeOut(duration: 0.4)) { showContent = true }
         }
-        .refreshable {
-            await viewModel.refresh()
-        }
+        .refreshable { await viewModel.refresh() }
         .confirmationDialog(
             "Delete QR Code",
             isPresented: $viewModel.showDeleteConfirmation,
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                Task {
-                    await viewModel.deleteConfirmed()
-                }
+                Task { await viewModel.deleteConfirmed() }
             }
-            Button("Cancel", role: .cancel) {
-                viewModel.cancelDelete()
-            }
+            Button("Cancel", role: .cancel) { viewModel.cancelDelete() }
         } message: {
             Text("This action cannot be undone.")
         }
@@ -64,13 +54,13 @@ struct HistoryView: View {
 
             ZStack {
                 Circle()
-                    .fill(Color.accentPrimary.opacity(0.1))
-                    .frame(width: 120, height: 120)
+                    .fill(Color.surface2)
+                    .frame(width: 96, height: 96)
                     .scaleEffect(showContent ? 1 : 0.5)
 
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Color.accentPrimary.opacity(0.5))
+                    .font(.system(size: 38))
+                    .foregroundStyle(Color.ink3)
                     .scaleEffect(showContent ? 1 : 0)
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showContent)
@@ -97,61 +87,90 @@ struct HistoryView: View {
     private var historyList: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                headerSection
-                    .padding(.top, 60)
-                    .padding(.bottom, 24)
-                    .padding(.horizontal, Theme.spacing.screen)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
+                // Header
+                HStack(alignment: .center) {
+                    Text("History")
+                        .font(.system(size: 34, weight: .bold))
+                        .tracking(-1.0)
+                        .foregroundStyle(Color.textPrimary)
 
-                LazyVStack(spacing: 12) {
-                    ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
-                        HistoryRowView(
-                            item: item,
-                            onTap: { viewModel.selectItem(item) },
-                            onDelete: {
-                                HapticManager.shared.warning()
-                                viewModel.confirmDelete(item)
-                            },
-                            onShare: { viewModel.shareItem(item) }
-                        )
-                        .opacity(showContent ? 1 : 0)
-                        .offset(x: showContent ? 0 : 50)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(min(index, 10)) * 0.05 + 0.15), value: showContent)
-                    }
-                }
-                .padding(.horizontal, Theme.spacing.screen)
+                    Spacer()
 
-                Spacer(minLength: 100)
-            }
-        }
-    }
-
-    // MARK: - Header Section
-    private var headerSection: some View {
-        HStack {
-            Text("History")
-                .typography(.largeTitle)
-
-            Spacer()
-
-            if !viewModel.items.isEmpty {
-                Menu {
-                    Button(role: .destructive) {
-                        Task {
-                            await viewModel.clearAllHistory()
+                    if !viewModel.items.isEmpty {
+                        Menu {
+                            Button(role: .destructive) {
+                                Task { await viewModel.clearAllHistory() }
+                            } label: {
+                                Label("Clear All", systemImage: "trash")
+                            }
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 13)
+                                    .fill(Color.surface)
+                                    .frame(width: 40, height: 40)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 13)
+                                            .stroke(Color.lineColor, lineWidth: 1)
+                                    }
+                                Image(systemName: "ellipsis")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(Color.textPrimary)
+                            }
                         }
-                    } label: {
-                        Label("Clear All", systemImage: "trash")
                     }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Color.textSecondary)
                 }
+                .padding(.top, 60)
+                .padding(.bottom, 20)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 20)
+
+                // Grouped items
+                ForEach(Array(viewModel.sortedGroupKeys.enumerated()), id: \.element) { gi, key in
+                    if let items = viewModel.groupedItems[key] {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(viewModel.sectionTitle(for: key).uppercased())
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .tracking(0.5)
+                                .foregroundStyle(Color.ink3)
+                                .padding(.bottom, -2)
+
+                            VStack(spacing: 0) {
+                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                                    HistoryRowView(
+                                        item: item,
+                                        isLast: index == items.count - 1,
+                                        onTap: { viewModel.selectItem(item) },
+                                        onDelete: {
+                                            HapticManager.shared.warning()
+                                            viewModel.confirmDelete(item)
+                                        },
+                                        onShare: { viewModel.shareItem(item) }
+                                    )
+                                }
+                            }
+                            .background(Color.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(Color.lineColor, lineWidth: 1)
+                            }
+                            .shadow(color: Color.ink.opacity(0.04), radius: 2, x: 0, y: 1)
+                            .shadow(color: Color.ink.opacity(0.08), radius: 14, x: 0, y: 6)
+                        }
+                        .padding(.bottom, 18)
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(gi) * 0.05 + 0.15), value: showContent)
+                    }
+                }
+
+                Spacer(minLength: 24)
             }
+            .padding(.horizontal, 22)
         }
+        .ignoresSafeArea(edges: .top)
     }
+
 }
 
 // MARK: - Share Sheet
@@ -171,82 +190,13 @@ struct GroupedHistoryView: View {
     @StateObject private var viewModel = HistoryViewModel()
 
     var body: some View {
-        ZStack {
-            Color.backgroundPrimary
-                .ignoresSafeArea()
-
-            if viewModel.isEmpty {
-                emptyState
-            } else {
-                groupedHistoryList
-            }
-        }
-        .onAppear {
-            viewModel.bind(tabCoordinator: tabCoordinator)
-            Task {
-                await viewModel.loadHistory()
-            }
-        }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 48))
-                .foregroundStyle(Color.textTertiary)
-
-            Text("No history yet")
-                .typography(.title2, color: .textSecondary)
-
-            Spacer()
-        }
-    }
-
-    private var groupedHistoryList: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("History")
-                    .typography(.largeTitle)
-                    .padding(.top, 60)
-                    .padding(.horizontal, Theme.spacing.screen)
-
-                ForEach(viewModel.sortedGroupKeys, id: \.self) { key in
-                    if let items = viewModel.groupedItems[key] {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(key)
-                                .typography(.caption1, color: .textTertiary)
-                                .padding(.horizontal, Theme.spacing.screen)
-
-                            VStack(spacing: 8) {
-                                ForEach(items) { item in
-                                    HistoryRowView(
-                                        item: item,
-                                        onTap: { viewModel.selectItem(item) },
-                                        onDelete: { viewModel.confirmDelete(item) },
-                                        onShare: { viewModel.shareItem(item) }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, Theme.spacing.screen)
-                        }
-                    }
-                }
-
-                Spacer(minLength: 100)
-            }
-        }
+        HistoryView()
+            .environmentObject(tabCoordinator)
     }
 }
 
 // MARK: - Preview
 #Preview("History View") {
-    HistoryView()
-        .environmentObject(MainTabCoordinator())
-}
-
-#Preview("Empty State") {
     HistoryView()
         .environmentObject(MainTabCoordinator())
 }

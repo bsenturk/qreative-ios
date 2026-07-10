@@ -76,11 +76,11 @@ struct MailUnavailableView: View {
                     VStack(spacing: 12) {
                         Text("Mail Not Configured")
                             .font(.system(size: 22, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.textPrimary)
 
                         Text("Please configure your Mail app or contact us directly at:")
                             .font(.system(size: 15))
-                            .foregroundStyle(Color.white.opacity(0.7))
+                            .foregroundStyle(Color.ink2)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
 
@@ -91,7 +91,7 @@ struct MailUnavailableView: View {
                             .padding(.vertical, 12)
                             .background {
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.white.opacity(0.05))
+                                    .fill(Color.surface2)
                             }
                             .onTapGesture {
                                 UIPasteboard.general.string = recipient
@@ -100,7 +100,7 @@ struct MailUnavailableView: View {
 
                         Text("Tap to copy")
                             .font(.system(size: 13))
-                            .foregroundStyle(Color.white.opacity(0.5))
+                            .foregroundStyle(Color.ink3)
                     }
 
                     Button {
@@ -128,7 +128,7 @@ struct MailUnavailableView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.6))
+                            .foregroundStyle(Color.ink3)
                     }
                 }
             }

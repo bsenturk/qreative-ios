@@ -10,6 +10,7 @@ struct SettingsItem: Identifiable {
     let title: String
     let subtitle: String?
     let showChevron: Bool
+    let isRestore: Bool
     let action: () -> Void
 
     init(
@@ -18,6 +19,7 @@ struct SettingsItem: Identifiable {
         title: String,
         subtitle: String? = nil,
         showChevron: Bool = true,
+        isRestore: Bool = false,
         action: @escaping () -> Void
     ) {
         self.icon = icon
@@ -25,6 +27,7 @@ struct SettingsItem: Identifiable {
         self.title = title
         self.subtitle = subtitle
         self.showChevron = showChevron
+        self.isRestore = isRestore
         self.action = action
     }
 }
@@ -32,6 +35,7 @@ struct SettingsItem: Identifiable {
 // MARK: - Settings Group
 struct SettingsGroup: Identifiable {
     let id = UUID()
+    let title: String
     let items: [SettingsItem]
 }
 
@@ -42,6 +46,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var isPremium: Bool = false
     @Published var showPaywall: Bool = false
+    @Published var showMembershipSheet: Bool = false
     @Published var showRestoreAlert: Bool = false
     @Published var restoreMessage: String = ""
     @Published var isRestoring: Bool = false
@@ -61,61 +66,53 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Settings Groups
     var settingsGroups: [SettingsGroup] {
         [
-            SettingsGroup(items: [
-                SettingsItem(
-                    icon: "gearshape.fill",
-                    iconColor: Color(hex: "8E8E93"),
-                    title: "General",
-                    action: { [weak self] in self?.openGeneral() }
-                ),
-            ]),
-
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Support"), items: [
                 SettingsItem(
                     icon: "questionmark.circle.fill",
                     iconColor: Color(hex: "34C759"),
-                    title: "Help & Support",
+                    title: appLocalized("Help & Support"),
                     action: { [weak self] in self?.openHelp() }
                 ),
                 SettingsItem(
                     icon: "arrow.clockwise",
                     iconColor: Color(hex: "FF9500"),
-                    title: "Restore Purchases",
+                    title: appLocalized("Restore Purchases"),
                     showChevron: false,
+                    isRestore: true,
                     action: { [weak self] in
                         Task { await self?.restorePurchases() }
                     }
                 ),
             ]),
 
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Feedback"), items: [
                 SettingsItem(
                     icon: "star.fill",
                     iconColor: Color(hex: "FFCC00"),
-                    title: "Rate App",
+                    title: appLocalized("Rate App"),
                     showChevron: false,
                     action: { [weak self] in self?.rateApp() }
                 ),
                 SettingsItem(
                     icon: "square.and.arrow.up.fill",
                     iconColor: Color(hex: "007AFF"),
-                    title: "Share App",
+                    title: appLocalized("Share App"),
                     showChevron: false,
                     action: { [weak self] in self?.shareApp() }
                 ),
             ]),
 
-            SettingsGroup(items: [
+            SettingsGroup(title: appLocalized("Legal"), items: [
                 SettingsItem(
                     icon: "doc.text.fill",
                     iconColor: Color(hex: "8E8E93"),
-                    title: "Privacy Policy",
+                    title: appLocalized("Privacy Policy"),
                     action: { [weak self] in self?.openPrivacyPolicy() }
                 ),
                 SettingsItem(
                     icon: "doc.plaintext.fill",
                     iconColor: Color(hex: "8E8E93"),
-                    title: "Terms of Use",
+                    title: appLocalized("Terms of Use"),
                     action: { [weak self] in self?.openTermsOfUse() }
                 ),
             ]),
@@ -134,10 +131,34 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Actions
     func showUpgrade() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.medium)
 
-        coordinator?.showPaywall()
+        coordinator?.showPaywall(source: "settings")
+    }
+
+    // MARK: - Membership
+    func openMembership() {
+        HapticManager.shared.impact(.light)
+
+        showMembershipSheet = true
+    }
+
+    func goProFromMembership() {
+        showMembershipSheet = false
+        // Let the sheet dismiss before presenting the paywall.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.coordinator?.showPaywall(source: "membership")
+        }
+    }
+
+    func manageSubscriptions() {
+        HapticManager.shared.impact(.light)
+
+        AnalyticsService.manageSubscriptionsTapped()
+
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+            UIApplication.shared.open(url)
+        }
     }
 
     // MARK: - Navigation
@@ -148,22 +169,19 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func openHelp() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         showMailComposer = true
     }
 
     func openPrivacyPolicy() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         tabCoordinator?.pushToSettings(.settings(.privacy))
     }
 
     func openTermsOfUse() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
 
         tabCoordinator?.pushToSettings(.settings(.termsOfUse))
     }
@@ -175,14 +193,14 @@ final class SettingsViewModel: ObservableObject {
         isRestoring = true
 
         do {
-            try await Task.sleep(nanoseconds: 1_500_000_000)
-
-            // TODO: Implement actual restore purchases logic with StoreKit
-            // For now, always show "no purchases" message
-            restoreMessage = "No purchases to restore."
-
+            let restored = try await PurchasesManager.shared.restore()
+            AnalyticsService.restorePurchases(success: restored)
+            restoreMessage = restored
+                ? appLocalized("Your purchases have been restored.")
+                : appLocalized("No purchases to restore.")
         } catch {
-            restoreMessage = "Failed to restore purchases. Please try again."
+            AnalyticsService.restorePurchases(success: false)
+            restoreMessage = appLocalized("Failed to restore purchases. Please try again.")
         }
 
         isRestoring = false
@@ -191,8 +209,9 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Rate App
     func rateApp() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
+
+        AnalyticsService.rateAppTapped()
 
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             SKStoreReviewController.requestReview(in: scene)
@@ -201,14 +220,15 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Share App
     func shareApp() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        HapticManager.shared.impact(.light)
+
+        AnalyticsService.shareAppTapped()
 
         showShareSheet = true
     }
 
     var shareItems: [Any] {
-        let text = "Check out QReative - Create beautiful QR codes!"
+        let text = appLocalized("Check out QReative - Create beautiful QR codes!")
         let url = URL(string: "https://apps.apple.com/app/qreative/id123456789")!
         return [text, url]
     }

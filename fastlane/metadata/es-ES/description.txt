@@ -1,0 +1,43 @@
+Escanea cualquier código QR o de barras al instante y luego crea tus propios códigos QR que se ven increíbles. Colores personalizados, degradados, formas, tu logo e incluso emojis.
+
+QReative es tu kit QR todo en uno: un lector ultrarrápido y un generador de códigos QR precioso en una sola app.
+
+ESCANEA LO QUE SEA
+• Lee códigos QR y de barras al instante con la cámara
+• Escanea desde fotos de tu galería
+• Detecta automáticamente enlaces, Wi-Fi, contactos, teléfonos y correos
+• Cada escaneo se guarda en un historial con búsqueda
+
+CREA CÓDIGOS QR PARA TODO
+• Sitio web y enlaces
+• Wi-Fi — que tus invitados se conecten con un toque
+• Instagram y WhatsApp
+• Tarjeta de contacto (vCard)
+• Correo, teléfono y SMS
+• Texto
+
+HAZLO TUYO
+• Colores sólidos y degradados llamativos
+• Patrones cuadrados, redondeados o de puntos
+• Pon tu logo en el centro
+• Añade un emoji para darle personalidad
+• Exporta en alta resolución para compartir donde sea
+
+POR QUÉ TE ENCANTARÁ
+• Limpio, simple y muy rápido
+• Tus escaneos y creaciones, siempre guardados
+• Sin necesidad de cuenta
+
+QReative PRO
+Mejora para desbloquear todo:
+• Todos los colores, degradados y formas
+• Logo y emoji en tus códigos
+• Exportación en Full HD
+• Experiencia sin anuncios
+
+Las suscripciones se renuevan automáticamente hasta que las canceles; gestiónalas o cancélalas cuando quieras en Ajustes. El pago se carga a tu cuenta de Apple.
+
+Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de privacidad: https://bsenturk.github.io/qreative-ios/privacy.html
+
+¿Tienes dudas o ideas? Escríbenos en Ajustes → Ayuda y soporte.

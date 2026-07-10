@@ -9,7 +9,7 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Published Properties
     @Published var isAuthorized: Bool = false
     @Published var isSessionRunning: Bool = false
-    @Published var detectedQRCode: String?
+    @Published var detectedCode: DetectedCode?
     @Published var torchMode: AVCaptureDevice.TorchMode = .off
     @Published var zoomFactor: CGFloat = 1.0
     @Published var error: CameraError?
@@ -18,10 +18,15 @@ final class CameraService: NSObject, ObservableObject {
     nonisolated(unsafe) let captureSession = AVCaptureSession()
     nonisolated(unsafe) private var videoDeviceInput: AVCaptureDeviceInput?
     nonisolated(unsafe) private let metadataOutput = AVCaptureMetadataOutput()
+    /// Whether inputs/outputs have been added to the session. Mutated only on
+    /// `sessionQueue`, so the unchecked access is safe.
+    nonisolated(unsafe) private var isConfigured = false
     private let sessionQueue = DispatchQueue(label: "com.qreative.camera.session")
 
     // MARK: - Configuration
     private var shouldStopOnDetection: Bool = true
+    /// Active scan mode (QR vs Barcode). Mutated only on `sessionQueue`.
+    nonisolated(unsafe) private var scanMode: ScanMode = .qr
     private var lastDetectedCode: String?
     private var lastDetectionTime: Date?
     private let detectionCooldown: TimeInterval = 1.0
@@ -55,6 +60,10 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Permission
     private func checkInitialPermission() {
+        if ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode") {
+            isAuthorized = true
+            return
+        }
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         isAuthorized = status == .authorized
     }
@@ -108,6 +117,12 @@ final class CameraService: NSObject, ObservableObject {
             return
         }
 
+        // Already configured — just (re)start so we don't add duplicate inputs.
+        guard !isConfigured else {
+            startRunningIfNeeded()
+            return
+        }
+
         captureSession.beginConfiguration()
         captureSession.sessionPreset = .high
 
@@ -145,9 +160,7 @@ final class CameraService: NSObject, ObservableObject {
 
             metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
 
-            if metadataOutput.availableMetadataObjectTypes.contains(.qr) {
-                metadataOutput.metadataObjectTypes = [.qr, .ean8, .ean13, .pdf417, .aztec, .dataMatrix]
-            }
+            applyMetadataTypes()
         } else {
             Task { @MainActor [weak self] in
                 self?.error = .configurationFailed
@@ -157,31 +170,38 @@ final class CameraService: NSObject, ObservableObject {
         }
 
         captureSession.commitConfiguration()
+        isConfigured = true
 
         // Start session after configuration is complete
-        if !captureSession.isRunning {
-            captureSession.startRunning()
+        startRunningIfNeeded()
+    }
 
-            Task { @MainActor [weak self] in
-                self?.isSessionRunning = true
-                self?.detectedQRCode = nil
-                self?.lastDetectedCode = nil
-            }
+    /// Starts the session if it isn't already running. Must be called on
+    /// `sessionQueue`.
+    private nonisolated func startRunningIfNeeded() {
+        guard !captureSession.isRunning else { return }
+        captureSession.startRunning()
+
+        Task { @MainActor [weak self] in
+            self?.isSessionRunning = true
+            self?.detectedCode = nil
+            self?.lastDetectedCode = nil
         }
     }
 
     // MARK: - Session Control
     func startSession() {
-        let session = captureSession
+        let authorized = isAuthorized
         sessionQueue.async { [weak self] in
-            if !session.isRunning {
-                session.startRunning()
-
-                Task { @MainActor [weak self] in
-                    self?.isSessionRunning = true
-                    self?.detectedQRCode = nil
-                    self?.lastDetectedCode = nil
-                }
+            guard let self else { return }
+            // On cold launch the session may be authorized but not yet
+            // configured (configuration only ran the first time permission was
+            // granted). Configure on demand so we never start an empty session,
+            // which would render a black screen.
+            if !self.isConfigured {
+                self.configureSession(authorized: authorized)
+            } else {
+                self.startRunningIfNeeded()
             }
         }
     }
@@ -191,67 +211,59 @@ final class CameraService: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             if session.isRunning {
                 session.stopRunning()
-
-                Task { @MainActor [weak self] in
-                    self?.isSessionRunning = false
-                }
+            }
+            // Stopping the session turns the hardware torch off, so reset the
+            // published torch state to keep the flash button in sync.
+            Task { @MainActor [weak self] in
+                self?.isSessionRunning = false
+                self?.torchMode = .off
             }
         }
     }
 
     func resumeScanning() {
-        detectedQRCode = nil
+        detectedCode = nil
         lastDetectedCode = nil
         startSession()
     }
 
     // MARK: - Torch Control
+    // All access to `videoDeviceInput`/`device` happens on `sessionQueue` (the
+    // queue that owns it) to avoid racing the configuration that creates it.
     func toggleTorch() {
-        guard let device = videoDeviceInput?.device,
-              device.hasTorch else {
-            error = .torchNotAvailable
-            return
-        }
-
         sessionQueue.async { [weak self] in
+            guard let self else { return }
+            guard let device = self.videoDeviceInput?.device, device.hasTorch else {
+                Task { @MainActor in self.error = .torchNotAvailable }
+                return
+            }
             do {
                 try device.lockForConfiguration()
-
                 let newMode: AVCaptureDevice.TorchMode = device.torchMode == .on ? .off : .on
-
                 if device.isTorchModeSupported(newMode) {
                     device.torchMode = newMode
-
-                    Task { @MainActor [weak self] in
-                        self?.torchMode = newMode
-                    }
+                    Task { @MainActor in self.torchMode = newMode }
                 }
-
                 device.unlockForConfiguration()
             } catch {
-                Task { @MainActor [weak self] in
-                    self?.error = .torchNotAvailable
-                }
+                Task { @MainActor in self.error = .torchNotAvailable }
             }
         }
     }
 
     func setTorch(_ mode: AVCaptureDevice.TorchMode) {
-        guard let device = videoDeviceInput?.device,
-              device.hasTorch,
-              device.isTorchModeSupported(mode) else {
-            return
-        }
-
         sessionQueue.async { [weak self] in
+            guard let self,
+                  let device = self.videoDeviceInput?.device,
+                  device.hasTorch,
+                  device.isTorchModeSupported(mode) else {
+                return
+            }
             do {
                 try device.lockForConfiguration()
                 device.torchMode = mode
                 device.unlockForConfiguration()
-
-                Task { @MainActor [weak self] in
-                    self?.torchMode = mode
-                }
+                Task { @MainActor in self.torchMode = mode }
             } catch {
             }
         }
@@ -259,21 +271,16 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: - Zoom Control
     func setZoom(_ factor: CGFloat) {
-        guard let device = videoDeviceInput?.device else { return }
-
-        let minZoom: CGFloat = 1.0
-        let maxZoom = min(device.activeFormat.videoMaxZoomFactor, 5.0)
-        let clampedFactor = max(minZoom, min(factor, maxZoom))
-
         sessionQueue.async { [weak self] in
+            guard let self, let device = self.videoDeviceInput?.device else { return }
+            let minZoom: CGFloat = 1.0
+            let maxZoom = min(device.activeFormat.videoMaxZoomFactor, 5.0)
+            let clampedFactor = max(minZoom, min(factor, maxZoom))
             do {
                 try device.lockForConfiguration()
                 device.videoZoomFactor = clampedFactor
                 device.unlockForConfiguration()
-
-                Task { @MainActor [weak self] in
-                    self?.zoomFactor = clampedFactor
-                }
+                Task { @MainActor in self.zoomFactor = clampedFactor }
             } catch {
             }
         }
@@ -290,6 +297,25 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Configuration
     func setShouldStopOnDetection(_ stop: Bool) {
         shouldStopOnDetection = stop
+    }
+
+    /// Switches between QR and Barcode scanning. Updates which symbologies the
+    /// metadata output reports so each mode only reacts to relevant codes.
+    func setScanMode(_ mode: ScanMode) {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.scanMode = mode
+            guard self.isConfigured else { return }
+            self.applyMetadataTypes()
+        }
+    }
+
+    /// Applies the current `scanMode`'s symbologies to the metadata output,
+    /// keeping only the types the device actually supports. Must be called on
+    /// `sessionQueue` after the output is added to the session.
+    private nonisolated func applyMetadataTypes() {
+        let available = metadataOutput.availableMetadataObjectTypes
+        metadataOutput.metadataObjectTypes = scanMode.metadataTypes.filter { available.contains($0) }
     }
 
     // MARK: - Cleanup
@@ -316,13 +342,14 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
             return
         }
 
+        let symbology = CodeSymbology.detect(metadataType: readableObject.type, value: stringValue)
         Task { @MainActor in
-            handleDetectedCode(stringValue)
+            handleDetectedCode(stringValue, symbology: symbology)
         }
     }
 
     @MainActor
-    private func handleDetectedCode(_ code: String) {
+    private func handleDetectedCode(_ code: String, symbology: CodeSymbology) {
         if let lastTime = lastDetectionTime,
            let lastCode = lastDetectedCode,
            lastCode == code,
@@ -332,10 +359,9 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
 
         lastDetectedCode = code
         lastDetectionTime = Date()
-        detectedQRCode = code
+        detectedCode = DetectedCode(value: code, symbology: symbology)
 
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        HapticManager.shared.success()
 
         if shouldStopOnDetection {
             stopSession()

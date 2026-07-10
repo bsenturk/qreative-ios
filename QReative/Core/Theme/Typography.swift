@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Typography Style
 enum Typography {
     case largeTitle
+    case displayTitle       // serif display
     case title1
     case title2
     case title3
@@ -12,11 +13,15 @@ enum Typography {
     case caption1
     case caption2
     case footnote
+    case mono               // monospace label
 
     var font: Font {
         switch self {
         case .largeTitle:
-            return .system(size: 32, weight: .bold)
+            return .system(size: 34, weight: .bold, design: .default)
+        case .displayTitle:
+            // Instrument Serif substitute: New York serif
+            return .system(size: 38, weight: .semibold, design: .serif)
         case .title1:
             return .system(size: 28, weight: .bold)
         case .title2:
@@ -35,18 +40,20 @@ enum Typography {
             return .system(size: 12, weight: .regular)
         case .footnote:
             return .system(size: 11, weight: .regular)
+        case .mono:
+            return .system(size: 11, weight: .medium, design: .monospaced)
         }
     }
 
     var lineSpacing: CGFloat {
         switch self {
-        case .largeTitle, .title1:
+        case .largeTitle, .displayTitle, .title1:
             return 4
         case .title2, .title3, .headline:
             return 3
         case .body, .callout:
             return 2
-        case .caption1, .caption2, .footnote:
+        case .caption1, .caption2, .footnote, .mono:
             return 1
         }
     }

@@ -1,0 +1,15 @@
+QReative is a QR/barcode scanner + QR code generator app. No account or login
+is required — all data (scan history) is stored locally on device.
+
+To test scanning: open the Scan tab and grant camera access when prompted.
+To test QR generation: open the Create tab, pick a type, customize, and save.
+
+Subscription (QReative Pro): weekly/monthly auto-renewing subscription with a
+3-day free trial, managed via RevenueCat + StoreKit. Free-tier users see an
+interstitial ad after saving a QR code; Pro subscribers do not. Restore
+Purchases is available on the paywall and in Settings.
+
+The app requests App Tracking Transparency to enable personalized AdMob ads;
+declining ATT does not restrict any app functionality.
+
+No demo account is needed — the app is fully usable without sign-in.

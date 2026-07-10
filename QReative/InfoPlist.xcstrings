@@ -1,0 +1,385 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QReative"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "QReative"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Permission prompt shown when the app requests camera access to scan codes.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج QReative إلى الوصول إلى الكاميرا لمسح رموز QR."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative benötigt Kamerazugriff, um QR-Codes zu scannen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative needs camera access to scan QR codes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative necesita acceso a la cámara para escanear códigos QR."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative a besoin d’accéder à l’appareil photo pour scanner des codes QR."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative memerlukan akses kamera untuk memindai kode QR."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeはQRコードをスキャンするためにカメラへのアクセスを必要とします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative precisa de acesso à câmera para escanear códigos QR."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ต้องการการเข้าถึงกล้องเพื่อสแกนคิวอาร์โค้ด"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, QR kodlarını taramak için kameranıza erişime ihtiyaç duyar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative cần quyền truy cập camera để quét mã QR."
+          }
+        }
+      }
+    },
+    "NSContactsUsageDescription" : {
+      "comment" : "Permission prompt shown when saving contact details from a scanned QR code.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج QReative إلى الوصول إلى جهات اتصالك لحفظ تفاصيل جهة الاتصال من رمز QR ممسوح ضوئيًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative benötigt Zugriff auf Ihre Kontakte, um Kontaktdaten aus einem gescannten QR-Code zu speichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative needs access to your contacts to save contact details from a scanned QR code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative necesita acceso a tus contactos para guardar los datos de contacto de un código QR escaneado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative a besoin d’accéder à vos contacts pour enregistrer les coordonnées d’un code QR scanné."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative memerlukan akses ke kontak Anda untuk menyimpan detail kontak dari kode QR yang dipindai."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeはスキャンしたQRコードの連絡先情報を保存するために連絡先へのアクセスを必要とします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative precisa de acesso aos seus contatos para salvar os dados de contato de um código QR escaneado."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ต้องการการเข้าถึงรายชื่อติดต่อของคุณเพื่อบันทึกข้อมูลติดต่อจากคิวอาร์โค้ดที่สแกน"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, taranan bir QR kodundaki kişi bilgilerini kaydetmek için kişilerinize erişime ihtiyaç duyar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative cần quyền truy cập danh bạ để lưu thông tin liên hệ từ mã QR đã quét."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "comment" : "Permission prompt shown when saving a generated QR code to the photo library.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج QReative إلى إذن لحفظ رموز QR التي تم إنشاؤها في مكتبة الصور."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative benötigt die Berechtigung, erstellte QR-Codes in Ihrer Fotomediathek zu speichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative needs permission to save your generated QR codes to your photo library."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative necesita permiso para guardar los códigos QR generados en tu fototeca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative a besoin de l’autorisation d’enregistrer les codes QR générés dans votre photothèque."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative memerlukan izin untuk menyimpan kode QR yang dibuat ke pustaka foto Anda."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeは生成したQRコードを写真ライブラリに保存するために許可を必要とします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative precisa de permissão para salvar os códigos QR gerados na sua biblioteca de fotos."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ต้องการสิทธิ์ในการบันทึกคิวอาร์โค้ดที่สร้างขึ้นลงในคลังภาพของคุณ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, oluşturulan QR kodlarını fotoğraf kitaplığınıza kaydetmek için izne ihtiyaç duyar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative cần quyền để lưu mã QR đã tạo vào thư viện ảnh của bạn."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Permission prompt shown when adding a logo or saving a QR code via the photo library.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج QReative إلى الوصول إلى مكتبة الصور لإضافة شعارات مخصصة إلى رموز QR وحفظ رموز QR التي تم إنشاؤها في صورك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative benötigt Zugriff auf Ihre Fotomediathek, um Ihren QR-Codes eigene Logos hinzuzufügen und erstellte QR-Codes in Ihren Fotos zu speichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative needs access to your photo library to add custom logos to your QR codes and save generated QR codes to your photos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative necesita acceso a tu fototeca para añadir logotipos personalizados a tus códigos QR y guardar los códigos QR generados en tus fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative a besoin d’accéder à votre photothèque pour ajouter des logos personnalisés à vos codes QR et enregistrer les codes QR générés dans vos photos."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative memerlukan akses ke pustaka foto Anda untuk menambahkan logo khusus ke kode QR dan menyimpan kode QR yang dibuat ke foto Anda."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeはQRコードにカスタムロゴを追加し、生成したQRコードを写真に保存するために写真ライブラリへのアクセスを必要とします。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative precisa de acesso à sua biblioteca de fotos para adicionar logotipos personalizados aos seus códigos QR e salvar os códigos QR gerados nas suas fotos."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ต้องการการเข้าถึงคลังภาพของคุณเพื่อเพิ่มโลโก้ที่กำหนดเองลงในคิวอาร์โค้ดและบันทึกคิวอาร์โค้ดที่สร้างขึ้นลงในรูปภาพของคุณ"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, QR kodlarınıza özel logolar eklemek ve oluşturulan QR kodlarını fotoğraflarınıza kaydetmek için fotoğraf kitaplığınıza erişime ihtiyaç duyar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative cần quyền truy cập thư viện ảnh để thêm logo tùy chỉnh vào mã QR và lưu mã QR đã tạo vào ảnh của bạn."
+          }
+        }
+      }
+    },
+    "NSUserTrackingUsageDescription" : {
+      "comment" : "Permission prompt (App Tracking Transparency) shown before using the advertising identifier for personalized ads.",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم QReative نشاطك لعرض إعلانات أكثر صلة والحفاظ على دعم النسخة المجانية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative verwendet Ihre Aktivität, um Ihnen relevantere Werbung anzuzeigen und die kostenlose Version zu unterstützen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative uses your activity to show more relevant ads and keep the free version supported."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative usa tu actividad para mostrarte anuncios más relevantes y mantener la versión gratuita."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative utilise votre activité pour afficher des publicités plus pertinentes et financer la version gratuite."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative menggunakan aktivitas Anda untuk menampilkan iklan yang lebih relevan dan mendukung versi gratis."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReativeはあなたのアクティビティを利用して、より関連性の高い広告を表示し、無料版を維持します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O QReative usa sua atividade para mostrar anúncios mais relevantes e manter a versão gratuita."
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative ใช้กิจกรรมของคุณเพื่อแสดงโฆษณาที่เกี่ยวข้องมากขึ้นและสนับสนุนเวอร์ชันฟรี"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative, size daha alakalı reklamlar göstermek ve ücretsiz sürümü desteklemek için etkinliğinizi kullanır."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QReative sử dụng hoạt động của bạn để hiển thị quảng cáo phù hợp hơn và duy trì phiên bản miễn phí."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,13 +1,12 @@
 import SwiftUI
 
-// MARK: - History Row View
+// MARK: - History Row View (inline row, placed inside a card container)
 struct HistoryRowView: View {
     let item: HistoryItem
+    var isLast: Bool = false
     let onTap: () -> Void
     let onDelete: () -> Void
     let onShare: () -> Void
-
-    @State private var isPressed: Bool = false
 
     var body: some View {
         Button {
@@ -15,14 +14,7 @@ struct HistoryRowView: View {
         } label: {
             rowContent
         }
-        .buttonStyle(.plain)
-        .scaleEffect(isPressed ? 0.98 : 1.0)
-        .animation(Theme.animation.springQuick, value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
+        .buttonStyle(PressableStyle(scale: 0.99))
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 onDelete()
@@ -36,153 +28,74 @@ struct HistoryRowView: View {
             } label: {
                 Label("Share", systemImage: "square.and.arrow.up")
             }
-            .tint(Color(hex: "2196F3"))
+            .tint(Color.accentPrimary)
         }
     }
 
     // MARK: - Row Content
     private var rowContent: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 13) {
             qrThumbnail
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Image(systemName: item.typeIcon)
-                        .font(.system(size: 10))
-                        .foregroundStyle(item.accentColor)
+                Text(item.displayTitle)
+                    .font(.system(size: 15, weight: .semibold))
+                    .tracking(-0.2)
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(1)
 
-                    Text(item.displayTitle)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-
-                Text(item.formattedDate)
+                Text("\(item.displayTypeName) · \(item.shortFormattedDate)")
                     .font(.system(size: 12))
-                    .foregroundStyle(Color.white.opacity(0.4))
+                    .foregroundStyle(Color.ink3)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.3))
+                .foregroundStyle(Color.ink3)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+        .padding(.vertical, 13)
+        .background(Color.surface)
+        .overlay(alignment: .bottom) {
+            if !isLast {
+                Rectangle()
+                    .fill(Color.lineColor)
+                    .frame(height: 1)
+                    .padding(.leading, 76)
+            }
         }
     }
 
     // MARK: - QR Thumbnail
     private var qrThumbnail: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.white)
-                .frame(width: 50, height: 50)
+            RoundedRectangle(cornerRadius: 9)
+                .fill(Color.surface2)
+                .frame(width: 38, height: 38)
 
-            if let thumbnailImage = item.thumbnailImage {
+            if item.isBarcode {
+                // A 1D barcode is unreadable at 28pt, so show a clear glyph.
+                Image(systemName: "barcode")
+                    .font(.system(size: 19, weight: .regular))
+                    .foregroundStyle(Color.textPrimary)
+            } else if let thumbnailImage = item.thumbnailImage {
                 Image(uiImage: thumbnailImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 42, height: 42)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .frame(width: 30, height: 30)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
             } else {
                 QRCodePreview(
                     content: item.content.isEmpty ? "QR" : item.content,
-                    size: 42,
-                    foregroundColor: item.accentColor,
-                    backgroundColor: .white,
+                    size: 28,
+                    foregroundColor: .textPrimary,
+                    backgroundColor: .clear,
                     shape: .squares,
                     logoImage: nil,
                     isGlowing: false
                 )
             }
         }
-    }
-}
-
-// MARK: - Compact History Row
-struct HistoryRowCompact: View {
-    let item: HistoryItem
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(item.accentColor.opacity(0.15))
-                        .frame(width: 40, height: 40)
-
-                    Image(systemName: item.typeIcon)
-                        .font(.system(size: 16))
-                        .foregroundStyle(item.accentColor)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.displayTitle)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-
-                    Text(item.shortFormattedDate)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.white.opacity(0.4))
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.3))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.03))
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Preview
-#Preview {
-    ZStack {
-        Color.backgroundPrimary
-            .ignoresSafeArea()
-
-        VStack(spacing: 12) {
-            ForEach(HistoryItem.samples.prefix(3)) { item in
-                HistoryRowView(
-                    item: item,
-                    onTap: { print("Tapped: \(item.displayTitle)") },
-                    onDelete: { print("Delete: \(item.id)") },
-                    onShare: { print("Share: \(item.content)") }
-                )
-            }
-
-            Divider()
-                .background(Color.white.opacity(0.1))
-                .padding(.vertical, 8)
-
-            Text("Compact Version")
-                .typography(.caption1, color: .textTertiary)
-
-            ForEach(HistoryItem.samples.prefix(2)) { item in
-                HistoryRowCompact(item: item) {
-                    print("Compact tapped: \(item.displayTitle)")
-                }
-            }
-        }
-        .padding(20)
     }
 }

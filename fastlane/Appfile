@@ -1,0 +1,14 @@
+app_identifier("com.xptlabs.qreative") # The bundle identifier of your app
+apple_id("buraksenturktr@icloud.com") # Your Apple Developer Portal username
+
+itc_team_id("126973887") # App Store Connect Team ID
+team_id("ADPP457ME6") # Developer Portal Team ID
+
+# ponytail: app_store_connect_api_key isn't a valid Appfile DSL method on
+# fastlane 2.230.0 (only added to Appfile in a later release) — calling it here
+# aborts Appfile parsing on every run. Pass API key auth via --api_key_path (or
+# the APP_STORE_CONNECT_API_KEY_PATH env var) on each fastlane invocation
+# instead; upgrade fastlane to restore Appfile support if that's preferred.
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

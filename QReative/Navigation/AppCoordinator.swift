@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 // MARK: - App Coordinator
 @MainActor
@@ -24,10 +25,17 @@ final class AppCoordinator: ObservableObject {
     private enum Keys {
         static let onboardingCompleted = "qreative.onboardingCompleted"
         static let isPremiumUser = "qreative.isPremiumUser"
+        static let activationPaywallShown = "qreative.activationPaywallShown"
     }
 
     // MARK: - Init
     init() {
+        if ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode") {
+            self.isOnboardingCompleted = true
+            self.isPremiumUser = true
+            self.currentRoute = .mainTab(.scan)
+            return
+        }
         let onboardingCompleted = UserDefaults.standard.bool(forKey: Keys.onboardingCompleted)
         self.isOnboardingCompleted = onboardingCompleted
         self.isPremiumUser = UserDefaults.standard.bool(forKey: Keys.isPremiumUser)
@@ -36,9 +44,9 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Start
     func start() {
+        AnalyticsService.setMembership(isPremium: isPremiumUser)
         if isOnboardingCompleted {
             currentRoute = .mainTab(.scan)
-            AppOpenAdManager.shared.loadAd()
         } else {
             currentRoute = .onboarding
         }
@@ -78,15 +86,39 @@ final class AppCoordinator: ObservableObject {
 
     // MARK: - Onboarding
     func completeOnboarding() {
-        isOnboardingCompleted = true
-        AppOpenAdManager.shared.loadAd()
-        navigate(to: .mainTab(.scan))
-        showPaywall()
+        AnalyticsService.onboardingCompleted()
+        finishOnboarding()
     }
 
-    func skipOnboarding() {
+    func skipOnboarding(atStep step: Int = 0) {
+        AnalyticsService.onboardingSkipped(step: step)
+        finishOnboarding()
+    }
+
+    private func finishOnboarding() {
         isOnboardingCompleted = true
         navigate(to: .mainTab(.scan))
+        // Prime the camera permission in context (the onboarding explained scanning),
+        // instead of a cold prompt later. The paywall is deferred until the user has
+        // experienced first value (their first scan) — see maybeShowActivationPaywall().
+        primeCameraPermission()
+    }
+
+    private func primeCameraPermission() {
+        guard AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined else { return }
+        AVCaptureDevice.requestAccess(for: .video) { _ in }
+    }
+
+    // MARK: - Activation Paywall (deferred, shown once after first value moment)
+    func maybeShowActivationPaywall() {
+        guard !isPremiumUser else { return }
+        guard !UserDefaults.standard.bool(forKey: Keys.activationPaywallShown) else { return }
+
+        UserDefaults.standard.set(true, forKey: Keys.activationPaywallShown)
+        // Let the current sheet/transition settle before presenting the paywall.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.showPaywall(source: "activation")
+        }
     }
 
     func resetOnboarding() {
@@ -95,7 +127,8 @@ final class AppCoordinator: ObservableObject {
     }
 
     // MARK: - Paywall
-    func showPaywall() {
+    func showPaywall(source: String = "app") {
+        AnalyticsService.paywallShown(source: source)
         isPaywallPresented = true
     }
 
@@ -106,20 +139,20 @@ final class AppCoordinator: ObservableObject {
     func handlePurchaseSuccess() {
         isPremiumUser = true
         UserDefaults.standard.set(true, forKey: Keys.isPremiumUser)
+        AnalyticsService.setMembership(isPremium: true)
         dismissPaywall()
     }
 
-    func restorePurchases() async -> Bool {
-        return false
-    }
-
-    // MARK: - Premium Features
-    func requirePremium(for feature: String, action: @escaping () -> Void) {
-        if isPremiumUser {
-            action()
-        } else {
-            showPaywall()
-        }
+    /// Single sync point for RevenueCat entitlement changes. Keeps the app-wide
+    /// `isPremiumUser` gating flag aligned with the user's real subscription.
+    func updatePremium(_ isPro: Bool) {
+        // Screenshot mode force-unlocks premium; don't let the (unpurchased) real
+        // entitlement status overwrite that once RevenueCat responds.
+        guard !ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode") else { return }
+        guard isPremiumUser != isPro else { return }
+        isPremiumUser = isPro
+        UserDefaults.standard.set(isPro, forKey: Keys.isPremiumUser)
+        AnalyticsService.setMembership(isPremium: isPro)
     }
 
     // MARK: - Sheet Presentation
@@ -129,44 +162,5 @@ final class AppCoordinator: ObservableObject {
 
     func dismissSheet() {
         presentedSheet = nil
-    }
-
-    // MARK: - Deep Link Handling
-    func handleDeepLink(_ url: URL) {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              let host = components.host else {
-            return
-        }
-
-        switch host {
-        case "scan":
-            navigate(to: .mainTab(.scan))
-        case "create":
-            navigate(to: .mainTab(.create))
-        case "premium":
-            showPaywall()
-        default:
-            break
-        }
-    }
-}
-
-// MARK: - Environment Key
-private struct AppCoordinatorKey: EnvironmentKey {
-    static let defaultValue: AppCoordinator = AppCoordinator()
-}
-
-extension EnvironmentValues {
-    var appCoordinator: AppCoordinator {
-        get { self[AppCoordinatorKey.self] }
-        set { self[AppCoordinatorKey.self] = newValue }
-    }
-}
-
-// MARK: - View Extension
-extension View {
-    func withAppCoordinator(_ coordinator: AppCoordinator) -> some View {
-        environment(\.appCoordinator, coordinator)
-            .environmentObject(coordinator)
     }
 }

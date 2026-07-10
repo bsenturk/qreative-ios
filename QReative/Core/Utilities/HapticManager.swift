@@ -31,8 +31,16 @@ final class HapticManager {
         selection.prepare()
     }
 
+    // MARK: - Enabled State
+    /// Reads the user's "Haptic feedback" preference directly from UserDefaults
+    /// (key owned by `AppSettings`) so haptics can be gated from any context.
+    private var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: "settings.hapticFeedback") as? Bool ?? true
+    }
+
     // MARK: - Impact Feedback
     func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        guard isEnabled else { return }
         switch style {
         case .light:
             impactLight.impactOccurred()
@@ -49,82 +57,28 @@ final class HapticManager {
         }
     }
 
-    func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle, intensity: CGFloat) {
-        switch style {
-        case .light:
-            impactLight.impactOccurred(intensity: intensity)
-        case .medium:
-            impactMedium.impactOccurred(intensity: intensity)
-        case .heavy:
-            impactHeavy.impactOccurred(intensity: intensity)
-        case .soft:
-            impactSoft.impactOccurred(intensity: intensity)
-        case .rigid:
-            impactRigid.impactOccurred(intensity: intensity)
-        @unknown default:
-            impactMedium.impactOccurred(intensity: intensity)
-        }
-    }
-
     // MARK: - Notification Feedback
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        guard isEnabled else { return }
         notification.notificationOccurred(type)
     }
 
     // MARK: - Selection Feedback
     func selectionChanged() {
+        guard isEnabled else { return }
         selection.selectionChanged()
     }
 
     // MARK: - Convenience Methods
-    func lightTap() {
-        impactLight.impactOccurred()
-    }
-
-    func mediumTap() {
-        impactMedium.impactOccurred()
-    }
-
-    func heavyTap() {
-        impactHeavy.impactOccurred()
-    }
-
-    func softTap() {
-        impactSoft.impactOccurred()
-    }
-
-    func rigidTap() {
-        impactRigid.impactOccurred()
-    }
-
-    func success() {
-        notification.notificationOccurred(.success)
-    }
-
-    func warning() {
-        notification.notificationOccurred(.warning)
-    }
-
-    func error() {
-        notification.notificationOccurred(.error)
-    }
+    // All route through the gated core methods above so the "Haptic feedback"
+    // setting controls every haptic in one place.
+    func lightTap() { impact(.light) }
+    func mediumTap() { impact(.medium) }
+    func heavyTap() { impact(.heavy) }
+    func softTap() { impact(.soft) }
+    func rigidTap() { impact(.rigid) }
+    func success() { notification(.success) }
+    func warning() { notification(.warning) }
+    func error() { notification(.error) }
 }
 
-// MARK: - SwiftUI Extension
-import SwiftUI
-
-extension View {
-    func hapticOnTap(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) -> some View {
-        self.simultaneousGesture(
-            TapGesture().onEnded { _ in
-                HapticManager.shared.impact(style)
-            }
-        )
-    }
-
-    func hapticOnChange<Value: Equatable>(of value: Value, _ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) -> some View {
-        self.onChange(of: value) { _, _ in
-            HapticManager.shared.impact(style)
-        }
-    }
-}

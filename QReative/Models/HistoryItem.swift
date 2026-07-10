@@ -5,6 +5,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
     case website
     case wifi
     case instagram
+    case x
+    case tiktok
+    case whatsapp
     case text
     case vcard
     case email
@@ -17,6 +20,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return "globe"
         case .wifi: return "wifi"
         case .instagram: return "camera.circle.fill"
+        case .x: return "x.circle.fill"
+        case .tiktok: return "music.note"
+        case .whatsapp: return "message.circle.fill"
         case .text: return "doc.text.fill"
         case .vcard: return "person.crop.rectangle.fill"
         case .email: return "envelope.fill"
@@ -31,6 +37,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return "Website"
         case .wifi: return "WiFi"
         case .instagram: return "Instagram"
+        case .x: return "X"
+        case .tiktok: return "TikTok"
+        case .whatsapp: return "WhatsApp"
         case .text: return "Text"
         case .vcard: return "Contact"
         case .email: return "Email"
@@ -45,6 +54,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return Color(hex: "6200EA")
         case .wifi: return Color(hex: "00E5FF")
         case .instagram: return Color(hex: "E1306C")
+        case .x: return Color(hex: "000000")
+        case .tiktok: return Color(hex: "FE2C55")
+        case .whatsapp: return Color(hex: "25D366")
         case .text: return Color(hex: "607D8B")
         case .vcard: return Color(hex: "4CAF50")
         case .email: return Color(hex: "FF5722")
@@ -59,6 +71,9 @@ enum HistoryItemType: String, Codable, CaseIterable {
         case .website: return [Color(hex: "6200EA"), Color(hex: "9C27B0")]
         case .wifi: return [Color(hex: "00B8D4"), Color(hex: "00E5FF")]
         case .instagram: return [Color(hex: "F58529"), Color(hex: "DD2A7B")]
+        case .x: return [Color(hex: "000000"), Color(hex: "333639")]
+        case .tiktok: return [Color(hex: "25F4EE"), Color(hex: "FE2C55")]
+        case .whatsapp: return [Color(hex: "25D366"), Color(hex: "128C7E")]
         case .text: return [Color(hex: "607D8B"), Color(hex: "455A64")]
         case .vcard: return [Color(hex: "4CAF50"), Color(hex: "2E7D32")]
         case .email: return [Color(hex: "FF5722"), Color(hex: "E64A19")]
@@ -76,18 +91,37 @@ enum HistoryItemType: String, Codable, CaseIterable {
         )
     }
 
+    /// `name@host.tld` with no spaces — avoids misclassifying free text that
+    /// merely contains "@" and "." (e.g. "meet @ 5 on apple.com") as email.
+    private static func isEmailLike(_ content: String) -> Bool {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.contains(" "), trimmed.contains("@") else { return false }
+        let parts = trimmed.split(separator: "@")
+        return parts.count == 2 && parts[1].contains(".")
+    }
+
     // MARK: - Detection
     static func detect(from content: String) -> HistoryItemType {
         let lowercased = content.lowercased()
+
+        if lowercased.contains("wa.me/") || lowercased.contains("api.whatsapp.com") || lowercased.contains("whatsapp.com/send") {
+            return .whatsapp
+        }
 
         if lowercased.hasPrefix("http://") || lowercased.hasPrefix("https://") {
             if lowercased.contains("instagram.com") {
                 return .instagram
             }
+            if lowercased.contains("x.com/") || lowercased.contains("twitter.com/") {
+                return .x
+            }
+            if lowercased.contains("tiktok.com") {
+                return .tiktok
+            }
             return .website
         } else if lowercased.hasPrefix("wifi:") {
             return .wifi
-        } else if lowercased.hasPrefix("mailto:") || (content.contains("@") && content.contains(".")) {
+        } else if lowercased.hasPrefix("mailto:") || isEmailLike(content) {
             return .email
         } else if lowercased.hasPrefix("tel:") {
             return .phone
@@ -101,6 +135,15 @@ enum HistoryItemType: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - History Source
+/// How a history item entered the app. Optional for backward compatibility:
+/// items saved before this field existed decode as `nil` and are treated as
+/// scanned for filtering.
+enum HistorySource: String, Codable {
+    case scanned
+    case created
+}
+
 // MARK: - History Item
 struct HistoryItem: Identifiable, Codable, Equatable {
 
@@ -109,10 +152,14 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     let content: String
     let type: HistoryItemType
     let createdAt: Date
+    var source: HistorySource?
     var thumbnailData: Data?
     var customColor: String?
     var customShape: String?
     var hasLogo: Bool
+    /// The code's actual encoding. Optional for backward compatibility: items
+    /// saved before this field existed decode as `nil` and are treated as QR.
+    var symbology: CodeSymbology?
 
     // MARK: - Init
     init(
@@ -120,19 +167,40 @@ struct HistoryItem: Identifiable, Codable, Equatable {
         content: String,
         type: HistoryItemType? = nil,
         createdAt: Date = Date(),
+        source: HistorySource? = nil,
         thumbnailData: Data? = nil,
         customColor: String? = nil,
         customShape: String? = nil,
-        hasLogo: Bool = false
+        hasLogo: Bool = false,
+        symbology: CodeSymbology? = nil
     ) {
         self.id = id
         self.content = content
         self.type = type ?? HistoryItemType.detect(from: content)
         self.createdAt = createdAt
+        self.source = source
         self.thumbnailData = thumbnailData
         self.customColor = customColor
         self.customShape = customShape
         self.hasLogo = hasLogo
+        self.symbology = symbology
+    }
+
+    // MARK: - Symbology Helpers
+    /// True for 1D linear barcodes (renders as a wide rectangle, not a QR).
+    var isBarcode: Bool { symbology?.isBarcode ?? false }
+
+    /// Label for the type chip / header: the symbology name for non-QR codes,
+    /// otherwise the content-based type title (Website, WiFi, …).
+    var displayTypeName: String {
+        if let symbology, symbology != .qr { return symbology.displayName }
+        return type.title
+    }
+
+    /// Icon matching `displayTypeName`.
+    var displayTypeIcon: String {
+        guard let symbology, symbology != .qr else { return type.icon }
+        return symbology.icon
     }
 
     // MARK: - Computed Properties
@@ -144,6 +212,12 @@ struct HistoryItem: Identifiable, Codable, Equatable {
             return extractWiFiSSID(content) ?? "WiFi Network"
         case .instagram:
             return extractInstagramUsername(content) ?? "Instagram"
+        case .x:
+            return extractHandle(content, hosts: ["x.com", "twitter.com"]) ?? "X"
+        case .tiktok:
+            return extractHandle(content, hosts: ["tiktok.com"]) ?? "TikTok"
+        case .whatsapp:
+            return extractWhatsAppNumber(content) ?? "WhatsApp"
         case .vcard:
             return extractVCardName(content) ?? "Contact"
         case .email:
@@ -256,12 +330,29 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 
     private func extractWiFiSSID(_ content: String) -> String? {
-        guard let ssidRange = content.range(of: "S:"),
-              let endRange = content.range(of: ";", range: ssidRange.upperBound..<content.endIndex) else {
-            return nil
+        // Parses the S: field honoring backslash escaping, so SSIDs containing
+        // ';' / ':' / ',' round-trip correctly (matches QRType.escapeWifiString).
+        // The naive "first ';'" terminator broke on escaped separators.
+        guard let sRange = content.range(of: "S:") else { return nil }
+
+        var result = ""
+        var escaped = false
+        var index = sRange.upperBound
+        while index < content.endIndex {
+            let ch = content[index]
+            if escaped {
+                result.append(ch)
+                escaped = false
+            } else if ch == "\\" {
+                escaped = true
+            } else if ch == ";" {
+                break
+            } else {
+                result.append(ch)
+            }
+            index = content.index(after: index)
         }
-        return String(content[ssidRange.upperBound..<endRange.lowerBound])
-            .replacingOccurrences(of: "\\;", with: ";")
+        return result.isEmpty ? nil : result
     }
 
     private func extractInstagramUsername(_ url: String) -> String? {
@@ -275,6 +366,35 @@ struct HistoryItem: Identifiable, Codable, Equatable {
             .components(separatedBy: "/")
 
         return components.first.map { "@\($0)" }
+    }
+
+    /// Extracts a "@handle" from a profile URL for the given hosts (e.g. x.com,
+    /// tiktok.com). Returns nil when the URL doesn't match or has no username.
+    private func extractHandle(_ url: String, hosts: [String]) -> String? {
+        let lower = url.lowercased()
+        guard hosts.contains(where: { lower.contains($0) }) else { return nil }
+
+        var path = url
+            .replacingOccurrences(of: "https://", with: "")
+            .replacingOccurrences(of: "http://", with: "")
+            .replacingOccurrences(of: "www.", with: "")
+        for host in hosts {
+            path = path.replacingOccurrences(of: "\(host)/", with: "")
+        }
+        let handle = path.components(separatedBy: "/").first?
+            .replacingOccurrences(of: "@", with: "") ?? ""
+        return handle.isEmpty ? nil : "@\(handle)"
+    }
+
+    private func extractWhatsAppNumber(_ content: String) -> String? {
+        // Pulls the phone number out of a wa.me / whatsapp.com link.
+        guard let url = URL(string: content) else { return nil }
+        if let phone = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.first(where: { $0.name == "phone" })?.value, !phone.isEmpty {
+            return "+\(phone)"
+        }
+        let digits = url.lastPathComponent.filter(\.isNumber)
+        return digits.isEmpty ? nil : "+\(digits)"
     }
 
     private func extractVCardName(_ content: String) -> String? {
@@ -303,28 +423,3 @@ struct HistoryItem: Identifiable, Codable, Equatable {
     }
 }
 
-// MARK: - Sample Data
-extension HistoryItem {
-    static let samples: [HistoryItem] = [
-        HistoryItem(
-            content: "https://www.apple.com",
-            createdAt: Date()
-        ),
-        HistoryItem(
-            content: "WIFI:T:WPA;S:HomeNetwork;P:password123;;",
-            createdAt: Date().addingTimeInterval(-3600)
-        ),
-        HistoryItem(
-            content: "https://instagram.com/apple",
-            createdAt: Date().addingTimeInterval(-86400)
-        ),
-        HistoryItem(
-            content: "BEGIN:VCARD\nVERSION:3.0\nFN:John Doe\nTEL:+1234567890\nEND:VCARD",
-            createdAt: Date().addingTimeInterval(-172800)
-        ),
-        HistoryItem(
-            content: "Hello, this is a sample text QR code content.",
-            createdAt: Date().addingTimeInterval(-604800)
-        ),
-    ]
-}

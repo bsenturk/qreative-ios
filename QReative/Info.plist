@@ -2,10 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>QReative needs camera access to scan QR codes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>QReative needs access to your photo library to add custom logos to your QR codes and save generated QR codes to your photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>QReative needs permission to save your generated QR codes to your photo library.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>QReative needs access to your contacts to save contact details from a scanned QR code.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>QReative uses your activity to show more relevant ads and keep the free version supported.</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-2545255000258244~6499911773</string>
 	<key>SKAdNetworkItems</key>

@@ -1,269 +1,203 @@
 import SwiftUI
 
 // MARK: - Onboarding View
+/// Single value screen. Communicates the one differentiator (beautiful, custom
+/// QR codes), then drops the user straight into the app. Camera permission is
+/// primed and the paywall is deferred to the first value moment — both handled
+/// by `AppCoordinator.finishOnboarding()`.
 struct OnboardingView: View {
     @EnvironmentObject var appCoordinator: AppCoordinator
-    @State private var currentPage: Int = 0
-    @State private var floatOffset: CGFloat = 0
-    @State private var isAppeared = false
     @State private var showContent = false
-    @State private var showButton = false
-
-    private let totalPages = 3
 
     var body: some View {
         ZStack {
-            backgroundLayer
+            Color.backgroundPrimary.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                TabView(selection: $currentPage) {
-                    ForEach(0..<totalPages, id: \.self) { index in
-                        pageContent(for: index)
-                            .tag(index)
-                    }
+                // Top brand bar
+                HStack(spacing: 8) {
+                    BrandMarkView(size: 24)
+                    Text("QReative")
+                        .font(.system(size: 16, weight: .bold))
+                        .tracking(-0.3)
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .onChange(of: currentPage) { _, _ in
-                    HapticManager.shared.lightTap()
-                }
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
 
-                pageIndicators
-                    .padding(.bottom, 32)
+                Spacer()
+
+                // Hero illustration
+                HeroCreateView()
                     .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 20)
+                    .animation(.easeOut(duration: 0.55).delay(0.05), value: showContent)
 
-                PrimaryButton(currentPage == totalPages - 1 ? "Get Started" : "Next", icon: "arrow.right") {
-                    HapticManager.shared.mediumTap()
-                    if currentPage < totalPages - 1 {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            currentPage += 1
-                        }
-                    } else {
-                        appCoordinator.completeOnboarding()
-                    }
+                Spacer().frame(height: 30)
+
+                // Title
+                Text("Make QR codes\nworth scanning")
+                    .font(.system(size: 33, weight: .bold))
+                    .tracking(-0.9)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.textPrimary)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 14)
+                    .animation(.easeOut(duration: 0.55).delay(0.14), value: showContent)
+
+                // Body
+                Text("Create and scan QR codes & barcodes — all in one place.")
+                    .font(.system(size: 15.5))
+                    .foregroundStyle(Color.ink2)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 30)
+                    .padding(.top, 14)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(y: showContent ? 0 : 10)
+                    .animation(.easeOut(duration: 0.55).delay(0.20), value: showContent)
+
+                // Capabilities (gives create + scan equal billing)
+                VStack(spacing: 14) {
+                    capabilityRow(
+                        icon: "paintpalette.fill",
+                        title: "Create",
+                        subtitle: "Custom colors, shapes, logos & emojis"
+                    )
+                    capabilityRow(
+                        icon: "viewfinder",
+                        title: "Scan",
+                        subtitle: "Read any QR code or barcode instantly"
+                    )
                 }
-                .frame(maxWidth: 320)
-                .padding(.horizontal, Theme.spacing.screen)
-                .padding(.bottom, 60)
-                .scaleEffect(showButton ? 1 : 0.8)
-                .opacity(showButton ? 1 : 0)
+                .padding(.horizontal, 36)
+                .padding(.top, 22)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 10)
+                .animation(.easeOut(duration: 0.55).delay(0.26), value: showContent)
+
+                Spacer()
+
+                // CTA button
+                PrimaryButton(appLocalized("Get Started"), icon: "arrow.right") {
+                    HapticManager.shared.mediumTap()
+                    appCoordinator.completeOnboarding()
+                }
+                .padding(.horizontal, 30)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 10)
+                .animation(.easeOut(duration: 0.55).delay(0.32), value: showContent)
             }
+            .padding(.bottom, 18)
         }
-        .ignoresSafeArea()
         .onAppear {
-            startAnimations()
-        }
-    }
-
-    // MARK: - Page Content
-    private func pageContent(for index: Int) -> some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            pageIcon(for: index)
-                .padding(.bottom, 48)
-                .scaleEffect(isAppeared ? 1 : 0.5)
-                .opacity(isAppeared ? 1 : 0)
-
-            VStack(spacing: 16) {
-                Text(headlineText(for: index))
-                    .typography(.largeTitle)
-                    .multilineTextAlignment(.center)
-
-                Text(subheadlineText(for: index))
-                    .typography(.body, color: .textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-            }
-            .padding(.horizontal, Theme.spacing.screen)
-            .opacity(showContent ? 1 : 0)
-            .offset(y: showContent ? 0 : 30)
-
-            Spacer()
-        }
-    }
-
-    // MARK: - Page Icon
-    @ViewBuilder
-    private func pageIcon(for index: Int) -> some View {
-        switch index {
-        case 0:
-            qrCodeSection
-        case 1:
-            scanIconSection
-        case 2:
-            historyIconSection
-        default:
-            qrCodeSection
-        }
-    }
-
-    // MARK: - Scan Icon Section
-    private var scanIconSection: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 32)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.accentPrimary, Color.accentSecondary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 180, height: 180)
-
-            Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 80, weight: .light))
-                .foregroundStyle(.white)
-        }
-        .offset(y: floatOffset)
-        .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
-    }
-
-    // MARK: - History Icon Section
-    private var historyIconSection: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 32)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.accentTertiary, Color.accentPrimary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 180, height: 180)
-
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 80, weight: .light))
-                .foregroundStyle(.white)
-        }
-        .offset(y: floatOffset)
-        .shadow(color: Color.accentTertiary.opacity(0.3), radius: 30, x: 0, y: 20)
-    }
-
-    // MARK: - Background Layer
-    private var backgroundLayer: some View {
-        ZStack {
-            Color.backgroundPrimary
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color.accentPrimary.opacity(0.6),
-                            Color.accentPrimary.opacity(0.2),
-                            Color.clear
-                        ],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 200
-                    )
-                )
-                .frame(width: 400, height: 400)
-                .blur(radius: 60)
-                .offset(x: -150, y: -200)
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color.accentTertiary.opacity(0.5),
-                            Color.accentTertiary.opacity(0.15),
-                            Color.clear
-                        ],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 180
-                    )
-                )
-                .frame(width: 360, height: 360)
-                .blur(radius: 60)
-                .offset(x: 150, y: 300)
-        }
-    }
-
-    // MARK: - QR Code Section
-    private var qrCodeSection: some View {
-        QRCodePreview(
-            content: "https://qreative.app",
-            size: 180,
-            foregroundColor: .accentPrimary,
-            backgroundColor: .white,
-            shape: .rounded,
-            logoImage: nil,
-            isGlowing: true
-        )
-        .rotation3DEffect(
-            .degrees(10),
-            axis: (x: 1, y: 0, z: 0),
-            perspective: 0.5
-        )
-        .rotation3DEffect(
-            .degrees(-10),
-            axis: (x: 0, y: 1, z: 0),
-            perspective: 0.5
-        )
-        .offset(y: floatOffset)
-        .shadow(color: Color.accentPrimary.opacity(0.3), radius: 30, x: 0, y: 20)
-    }
-
-    // MARK: - Page Texts
-    private func headlineText(for index: Int) -> String {
-        switch index {
-        case 0:
-            return "Create Unique QR Codes"
-        case 1:
-            return "Scan in Seconds"
-        case 2:
-            return "Access Your History"
-        default:
-            return "Create Unique QR Codes"
-        }
-    }
-
-    private func subheadlineText(for index: Int) -> String {
-        switch index {
-        case 0:
-            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
-        case 1:
-            return "Instantly scan any QR code with our fast and accurate scanner."
-        case 2:
-            return "Access all your previously scanned codes anytime, anywhere."
-        default:
-            return "Design beautiful QR codes with custom colors, shapes, and your own logo."
-        }
-    }
-
-    // MARK: - Page Indicators
-    private var pageIndicators: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<totalPages, id: \.self) { index in
-                Capsule()
-                    .fill(index == currentPage ? Color.accentPrimary : Color.white.opacity(0.2))
-                    .frame(
-                        width: index == currentPage ? 24 : 6,
-                        height: 6
-                    )
-                    .animation(Theme.animation.spring, value: currentPage)
+            AnalyticsService.onboardingStepViewed(step: 0, name: "value")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                withAnimation(.easeOut(duration: 0.45)) {
+                    showContent = true
+                }
             }
         }
     }
 
-    // MARK: - Animations
-    private func startAnimations() {
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-            isAppeared = true
-        }
+    // MARK: - Capability Row
+    private func capabilityRow(
+        icon: String,
+        title: LocalizedStringKey,
+        subtitle: LocalizedStringKey
+    ) -> some View {
+        HStack(spacing: 13) {
+            RoundedRectangle(cornerRadius: 11)
+                .fill(Color.accentPrimary.opacity(0.12))
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(systemName: icon)
+                        .font(.system(size: 18))
+                        .foregroundStyle(Color.accentPrimary)
+                }
 
-        withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
-            showContent = true
-        }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.textPrimary)
+                Text(subtitle)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.ink2)
+            }
 
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.5)) {
-            showButton = true
+            Spacer()
         }
+    }
+}
 
-        withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(0.6)) {
-            floatOffset = -12
+// MARK: - Brand Mark
+struct BrandMarkView: View {
+    let size: CGFloat
+
+    var body: some View {
+        Image(systemName: "qrcode.viewfinder")
+            .font(.system(size: size * 0.85, weight: .medium))
+            .foregroundStyle(Color.textPrimary)
+    }
+}
+
+// MARK: - Hero: Create
+private struct HeroCreateView: View {
+    var body: some View {
+        ZStack {
+            // Soft accent glow
+            Circle()
+                .fill(Color.accentPrimary.opacity(0.12))
+                .frame(width: 210, height: 210)
+                .blur(radius: 8)
+
+            // Rotated QR card
+            RoundedRectangle(cornerRadius: 26)
+                .fill(Color.surface)
+                .frame(width: 206, height: 206)
+                .shadow(color: Color.ink.opacity(0.20), radius: 36, x: 0, y: 20)
+                .rotationEffect(.degrees(-4))
+                .overlay {
+                    QRCodePreview(
+                        content: "https://qreative.app/hello",
+                        size: 170,
+                        foregroundColor: .textPrimary,
+                        backgroundColor: .white,
+                        shape: .rounded,
+                        logoImage: nil,
+                        isGlowing: false
+                    )
+                    .rotationEffect(.degrees(-4))
+                }
+
+            // Style badge
+            HStack(spacing: 7) {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.accentPrimary)
+                    .frame(width: 26, height: 26)
+                    .overlay {
+                        Image(systemName: "paintpalette.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white)
+                    }
+                Text("YOUR STYLE")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Color.ink2)
+                    .tracking(0.5)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.lineColor, lineWidth: 1)
+            }
+            .shadow(color: Color.ink.opacity(0.08), radius: 8, x: 0, y: 4)
+            .offset(x: 68, y: 88)
         }
+        .frame(width: 250, height: 280)
     }
 }
 

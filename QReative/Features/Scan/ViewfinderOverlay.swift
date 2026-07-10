@@ -4,41 +4,42 @@ import SwiftUI
 struct ViewfinderOverlay: View {
     @State private var scanLineOffset: CGFloat = 0
     @State private var isAnimating: Bool = false
-    @State private var bracketScale: CGFloat = 1.0
-    @State private var bracketOpacity: Double = 1.0
 
-    let frameSize: CGFloat
+    let frameWidth: CGFloat
+    let frameHeight: CGFloat
     let bracketLength: CGFloat
     let bracketWidth: CGFloat
 
     init(
-        frameSize: CGFloat = 260,
+        frameWidth: CGFloat = 260,
+        frameHeight: CGFloat = 260,
         bracketLength: CGFloat = 40,
         bracketWidth: CGFloat = 4
     ) {
-        self.frameSize = frameSize
+        self.frameWidth = frameWidth
+        self.frameHeight = frameHeight
         self.bracketLength = bracketLength
         self.bracketWidth = bracketWidth
     }
 
     var body: some View {
         ZStack {
-            DimmedBackground(frameSize: frameSize)
+            DimmedBackground(frameWidth: frameWidth, frameHeight: frameHeight)
 
             ZStack {
                 cornerBrackets
-                    .scaleEffect(bracketScale)
-                    .opacity(bracketOpacity)
 
                 scanningLine
-
-                centerFocus
             }
-            .frame(width: frameSize, height: frameSize)
+            .frame(width: frameWidth, height: frameHeight)
         }
         .onAppear {
             startScanAnimation()
-            startBracketPulse()
+        }
+        .onChange(of: frameHeight) { _, _ in
+            // Reset the travel so the line keeps sweeping the full (new) height
+            // after a QR ⇄ Barcode switch.
+            restartScanAnimation()
         }
     }
 
@@ -49,13 +50,13 @@ struct ViewfinderOverlay: View {
                 .position(x: bracketWidth / 2, y: bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .topRight)
-                .position(x: frameSize - bracketWidth / 2, y: bracketWidth / 2)
+                .position(x: frameWidth - bracketWidth / 2, y: bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .bottomLeft)
-                .position(x: bracketWidth / 2, y: frameSize - bracketWidth / 2)
+                .position(x: bracketWidth / 2, y: frameHeight - bracketWidth / 2)
 
             CornerBracket(length: bracketLength, width: bracketWidth, corner: .bottomRight)
-                .position(x: frameSize - bracketWidth / 2, y: frameSize - bracketWidth / 2)
+                .position(x: frameWidth - bracketWidth / 2, y: frameHeight - bracketWidth / 2)
         }
     }
 
@@ -66,49 +67,41 @@ struct ViewfinderOverlay: View {
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        Color.accentTertiary.opacity(0.3),
-                        Color.accentTertiary,
-                        Color.accentTertiary.opacity(0.3),
+                        Color.accentPrimary.opacity(0.3),
+                        Color.accentPrimary,
+                        Color.accentPrimary.opacity(0.3),
                         Color.clear
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
-            .frame(width: frameSize - 20, height: 2)
-            .shadow(color: Color.accentTertiary.opacity(0.8), radius: 15, x: 0, y: 0)
+            .frame(width: frameWidth - 20, height: 2)
+            .shadow(color: Color.accentPrimary.opacity(0.8), radius: 15, x: 0, y: 0)
             .offset(y: scanLineOffset)
-    }
-
-    // MARK: - Center Focus
-    private var centerFocus: some View {
-        Circle()
-            .stroke(Color.white.opacity(0.5), lineWidth: 2)
-            .frame(width: 8, height: 8)
     }
 
     // MARK: - Animation
     private func startScanAnimation() {
         guard !isAnimating else { return }
         isAnimating = true
+        runScanAnimation()
+    }
 
-        scanLineOffset = -frameSize / 2 + 20
+    private func restartScanAnimation() {
+        runScanAnimation()
+    }
 
+    private func runScanAnimation() {
+        // Snap to the top edge without animation, then sweep to the bottom.
+        withAnimation(.linear(duration: 0)) {
+            scanLineOffset = -frameHeight / 2 + 20
+        }
         withAnimation(
             .easeInOut(duration: 2.0)
             .repeatForever(autoreverses: true)
         ) {
-            scanLineOffset = frameSize / 2 - 20
-        }
-    }
-
-    private func startBracketPulse() {
-        withAnimation(
-            .easeInOut(duration: 1.5)
-            .repeatForever(autoreverses: true)
-        ) {
-            bracketScale = 1.02
-            bracketOpacity = 0.85
+            scanLineOffset = frameHeight / 2 - 20
         }
     }
 }
@@ -128,24 +121,15 @@ private struct CornerBracket: View {
             let path = bracketPath(in: size)
 
             context.addFilter(.shadow(
-                color: Color(hex: "6200EA").opacity(0.8),
-                radius: 10,
+                color: Color.black.opacity(0.35),
+                radius: 4,
                 x: 0,
                 y: 0
             ))
 
-            let gradient = Gradient(colors: [
-                Color(hex: "6200EA"),
-                Color(hex: "9C27B0")
-            ])
-
             context.stroke(
                 path,
-                with: .linearGradient(
-                    gradient,
-                    startPoint: gradientStart,
-                    endPoint: gradientEnd
-                ),
+                with: .color(.white),
                 style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
             )
         }
@@ -196,29 +180,12 @@ private struct CornerBracket: View {
 
         return path
     }
-
-    private var gradientStart: CGPoint {
-        switch corner {
-        case .topLeft: return CGPoint(x: 0, y: length)
-        case .topRight: return CGPoint(x: 0, y: 0)
-        case .bottomLeft: return CGPoint(x: 0, y: 0)
-        case .bottomRight: return CGPoint(x: length, y: 0)
-        }
-    }
-
-    private var gradientEnd: CGPoint {
-        switch corner {
-        case .topLeft: return CGPoint(x: length, y: 0)
-        case .topRight: return CGPoint(x: length, y: length)
-        case .bottomLeft: return CGPoint(x: length, y: length)
-        case .bottomRight: return CGPoint(x: 0, y: length)
-        }
-    }
 }
 
 // MARK: - Dimmed Background
 private struct DimmedBackground: View {
-    let frameSize: CGFloat
+    let frameWidth: CGFloat
+    let frameHeight: CGFloat
 
     var body: some View {
         GeometryReader { geometry in
@@ -226,7 +193,7 @@ private struct DimmedBackground: View {
                 .fill(Color.black.opacity(0.6))
                 .reverseMask {
                     RoundedRectangle(cornerRadius: 4)
-                        .frame(width: frameSize, height: frameSize)
+                        .frame(width: frameWidth, height: frameHeight)
                         .position(
                             x: geometry.size.width / 2,
                             y: geometry.size.height / 2
